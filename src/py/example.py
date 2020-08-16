@@ -154,16 +154,12 @@ if __name__ == "__main__":
 	view.setRootEntity(scene)
 	#container = QWebEngineView()
 	container = QtWidgets.QWidget.createWindowContainer(view)
-	container.setWindowFlags(QtCore.Qt.X11BypassWindowManagerHint |
-				QtCore.Qt.FramelessWindowHint |
-				QtCore.Qt.WindowStaysOnTopHint |
-				QtCore.Qt.WindowTransparentForInput |
-				QtCore.Qt.WindowDoesNotAcceptFocus |
-				QtCore.Qt.NoDropShadowWindowHint |
-				QtCore.Qt.WindowSystemMenuHint |
-					QtCore.Qt.WindowMinimizeButtonHint)
-	container.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
-	container.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+	container.setWindowFlags(
+			QtCore.Qt.X11BypassWindowManagerHint |
+			QtCore.Qt.WindowTransparentForInput 
+			)
+	#container.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
+	#container.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
 	container.setStyleSheet("background-color:red;")
 	view.defaultFrameGraph().setClearColor(QtCore.Qt.transparent)
 	view.defaultFrameGraph().setClearColor(QColor(100,0,0,100))
