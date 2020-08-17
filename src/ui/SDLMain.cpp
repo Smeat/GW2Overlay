@@ -58,6 +58,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <memory>
+#include <sstream>
 #include <thread>
 #include <iostream>
 #include <unordered_map>
@@ -90,6 +91,8 @@
 #include "../utils/xml/pugixml.hpp"
 #include "../utils/json/json.hpp"
 #include "Texture.h"
+
+using json = nlohmann::json;
 
 struct __attribute__((packed)) MumbleContext {
 	unsigned char serverAddress[28]; // contains sockaddr_in or sockaddr_in6
@@ -128,7 +131,7 @@ struct __attribute__((packed)) LinkedMem{
 //	wchar_t description[2048]; // always empty
 };
 
-
+// TODO: remove this global mess and create more files
 Window        mXWindow;
 Display*      mXDisplay;
 int socket_fd = -1;
@@ -152,7 +155,7 @@ void load_xml(const std::string& filename, int map_id) {
 		if(node.name() == std::string("MarkerCategory")) {
 			if(!node.attribute("iconFile").empty()) {
 				type_file_map[name] = node.attribute("iconFile").value();
-				std::cout << "Adding " << name << " : " << node.attribute("iconFile").value() << std::endl;
+	//			std::cout << "Adding " << name << " : " << node.attribute("iconFile").value() << std::endl;
 			}
 		}
 		return "";
@@ -177,7 +180,7 @@ void load_xml(const std::string& filename, int map_id) {
 				continue;
 			}
 			if(textures.find(filename->second) == textures.end()) {
-				std::cout << "loading texture " << filename->second << std::endl;
+	//			std::cout << "loading texture " << filename->second << std::endl;
 				std::shared_ptr<Texture> tex(new Texture(filename->second));
 				textures.insert({filename->second, tex});
 			}
@@ -185,6 +188,7 @@ void load_xml(const std::string& filename, int map_id) {
 			Mesh my_mesh(vertices, {0,1,3,1,2,3},tex_iter->second);
 			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));
 			obj->translate(pos);
+			obj->scale({3.0f, 3.0f, 1.0f});
 			objects.push_back(obj);
 		}
 	}
@@ -214,10 +218,12 @@ int create_socket() {
 	return fd;
 }
 
-void update_gw2(){
+void update_gw2(bool block = false){
 	struct sockaddr_in si_other;
 	int len = 0, slen = sizeof(si_other);
 	LinkedMem data;
+	int flags = 0;
+	if(!block) flags |= MSG_DONTWAIT;
 	if((len = ::recvfrom(socket_fd, &data, sizeof(data), MSG_DONTWAIT, (struct sockaddr *) &si_other, (socklen_t *)&slen)) > 0){
 		float* debug;
 		debug = data.fAvatarPosition;
@@ -338,6 +344,12 @@ void update_gl(int delta){
 	glFlush();
 }
 
+void set_projection(float fov_rad, float w, float h, float near = 0.1f, float far = 1000.0f) {
+	glm::mat4 projection = glm::mat4(1.0f);
+	projection = glm::perspectiveFovLH(fov_rad, w, h, near, far);
+	my_shader->set_mat4("projection", projection);
+}
+
 int main(int argc, char** argv) {
 	float screenWidth = 1680;
 	float screenHeight = 1050;
@@ -387,13 +399,11 @@ int main(int argc, char** argv) {
 
 	glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
 	glm::mat4 view          = glm::mat4(1.0f);
-	glm::mat4 projection    = glm::mat4(1.0f);
 	//model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	//projection = glm::perspective(glm::radians(102.0f), (float)1680 / (float)1050, 0.1f, 10000.0f);
 	//projection = glm::perspectiveLH(glm::radians(102.0f), (float)1680 / (float)1050, 0.1f, 10000.0f);
 	//TODO: get fov from identiy json string
-	projection = glm::perspectiveFovLH(glm::radians(102.f), 1680.0f, 1050.0f, 0.1f, 1000.0f);
 	//projection = glm::ortho(0.0f, 1680.0f, 0.0f, 1050.0f, 0.1f, 1000.0f);
 
 
@@ -401,7 +411,6 @@ int main(int argc, char** argv) {
 	my_shader->set_active();
 	my_shader->set_mat4("transform", model);
 	my_shader->set_mat4("view", view);
-	my_shader->set_mat4("projection", projection);
 	
 
 	socket_fd = create_socket();
@@ -412,10 +421,31 @@ int main(int argc, char** argv) {
 
 	int last_id = 0;
 	load_xml("/tmp/test.xml", 50);
+	{
+		update_gw2(true);
+		MumbleContext* ctx = (MumbleContext*)gw2_data.context;
+		char c = gw2_data.identity[0];
+		int i = 0;
+		std::stringstream ss;
+		while(c != 0 && i < 256) {
+			i += 1;
+			ss << c;
+			c = gw2_data.identity[i];
+		}
+		float fov = 1.222f;
+		try {
+			auto json = json::parse(ss.str());
+			std::cout << json.dump() << std::endl;
+			fov = json["fov"];
+		}
+		catch(...) {
+		}
+		set_projection(fov, 1680.0f, 1050.0f);
+	}
 
 	while(running) {
 		uint64_t delta = SDL_GetTicks() - last_call;
-		update_gw2();
+		update_gw2(true);
 		MumbleContext* ctx = (MumbleContext*)gw2_data.context;
 //		printf("Mount index %d size %lu space %lu\n", ctx->mountIndex, sizeof(MumbleContext), sizeof(gw2_data.context));
 		if(ctx->mapId != last_id) {
@@ -437,7 +467,12 @@ int main(int argc, char** argv) {
 
 		view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_mat4("view", view);
-		update_gl(delta);
+		//std::cout << (ctx->uiState & (1 << 3)) << std::endl;
+		if((ctx->uiState & (1 << 3))) {
+			update_gl(delta);
+		} else {
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		}
 		glXSwapBuffers(mXDisplay, mXWindow);
 		SDL_Event event;
 
@@ -448,7 +483,7 @@ int main(int argc, char** argv) {
 					break;
 			}
 		}
-		SDL_Delay(1000 / 60);
+	//	SDL_Delay(1000 / 100);
 	}
 	return 0;
 } 
