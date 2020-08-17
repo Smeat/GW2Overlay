@@ -1,4 +1,6 @@
 #include "Object.h"
+#include "Mesh.h"
+
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
@@ -6,9 +8,9 @@
 
 #include <GL/gl.h>
 
-Object::Object(std::shared_ptr<Shader> s, std::vector<float> vertex_data) {
+Object::Object(std::shared_ptr<Shader> s, std::vector<Mesh> vertex_data) {
 	this->m_shader = s;
-	this->m_vertex_data = vertex_data;
+	this->m_meshes = vertex_data;
 }
 void Object::translate(glm::vec3 pos) {
 	this->m_pos = pos;
@@ -32,10 +34,7 @@ void Object::update() {
 
 	this->m_shader->set_active();
 	this->m_shader->set_mat4("transform", this->m_model);
-	glBegin(GL_POLYGON);
-	for(int i = 0; i < this->m_vertex_data.size();) {
-		glVertex3f(this->m_vertex_data[i], this->m_vertex_data[i+1], this->m_vertex_data[i+2]);
-		i +=3;
+	for(auto iter = this->m_meshes.begin(); iter != this->m_meshes.end(); ++iter) {
+		iter->draw();
 	}
-	glEnd();
 }
