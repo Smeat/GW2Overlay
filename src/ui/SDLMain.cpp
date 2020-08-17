@@ -19,8 +19,6 @@
  */
 /*
  * TODO:
- * - Fix texture
- * - Let the planes always face the camera
  * - Add GUI (buttons, select files etc)
  *    - Probably using qt
  * - Find better way to start python script
@@ -28,6 +26,7 @@
  *
  * FIXME:
  *  - Objects are moving a little bit
+ *   - Probably due to socket delay
 */
 
 #include <GL/glew.h>
@@ -367,7 +366,7 @@ int main(int argc, char** argv) {
 
 	printf("OpenGL version %s\n", glGetString(GL_VERSION));
 
-	const char *vertex_shader_src = "#version 330 core\n"
+	const char *vertex_shader_src = "#version 420 core\n"
 	"layout (location = 0) in vec3 aPos;"
 	"layout (location = 0) in vec3 aColor;"
 	"layout (location = 2) in vec2 aTexCoord;"
@@ -380,9 +379,11 @@ int main(int argc, char** argv) {
     "   gl_Position = projection * view * transform * vec4(aPos, 1.0f);"
 	"   ourColor = aColor;"
 	"   TexCoord = aTexCoord;"
-    "}\0";
+	"TexCoord.y *= -1;"
+	"gl_Position = projection * (view*transform * vec4(0.0, 0.0, 0.0, 1.0) + vec4(aPos.x, aPos.y, 0.0, 0.0));"
+	"}\0";
 
-	const char *fragment_shader_src = "#version 330 core\n"
+	const char *fragment_shader_src = "#version 420 core\n"
 	"out vec4 FragColor;\n"
 	"in vec3 ourColor;"
 	"in vec2 TexCoord;"
