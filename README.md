@@ -11,6 +11,7 @@ The GW2 data is sent via UDP from a python script inside the wine environment, s
   I've tried launching the python program with a batch script with 20 sec delay, but that didn't work. I always need to open a wine console after GW2 is up an running. Not sure why
 
 ### Status
+ * Current status: Very early PoC
  * Can load and display GW2TaCo XML POIs
  * Tested on Arch with i3wm
  * Position is currently hardcoded for my setup
