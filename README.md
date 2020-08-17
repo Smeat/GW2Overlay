@@ -20,8 +20,8 @@ The GW2 data is sent via UDP from a python script inside the wine environment, s
  * Some kind of GUI for settings etc.
   * Boss timer
   * API key (daily)
- * Make the POIs always face the camera
  
 ### BUGS
- * GW2 doesn't report the UP vector, therefore the perspective is not perfect and the POIs are moving
-  * Currently only a very simple approach is implemented
+ * POIs are moving a little bit. Probably due to delay
+ * GW2 doesn't report the UP vector, therefore the perspective is not perfect
+  * The current imeplementation seems to be good enough
