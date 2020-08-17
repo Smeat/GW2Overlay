@@ -42,7 +42,6 @@
 
 #include <GL/gl.h>
 #include <GL/glx.h>
-#include <GL/glut.h>
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -364,7 +363,6 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	glutInit(&argc, argv);
 	glewInit();
 
 	printf("OpenGL version %s\n", glGetString(GL_VERSION));
