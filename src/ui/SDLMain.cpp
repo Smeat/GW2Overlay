@@ -88,6 +88,7 @@
 #include "Mesh.h"
 
 #include "../utils/xml/pugixml.hpp"
+#include "../utils/json/json.hpp"
 #include "Texture.h"
 
 struct __attribute__((packed)) MumbleContext {
@@ -345,12 +346,6 @@ int main(int argc, char** argv) {
 		printf("error initializing SDL: %s\n", SDL_GetError()); 
 	} 
 	SDL_Window* window = SDL_CreateTransparentWindow("GAME", 1280, 0, screenWidth, screenHeight);
-	//int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS | SDL_WINDOW_ALWAYS_ON_TOP;
-	//SDL_Window* window = SDL_CreateWindow("GAME", 1280, 0, 1680, 1050, window_flags);
-	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
 
 	int imgFlags = IMG_INIT_PNG;
 	if(!(IMG_Init(imgFlags) & imgFlags)) {
@@ -360,17 +355,6 @@ int main(int argc, char** argv) {
 
 	glutInit(&argc, argv);
 	glewInit();
-
-	/*SDL_GLContext glcontext = SDL_GL_CreateContext(window);
-	if(glcontext == NULL) {
-		printf("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
-		return 1;
-	}
-	*/
-	//SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-	//SDL_RenderClear(renderer);
-//	SDL_GL_SetSwapInterval(1);
-//	glClearColor( 0, 0.5, 0, 0.5) ; // light gray bg
 
 	printf("OpenGL version %s\n", glGetString(GL_VERSION));
 
@@ -454,22 +438,17 @@ int main(int argc, char** argv) {
 		view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_mat4("view", view);
 		update_gl(delta);
-		SDL_GL_SwapWindow(window);
+		glXSwapBuffers(mXDisplay, mXWindow);
 		SDL_Event event;
+
 		while(SDL_PollEvent(&event)) {
-		
 			switch(event.type) {
 				case SDL_QUIT:
 					running = false;
 					break;
 			}
 		}
-		glXSwapBuffers(mXDisplay, mXWindow);
-		//SDL_RenderPresent(renderer);
 		SDL_Delay(1000 / 60);
 	}
-
-	// Once finished with OpenGL functions, the SDL_GLContext can be deleted.
-	//SDL_GL_DeleteContext(glcontext); 
 	return 0;
 } 
