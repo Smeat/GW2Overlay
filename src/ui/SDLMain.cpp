@@ -310,7 +310,7 @@ SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w, 
 	xcb_rectangle_t *rect = nullptr;
 	int nrect = 0;
 
-	int offset = 1680;
+	int offset = w;
 	rectangle.x = offset;
 	rectangle.y = 0;
 	rectangle.width = w + offset;
@@ -351,12 +351,11 @@ void set_projection(float fov_rad, float w, float h, float near = 0.1f, float fa
 }
 
 int main(int argc, char** argv) {
-	float screenWidth = 1680;
-	float screenHeight = 1050;
-	// retutns zero on success else non-zero 
+	float screenWidth = 1680.0f;
+	float screenHeight = 1050.0f;
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) { 
 		printf("error initializing SDL: %s\n", SDL_GetError()); 
-	} 
+	}
 	SDL_Window* window = SDL_CreateTransparentWindow("GAME", 1280, 0, screenWidth, screenHeight);
 
 	int imgFlags = IMG_INIT_PNG;
@@ -371,16 +370,15 @@ int main(int argc, char** argv) {
 	printf("OpenGL version %s\n", glGetString(GL_VERSION));
 
 	const char *vertex_shader_src = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;"
-    "layout (location = 0) in vec3 aColor;"
+	"layout (location = 0) in vec3 aPos;"
+	"layout (location = 0) in vec3 aColor;"
 	"layout (location = 2) in vec2 aTexCoord;"
 	"out vec3 ourColor;"
 	"out vec2 TexCoord;"
 	"uniform mat4 transform;"
 	"uniform mat4 view;"
 	"uniform mat4 projection;"
-    "void main()"
-    "{"
+	"void main() {"
     "   gl_Position = projection * view * transform * vec4(aPos, 1.0f);"
 	"   ourColor = aColor;"
 	"   TexCoord = aTexCoord;"
@@ -399,19 +397,11 @@ int main(int argc, char** argv) {
 
 	glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
 	glm::mat4 view          = glm::mat4(1.0f);
-	//model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-	//projection = glm::perspective(glm::radians(102.0f), (float)1680 / (float)1050, 0.1f, 10000.0f);
-	//projection = glm::perspectiveLH(glm::radians(102.0f), (float)1680 / (float)1050, 0.1f, 10000.0f);
-	//TODO: get fov from identiy json string
-	//projection = glm::ortho(0.0f, 1680.0f, 0.0f, 1050.0f, 0.1f, 1000.0f);
-
 
 	my_shader->load_from_string(vertex_shader_src, fragment_shader_src);
 	my_shader->set_active();
 	my_shader->set_mat4("transform", model);
 	my_shader->set_mat4("view", view);
-	
 
 	socket_fd = create_socket();
 
@@ -440,7 +430,7 @@ int main(int argc, char** argv) {
 		}
 		catch(...) {
 		}
-		set_projection(fov, 1680.0f, 1050.0f);
+		set_projection(fov, screenWidth, screenHeight);
 	}
 
 	while(running) {
@@ -467,7 +457,6 @@ int main(int argc, char** argv) {
 
 		view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_mat4("view", view);
-		//std::cout << (ctx->uiState & (1 << 3)) << std::endl;
 		if((ctx->uiState & (1 << 3))) {
 			update_gl(delta);
 		} else {
