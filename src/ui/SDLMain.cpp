@@ -216,27 +216,20 @@ void update_gw2(){
 
 SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w, int h)
 {
-	/*Window mXWindow;*/
-	/*Display*/ mXDisplay = XOpenDisplay(0);
-	const char* xserver = getenv("DISPLAY");
+	mXDisplay = XOpenDisplay(0);
 
-	if (mXDisplay == 0)
-	{
-		printf("Could not establish a connection to X-server '%s'\n", xserver );
-		exit(1) ;
+	if (mXDisplay == 0) {
+		printf("Failed to connect to the Xserver\n");
+		return NULL;
 	}
 	xcb_connection_t* xconn = XGetXCBConnection(mXDisplay);
 
-
-	// query Visual for "TrueColor" and 32 bits depth (RGBA)
 	XVisualInfo visualinfo;
 	XMatchVisualInfo(mXDisplay, DefaultScreen(mXDisplay), 32, TrueColor, &visualinfo);
 
-	// create window
 	GC gc;
 	XSetWindowAttributes attr;
 	attr.colormap   = XCreateColormap(mXDisplay, DefaultRootWindow(mXDisplay), visualinfo.visual, AllocNone);
-	//attr.event_mask = ExposureMask;// | KeyPressMask;
 	attr.event_mask = NoEventMask;
 	attr.background_pixmap = None;
 	attr.border_pixel = 0;
@@ -252,26 +245,6 @@ SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w, 
 	gc = XCreateGC(mXDisplay, mXWindow, 0, 0);
 	printf("Window has id: %lu\n", mXWindow);
 
-	// set title bar name of window
-	XStoreName(mXDisplay, mXWindow, title);
-
-	// say window manager which position we would prefer
-	XSizeHints sizehints ;
-	sizehints.flags = PPosition | PSize;
-	sizehints.x	 = x ;  sizehints.y = y;
-	sizehints.width = w ; sizehints.height = h;
-	XSetWMNormalHints(mXDisplay, mXWindow, &sizehints);
-
-	// Switch On >> If user pressed close key let window manager only send notification >>
-	Atom wm_delete_window = XInternAtom(mXDisplay, "WM_DELETE_WINDOW", 0);
-	XSetWMProtocols(mXDisplay, mXWindow, &wm_delete_window, 1);
-
-	// Disable input
-	XWMHints* hints = XAllocWMHints();
-	hints->input = false;
-	hints->flags = InputHint;
-	//XSetWMHints(mXDisplay, mXWindow, hints);
-	
 	int baseEventMask
         = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_STRUCTURE_NOTIFY
             | XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
@@ -283,27 +256,28 @@ SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w, 
 	const int values[] = {1, transparentForInputEventMask};
 	xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(xconn, mXWindow, mask, values);
 	xcb_generic_error_t *error;
-    if ((error = xcb_request_check(xconn, cookie))) {
-        fprintf(stderr, "Could not reparent the window\n");
-        free(error);
-        return NULL;
-    } else {
+	if ((error = xcb_request_check(xconn, cookie))) {
+		fprintf(stderr, "Could not reparent the window\n");
+		free(error);
+		return NULL;
+	} else {
 		printf("Changed attributes\n");
 	}
 	// Mouse passthrough
 	// init xfixes
 	const xcb_query_extension_reply_t *reply = xcb_get_extension_data(xconn, &xcb_xfixes_id);
-    if (!reply || !reply->present)
-        return NULL;
+	if (!reply || !reply->present){
+		return NULL;
+	}
 
-    auto xfixes_query = xcb_xfixes_query_version(xconn,
+	auto xfixes_query = xcb_xfixes_query_version(xconn,
                                     XCB_XFIXES_MAJOR_VERSION,
                                     XCB_XFIXES_MINOR_VERSION);
 	auto xfixesQuery = xcb_xfixes_query_version_reply(xconn, xfixes_query, NULL);
-    if (!xfixesQuery || xfixesQuery->major_version < 2) {
-        printf("failed to initialize XFixes\n");
-        return NULL;
-    }
+	if (!xfixesQuery || xfixesQuery->major_version < 2) {
+		printf("failed to initialize XFixes\n");
+		return NULL;
+	}
 	
 	xcb_rectangle_t rectangle;
 
@@ -323,25 +297,16 @@ SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w, 
 	xcb_xfixes_set_window_shape_region_checked(xconn, mXWindow, XCB_SHAPE_SK_INPUT, 0, 0, region);
 	xcb_xfixes_destroy_region(xconn, region);
 
-
-	// create OpenGL context
 	GLXContext glcontext = glXCreateContext(mXDisplay, &visualinfo, 0, True) ;
-
-	if (!glcontext)
-	{
-		printf("X11 server '%s' does not support OpenGL\n", xserver ) ;
+	if (!glcontext) {
+		printf("Failed to create openGL context\n");
 		return NULL;
 	}
-
 	glXMakeCurrent(mXDisplay, mXWindow, glcontext);
 
-	// now let the window appear to the userSDL_WINDOWPOS_U
 	XMapWindow(mXDisplay, mXWindow);
 	glXSwapBuffers(mXDisplay, mXWindow);
-	
-
 	SDL_Window* sdl_window = SDL_CreateWindowFrom((void*)mXWindow);
-	SDL_Delay(30);
 	return sdl_window;
 }
 
