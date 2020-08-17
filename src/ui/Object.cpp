@@ -1,0 +1,41 @@
+#include "Object.h"
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <GL/gl.h>
+
+Object::Object(std::shared_ptr<Shader> s, std::vector<float> vertex_data) {
+	this->m_shader = s;
+	this->m_vertex_data = vertex_data;
+}
+void Object::translate(glm::vec3 pos) {
+	this->m_pos = pos;
+}
+
+void Object::scale(glm::vec3 scale) {
+	this->m_scale = scale;
+}
+
+void Object::rotate(float deg, glm::vec3 v) {
+	this->m_rotation = glm::radians(deg);
+	this->m_rotation_vec = v;
+}
+
+void Object::update() {
+	// update model pos
+	this->m_model = glm::mat4(1.0f);
+	this->m_model = glm::translate(this->m_model, this->m_pos);
+	this->m_model = glm::rotate(this->m_model, this->m_rotation, this->m_rotation_vec);
+	this->m_model = glm::scale(this->m_model, this->m_scale);
+
+	this->m_shader->set_active();
+	this->m_shader->set_mat4("transform", this->m_model);
+	glBegin(GL_POLYGON);
+	for(int i = 0; i < this->m_vertex_data.size();) {
+		glVertex3f(this->m_vertex_data[i], this->m_vertex_data[i+1], this->m_vertex_data[i+2]);
+		i +=3;
+	}
+	glEnd();
+}
