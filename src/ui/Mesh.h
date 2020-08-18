@@ -44,6 +44,7 @@ class Mesh {
  public:
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
 		 std::shared_ptr<Texture> tex);
+	virtual ~Mesh();
 	void draw();
 
  private:

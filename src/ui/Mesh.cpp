@@ -60,6 +60,15 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
 	glBindVertexArray(0);
 }
 
+Mesh::~Mesh() {
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glDeleteBuffers(1, &this->m_vbo);
+	glDeleteBuffers(1, &this->m_ebo);
+	glDeleteVertexArrays(1, &this->m_vao);
+}
+
 void Mesh::draw() {
 	this->m_texture->set_active();
 	glBindVertexArray(this->m_vao);

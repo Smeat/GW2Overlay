@@ -27,7 +27,8 @@
 
 #include <GL/gl.h>
 
-Object::Object(std::shared_ptr<Shader> s, std::vector<Mesh> vertex_data) {
+Object::Object(std::shared_ptr<Shader> s,
+			   std::vector<std::shared_ptr<Mesh>> vertex_data) {
 	this->m_shader = s;
 	this->m_meshes = vertex_data;
 }
@@ -52,6 +53,6 @@ void Object::update() {
 	this->m_shader->set_mat4("transform", this->m_model);
 	for (auto iter = this->m_meshes.begin(); iter != this->m_meshes.end();
 		 ++iter) {
-		iter->draw();
+		(*iter)->draw();
 	}
 }

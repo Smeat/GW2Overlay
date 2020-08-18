@@ -28,6 +28,7 @@ class Shader {
  public:
 	Shader() = default;
 	Shader(const std::string& vertex_path, const std::string& fragment_path);
+	virtual ~Shader();
 	void load_from_string(const std::string& vertex_src,
 						  const std::string& fragment_src);
 	void set_active();

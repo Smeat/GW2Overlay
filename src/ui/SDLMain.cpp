@@ -191,7 +191,8 @@ void load_xmls(const std::vector<std::string>& xml_files, int mapid) {
 				texture_file_map.insert({type_it->second.m_icon_file, tex});
 			}
 			auto tex_iter = texture_file_map.find(type_it->second.m_icon_file);
-			Mesh my_mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second);
+			std::shared_ptr<Mesh> my_mesh(
+				new Mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second));
 			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));
 			auto marker = markers.find(iter->m_type);
 			auto pos = iter->m_pos;

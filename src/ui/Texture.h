@@ -25,6 +25,7 @@
 class Texture {
  public:
 	Texture(const std::string& path);
+	virtual ~Texture();
 	void set_active();
 
  private:

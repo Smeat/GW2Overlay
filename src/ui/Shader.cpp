@@ -86,6 +86,11 @@ Shader::Shader(const std::string& vertex_path,
 	}
 }
 
+Shader::~Shader() {
+	glUseProgram(0);
+	glDeleteProgram(this->m_program_id);
+}
+
 void Shader::set_active() { glUseProgram(this->m_program_id); }
 
 void Shader::set_mat4(const std::string& name, const glm::mat4& mat) {

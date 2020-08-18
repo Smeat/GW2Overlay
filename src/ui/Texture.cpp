@@ -52,4 +52,9 @@ Texture::Texture(const std::string& path) {
 	SDL_FreeSurface(surf);
 }
 
+Texture::~Texture() {
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDeleteTextures(1, &this->m_id);
+}
+
 void Texture::set_active() { glBindTexture(GL_TEXTURE_2D, this->m_id); }
