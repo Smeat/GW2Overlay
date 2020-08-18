@@ -4,6 +4,16 @@
 #include <stdint.h>
 #include <string>
 
+enum UI_STATE {
+	MAP_OPEN,
+	COMPASS_TOP_RIGHT,
+	COMPASS_ROTATION,
+	GAME_FOCUS,
+	COMPETITIVE_MODE,
+	TEXTBOX_FOCUS,
+	COMBAT
+};
+
 struct __attribute__((packed)) MumbleContext {
 	unsigned char serverAddress[28];  // contains sockaddr_in or sockaddr_in6
 	uint32_t mapId;
@@ -26,6 +36,10 @@ struct __attribute__((packed)) MumbleContext {
 	float mapScale;
 	uint32_t processId;
 	uint8_t mountIndex;
+
+	bool get_ui_state(UI_STATE option) const {
+		return (this->uiState & (1 << option));
+	}
 };
 
 struct __attribute__((packed)) LinkedMem {

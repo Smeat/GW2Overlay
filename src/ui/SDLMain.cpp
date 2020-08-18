@@ -332,8 +332,7 @@ int main(int argc, char** argv) {
 		"FragColor = texture(ourTexture, TexCoord);"
 		"}";
 
-	glm::mat4 model = glm::mat4(
-		1.0f);	// make sure to initialize matrix to identity matrix first
+	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 view = glm::mat4(1.0f);
 
 	my_shader->load_from_string(vertex_shader_src, fragment_shader_src);
@@ -388,7 +387,7 @@ int main(int argc, char** argv) {
 
 		view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_mat4("view", view);
-		if ((ctx->uiState & (1 << 3))) {
+		if ((ctx->get_ui_state(UI_STATE::MAP_OPEN))) {
 			update_gl(delta);
 		} else {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
