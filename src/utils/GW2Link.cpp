@@ -8,6 +8,7 @@
 
 GW2Link::GW2Link() {
 	this->m_socket = this->create_socket();
+	memset(&this->m_gw2_data, 0, sizeof(this->m_gw2_data));
 	printf("Init GW2Link with Linkedmem size %lu, context size %lu total %lu\n",
 		   sizeof(LinkedMem), sizeof(MumbleContext),
 		   sizeof(LinkedMem) + sizeof(MumbleContext));

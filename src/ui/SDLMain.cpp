@@ -83,6 +83,8 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#include <boost/program_options.hpp>
+
 #include "Mesh.h"
 #include "Object.h"
 #include "Shader.h"
@@ -93,6 +95,7 @@
 #include "Texture.h"
 
 using json = nlohmann::json;
+namespace po = boost::program_options;
 
 // TODO: remove this global mess and create more files
 Window mXWindow;
@@ -307,8 +310,39 @@ void update_camera(const LinkedMem* gw2_data) {
 }
 
 int main(int argc, char** argv) {
-	float screenWidth = 1680.0f;
-	float screenHeight = 1050.0f;
+	po::options_description desc("Allowed options");
+	// clang-format off
+	desc.add_options()
+		("help,h", "show usage")
+		("xml", po::value<std::vector<std::string>>(),
+			"Path to xml file")
+		("width,w", po::value<float>()->default_value(1680.0f),
+			"Display width")
+		("height", po::value<float>()->default_value(1050.0f),
+			"Display height")
+		;
+	// clang-format on
+	po::variables_map vm;
+	try {
+		po::store(po::parse_command_line(argc, argv, desc), vm);
+		po::notify(vm);
+	} catch (std::exception& e) {
+		std::cerr << e.what();
+		std::cout << desc << std::endl;
+		return 1;
+	}
+
+	if (vm.count("help")) {
+		std::cout << desc << std::endl;
+		return 0;
+	}
+	std::vector<std::string> xml_files;
+	if (vm.count("xml")) {
+		xml_files = vm["xml"].as<std::vector<std::string>>();
+	}
+
+	float screenWidth = vm["width"].as<float>();
+	float screenHeight = vm["height"].as<float>();
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		printf("error initializing SDL: %s\n", SDL_GetError());
 	}
@@ -339,7 +373,8 @@ int main(int argc, char** argv) {
 		"ourColor = aColor;"
 		"TexCoord = aTexCoord;"
 		"TexCoord.y *= -1;"
-		"gl_Position = projection * (view*transform * vec4(0.0, 0.0, 0.0, 1.0) "
+		"gl_Position = projection * (view*transform * vec4(0.0, 0.0, 0.0, "
+		"1.0) "
 		"+ vec4(aPos.x, aPos.y, 0.0, 0.0));"
 		"}\0";
 
@@ -350,7 +385,8 @@ int main(int argc, char** argv) {
 		"in vec2 TexCoord;"
 		"uniform sampler2D ourTexture;"
 		"void main() {\n"
-		//"FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0f);"
+		//"FragColor = texture(ourTexture, TexCoord) *
+		// vec4(ourColor, 1.0f);"
 		"FragColor = texture(ourTexture, TexCoord);"
 		"}";
 
