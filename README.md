@@ -20,6 +20,7 @@ The GW2 data is sent via UDP from a python script inside the wine environment, s
  * Some kind of GUI for settings etc.
   * Boss timer
   * API key (daily)
+ * Vulkan renderer
  
 ### BUGS
  * POIs are moving a little bit. Probably due to delay
