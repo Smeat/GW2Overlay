@@ -399,6 +399,7 @@ int main(int argc, char** argv) {
 	glewInit();
 
 	printf("OpenGL version %s\n", glGetString(GL_VERSION));
+	glEnable(GL_DEPTH_TEST);
 
 	const char* vertex_shader_src =
 		"#version 420 core\n"
