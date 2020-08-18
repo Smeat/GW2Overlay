@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 smeat.
  *
- * This file is part of GW2Overlay 
+ * This file is part of GW2Overlay
  * (see https://github.com/Smeat/GW2Overlay).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,13 +23,12 @@
 #include <string>
 
 class Texture {
-	public:
-		Texture(const std::string& path);
-		void set_active();
-	
-	private:
-		unsigned int m_id;
+ public:
+	Texture(const std::string& path);
+	void set_active();
 
+ private:
+	unsigned int m_id;
 };
 
 #endif

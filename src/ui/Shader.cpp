@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 smeat.
  *
- * This file is part of GW2Overlay 
+ * This file is part of GW2Overlay
  * (see https://github.com/Smeat/GW2Overlay).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,13 +31,14 @@ int compile_shader(const char* src, int type) {
 	printf("Created shader with id %d\n", shader_id);
 	glShaderSource(shader_id, 1, &src, NULL);
 	glCompileShader(shader_id);
-	int  success;
+	int success;
 	char infoLog[512];
 
 	glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
-	if(!success){
+	if (!success) {
 		glGetShaderInfoLog(shader_id, 512, NULL, infoLog);
-		std::cerr << "Error during Shader compilation: " << infoLog << std::endl;
+		std::cerr << "Error during Shader compilation: " << infoLog
+				  << std::endl;
 		glDeleteShader(shader_id);
 		shader_id = 0;
 	}
@@ -53,7 +54,7 @@ int link_shader(int vertex_shader, int fragment_shader) {
 	int success;
 	glGetProgramiv(shader_prog, GL_COMPILE_STATUS, &success);
 	char infoLog[512];
-	if(!success){
+	if (!success) {
 		glGetProgramInfoLog(shader_prog, 512, NULL, infoLog);
 		std::cerr << "Error during Shader linking: " << infoLog << std::endl;
 		glDeleteProgram(shader_prog);
@@ -62,7 +63,8 @@ int link_shader(int vertex_shader, int fragment_shader) {
 	return shader_prog;
 }
 
-void Shader::load_from_string(const std::string& vertex_src, const std::string& fragment_src) {
+void Shader::load_from_string(const std::string& vertex_src,
+							  const std::string& fragment_src) {
 	int v_shader_id = compile_shader(vertex_src.c_str(), GL_VERTEX_SHADER);
 	int f_shader_id = compile_shader(fragment_src.c_str(), GL_FRAGMENT_SHADER);
 	this->m_program_id = link_shader(v_shader_id, f_shader_id);
@@ -70,11 +72,12 @@ void Shader::load_from_string(const std::string& vertex_src, const std::string& 
 	glDeleteShader(f_shader_id);
 }
 
-Shader::Shader(const std::string& vertex_path, const std::string& fragment_path) {
+Shader::Shader(const std::string& vertex_path,
+			   const std::string& fragment_path) {
 	std::ifstream v_file(vertex_path);
 	std::ifstream f_file(fragment_path);
 
-	if(v_file.is_open() && f_file.is_open()) {
+	if (v_file.is_open() && f_file.is_open()) {
 		std::stringstream v_stream, f_stream;
 
 		v_stream << v_stream.rdbuf();
@@ -83,10 +86,9 @@ Shader::Shader(const std::string& vertex_path, const std::string& fragment_path)
 	}
 }
 
-void Shader::set_active() {
-	glUseProgram(this->m_program_id);
-}
+void Shader::set_active() { glUseProgram(this->m_program_id); }
 
 void Shader::set_mat4(const std::string& name, const glm::mat4& mat) {
-	glUniformMatrix4fv(glGetUniformLocation(this->m_program_id, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(this->m_program_id, name.c_str()),
+					   1, GL_FALSE, &mat[0][0]);
 }
