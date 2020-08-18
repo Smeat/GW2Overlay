@@ -284,6 +284,28 @@ void set_projection(float fov_rad, float w, float h, float near = 0.1f,
 	my_shader->set_mat4("projection", projection);
 }
 
+void update_camera(const LinkedMem* gw2_data) {
+	//	auto ctx = gw2_data->get_context();
+	//	TODO: draw POIs on the map, if it is open
+	//	This requires to translate the position of all objects to map
+	// coordinates
+	glm::vec3 cameraPos = glm::make_vec3(gw2_data->fCameraPosition);
+	glm::vec3 cameraFront = glm::make_vec3(gw2_data->fCameraFront);
+	glm::vec3 cameraUp = glm::make_vec3(gw2_data->fCameraTop);
+	// TODO: proper camera UP! Any way to get the target? Mumble link cam up
+	// is always 0 this is good enough for now
+	cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	glm::vec3 cameraTarget = glm::make_vec3(gw2_data->fAvatarPosition);
+	glm::vec3 cameraDirection =
+		glm::normalize(cameraPos - glm::make_vec3(cameraTarget));
+	glm::vec3 cameraRight =
+		glm::normalize(glm::cross(cameraUp, cameraDirection));
+
+	auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
+	my_shader->set_mat4("view", view);
+}
+
 int main(int argc, char** argv) {
 	float screenWidth = 1680.0f;
 	float screenHeight = 1050.0f;
@@ -372,22 +394,8 @@ int main(int argc, char** argv) {
 			load_xml("/tmp/test.xml", last_id);
 		}
 
-		glm::vec3 cameraPos = glm::make_vec3(gw2_data->fCameraPosition);
-		glm::vec3 cameraFront = glm::make_vec3(gw2_data->fCameraFront);
-		glm::vec3 cameraUp = glm::make_vec3(gw2_data->fCameraTop);
-		// TODO: proper camera UP! Any way to get the target? Mumble link cam up
-		// is always 0 this is good enough for now
-		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-		glm::vec3 cameraTarget = glm::make_vec3(gw2_data->fAvatarPosition);
-		glm::vec3 cameraDirection =
-			glm::normalize(cameraPos - glm::make_vec3(cameraTarget));
-		glm::vec3 cameraRight =
-			glm::normalize(glm::cross(cameraUp, cameraDirection));
-
-		view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
-		my_shader->set_mat4("view", view);
 		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS)) {
+			update_camera(gw2_data);
 			update_gl(delta);
 		} else {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
