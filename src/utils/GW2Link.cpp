@@ -23,6 +23,7 @@ void GW2Link::update_gw2(bool block) {
 						  (struct sockaddr *)&si_other, (socklen_t *)&slen)) >
 		0) {
 		// clang-format off
+		/*
 		printf("uiVersion %d, uiTick %d\n", data.uiVersion, data.uiTick);
 		printf("fAvatarPosition (%f %f %f) fAvatarFront (%f %f %f) fAvatarTop (% f % f % f)\n", data.fAvatarPosition[0], data.fAvatarPosition[1],
 			   data.fAvatarPosition[2],
@@ -34,12 +35,14 @@ void GW2Link::update_gw2(bool block) {
 			   data.fCameraTop[0], data.fCameraTop[1], data.fCameraTop[2]);
 		printf("Contextlen %d\n", data.context_len);
 		printf("Packet len %d should be %lu, diff % d ctx %lu\n ", len, sizeof(LinkedMem), int(sizeof(LinkedMem) - len), sizeof(MumbleContext));
+		*/
+		// clang-format on
 
 		this->m_gw2_data = data;
 	}
 }
 
-const LinkedMem* GW2Link::get_gw2_data() const { return &this->m_gw2_data; }
+const LinkedMem *GW2Link::get_gw2_data() const { return &this->m_gw2_data; }
 
 int GW2Link::create_socket() {
 	int fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -78,6 +81,6 @@ std::string LinkedMem::get_identity() const {
 	return ss.str();
 }
 
-const MumbleContext* LinkedMem::get_context() const {
-	return (MumbleContext*)this->context;
+const MumbleContext *LinkedMem::get_context() const {
+	return (MumbleContext *)this->context;
 }
