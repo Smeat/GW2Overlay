@@ -193,8 +193,12 @@ void load_xmls(const std::vector<std::string>& xml_files, int mapid) {
 			auto tex_iter = texture_file_map.find(type_it->second.m_icon_file);
 			Mesh my_mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second);
 			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));
-			obj->translate(iter->m_pos);
-			obj->scale({3.0f, 3.0f, 1.0f});
+			auto marker = markers.find(iter->m_type);
+			auto pos = iter->m_pos;
+			pos.y += marker->second.m_height_offset;
+			obj->translate(pos);
+			obj->scale({marker->second.m_icon_size * 3.0f,
+						marker->second.m_icon_size * 3.0f, 1.0f});
 			objects.push_back(obj);
 		}
 	}
