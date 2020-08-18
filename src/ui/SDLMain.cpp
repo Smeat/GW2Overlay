@@ -405,6 +405,12 @@ int main(int argc, char** argv) {
 
 	printf("OpenGL version %s\n", glGetString(GL_VERSION));
 	glEnable(GL_DEPTH_TEST);
+	glAlphaFunc(GL_GREATER, 0.5f);
+	glEnable(GL_ALPHA_TEST);
+
+	// TODO: fix blending
+	// glEnable(GL_BLEND);
+	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	const char* vertex_shader_src =
 		"#version 420 core\n"
