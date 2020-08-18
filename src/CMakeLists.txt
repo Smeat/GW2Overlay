@@ -1,6 +1,8 @@
 project(GW2Overlay)
 cmake_minimum_required(VERSION 3.8)
 
+set(CMAKE_CXX_STANDARD 17)
+
 find_package(X11 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)

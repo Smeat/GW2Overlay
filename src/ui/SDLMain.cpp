@@ -82,6 +82,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <filesystem>
 
 #include <boost/program_options.hpp>
 
@@ -341,6 +342,8 @@ int main(int argc, char** argv) {
 		("help,h", "show usage")
 		("xml", po::value<std::vector<std::string>>(),
 			"Path to xml file")
+		("xml-folder", po::value<std::vector<std::string>>(),
+			"Path to folder with xml files")
 		("width,w", po::value<float>()->default_value(1680.0f),
 			"Display width")
 		("height", po::value<float>()->default_value(1050.0f),
@@ -364,6 +367,19 @@ int main(int argc, char** argv) {
 	std::vector<std::string> xml_files;
 	if (vm.count("xml")) {
 		xml_files = vm["xml"].as<std::vector<std::string>>();
+	}
+	if (vm.count("xml-folder")) {
+		auto folder_vec = vm["xml-folder"].as<std::vector<std::string>>();
+		for (auto iter = folder_vec.begin(); iter != folder_vec.end(); ++iter) {
+			for (const auto& entry :
+				 std::filesystem::directory_iterator(*iter)) {
+				if (entry.is_regular_file() &&
+					entry.path().extension() == ".xml") {
+					xml_files.push_back(entry.path().string());
+					std::cout << entry.path() << std::endl;
+				}
+			}
+		}
 	}
 
 	float screenWidth = vm["width"].as<float>();
