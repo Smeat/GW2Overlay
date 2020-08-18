@@ -387,7 +387,7 @@ int main(int argc, char** argv) {
 
 		view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_mat4("view", view);
-		if ((ctx->get_ui_state(UI_STATE::MAP_OPEN))) {
+		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS)) {
 			update_gl(delta);
 		} else {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
