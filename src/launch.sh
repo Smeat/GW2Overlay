@@ -40,8 +40,14 @@ MUMBLE_PID=$!
 $OVERLAY_CMD &
 OVERLAY_PID=$!
 
+function kill_children() {
+	kill ${OVERLAY_PID}
+	kill ${MUMBLE_PID}
+}
+
+trap kill_children SIGTERM SIGINT
+
 tail --pid=${GW2_PID} -f /dev/null
 
-kill ${OVERLAY_PID}
-kill ${MUMBLE_PID}
+kill_children
 
