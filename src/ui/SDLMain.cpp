@@ -376,11 +376,10 @@ int main(int argc, char** argv) {
 	"uniform mat4 view;"
 	"uniform mat4 projection;"
 	"void main() {"
-    "   gl_Position = projection * view * transform * vec4(aPos, 1.0f);"
-	"   ourColor = aColor;"
-	"   TexCoord = aTexCoord;"
-	"TexCoord.y *= -1;"
-	"gl_Position = projection * (view*transform * vec4(0.0, 0.0, 0.0, 1.0) + vec4(aPos.x, aPos.y, 0.0, 0.0));"
+		"ourColor = aColor;"
+		"TexCoord = aTexCoord;"
+		"TexCoord.y *= -1;"
+		"gl_Position = projection * (view*transform * vec4(0.0, 0.0, 0.0, 1.0) + vec4(aPos.x, aPos.y, 0.0, 0.0));"
 	"}\0";
 
 	const char *fragment_shader_src = "#version 420 core\n"
@@ -389,9 +388,8 @@ int main(int argc, char** argv) {
 	"in vec2 TexCoord;"
 	"uniform sampler2D ourTexture;"
 	"void main() {\n"
-	//"FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-	//"FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0f);"
-	"FragColor = texture(ourTexture, TexCoord);"
+		//"FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0f);"
+		"FragColor = texture(ourTexture, TexCoord);"
 	"}";
 
 	glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
