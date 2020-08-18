@@ -18,7 +18,18 @@ void GW2Link::update_gw2(bool block) {
 	int len = 0, slen = sizeof(si_other);
 	LinkedMem data;
 	int flags = 0;
-	if (!block) flags |= MSG_DONTWAIT;
+	if (block) {
+		int timeout = 200;
+		struct timeval tv;
+		tv.tv_sec = timeout / 1000;
+		tv.tv_usec = (timeout % 1000) * 1000;
+		fd_set rfds;
+		FD_ZERO(&rfds);
+		FD_SET(this->m_socket, &rfds);
+		::select(FD_SETSIZE, &rfds, nullptr, nullptr, &tv);
+	} else {
+		flags |= MSG_DONTWAIT;
+	}
 	if ((len = ::recvfrom(this->m_socket, &data, sizeof(data), MSG_DONTWAIT,
 						  (struct sockaddr *)&si_other, (socklen_t *)&slen)) >
 		0) {

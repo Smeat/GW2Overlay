@@ -410,7 +410,7 @@ int main(int argc, char** argv) {
 					break;
 			}
 		}
-		SDL_Delay(1000 / 100);
+		// SDL_Delay(1000 / 100);
 	}
 	return 0;
 }
