@@ -18,12 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Texture.h"
+#include <GL/glew.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
 #include <GL/gl.h>
-#include <GL/glew.h>
 
 #include <SDL2/SDL_surface.h>
 #include <iostream>
