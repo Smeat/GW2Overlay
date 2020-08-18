@@ -90,6 +90,7 @@
 #include "Shader.h"
 
 #include "../utils/GW2Link.h"
+#include "../utils/POI.h"
 #include "../utils/json/json.hpp"
 #include "../utils/xml/pugixml.hpp"
 #include "Texture.h"
@@ -103,33 +104,57 @@ Display* mXDisplay;
 std::vector<std::shared_ptr<Object>> objects;
 std::shared_ptr<Shader> my_shader(new Shader);
 
-void load_xml(const std::string& filename, int map_id) {
-	std::unordered_map<std::string, std::string> type_file_map;
-	std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
+typedef std::unordered_map<std::string, MarkerCategory> marker_type_map;
+
+void load_xml_types(const std::string& filename, std::vector<POI>* poi_vec,
+					marker_type_map* type_file_map) {
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(filename.c_str());
 	// load textures
 
-	std::function<void(const std::string&, pugi::xml_node)> traverse_func;
-	traverse_func = [&](const std::string& name, pugi::xml_node node) {
+	std::function<void(const std::string&, pugi::xml_node)>
+		traverse_markers_func;
+	traverse_markers_func = [&](const std::string& name, pugi::xml_node node) {
 		for (pugi::xml_node n : node.children()) {
 			std::string new_name =
 				name.empty() ? n.attribute("name").value()
 							 : name + "." + n.attribute("name").value();
-			traverse_func(new_name, n);
+			traverse_markers_func(new_name, n);
 		}
 		if (node.name() == std::string("MarkerCategory")) {
 			if (!node.attribute("iconFile").empty()) {
-				type_file_map[name] = node.attribute("iconFile").value();
-				//			std::cout << "Adding " << name << " : " <<
-				// node.attribute("iconFile").value() << std::endl;
+				MarkerCategory cat;
+				cat.m_icon_file = node.attribute("iconFile").value();
+				cat.m_icon_size = node.attribute("iconSize").as_float(1.0f);
+				cat.m_height_offset =
+					node.attribute("heightOffset").as_float(0);
+				cat.m_display_name = node.attribute("DisaplyName").value();
+				(*type_file_map)[name] = cat;
 			}
 		}
 		return "";
 	};
 
-	traverse_func("", doc.child("OverlayData"));
+	std::function<void(pugi::xml_node)> traverse_poi_func;
+	traverse_poi_func = [&](pugi::xml_node node) {
+		for (pugi::xml_node n : node.children()) {
+			traverse_poi_func(n);
+		}
+		if (node.name() == std::string("POI")) {
+			POI poi;
+			poi.m_map_id = node.attribute("MapID").as_int();
+			poi.m_pos.x = node.attribute("xpos").as_float();
+			poi.m_pos.y = node.attribute("ypos").as_float();
+			poi.m_pos.z = node.attribute("zpos").as_float();
+			poi.m_type = node.attribute("type").value();
+			poi_vec->push_back(poi);
+		}
+	};
+	traverse_markers_func("", doc.child("OverlayData"));
+	traverse_poi_func(doc.child("OverlayData"));
+}
 
+void load_xmls(const std::vector<std::string>& xml_files, int mapid) {
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f),
 							  glm::vec3(1.0f, 0.0f, 0.0f),
@@ -144,30 +169,30 @@ void load_xml(const std::string& filename, int map_id) {
 							  glm::vec3(1.0f, 1.0f, 0.0f),
 							  glm::vec2(0.0f, 1.0f)));
 	objects.clear();
-	for (auto poi = doc.child("OverlayData").child("POIs").child("POI"); poi;
-		 poi = poi.next_sibling("POI")) {
-		if (poi.attribute("MapID").as_int() == map_id) {
-			// std::cout << "POI: " << poi.attribute("type").value() <<
-			// std::endl;
-			glm::vec3 pos(poi.attribute("xpos").as_float(),
-						  poi.attribute("ypos").as_float(),
-						  poi.attribute("zpos").as_float());
-			std::string poi_name = poi.attribute("type").value();
-			auto filename = type_file_map.find(poi_name);
-			if (filename == type_file_map.end()) {
-				std::cout << "Couldn't find " << poi_name << std::endl;
+	std::vector<POI> pois;
+	marker_type_map markers;
+	std::unordered_map<std::string, std::shared_ptr<Texture>> texture_file_map;
+	for (auto iter = xml_files.begin(); iter != xml_files.end(); ++iter) {
+		std::cout << "Loading " << *iter << std::endl;
+		load_xml_types(*iter, &pois, &markers);
+	}
+	for (auto iter = pois.begin(); iter != pois.end(); ++iter) {
+		if (iter->m_map_id == mapid) {
+			auto type_it = markers.find(iter->m_type);
+			if (type_it == markers.end()) {
+				std::cout << "Couldn't find " << iter->m_type << std::endl;
 				continue;
 			}
-			if (textures.find(filename->second) == textures.end()) {
-				//			std::cout << "loading texture " << filename->second
-				//<< std::endl;
-				std::shared_ptr<Texture> tex(new Texture(filename->second));
-				textures.insert({filename->second, tex});
+			if (texture_file_map.find(type_it->second.m_icon_file) ==
+				texture_file_map.end()) {
+				std::shared_ptr<Texture> tex(
+					new Texture(type_it->second.m_icon_file));
+				texture_file_map.insert({type_it->second.m_icon_file, tex});
 			}
-			auto tex_iter = textures.find(filename->second);
+			auto tex_iter = texture_file_map.find(type_it->second.m_icon_file);
 			Mesh my_mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second);
 			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));
-			obj->translate(pos);
+			obj->translate(iter->m_pos);
 			obj->scale({3.0f, 3.0f, 1.0f});
 			objects.push_back(obj);
 		}
@@ -406,7 +431,6 @@ int main(int argc, char** argv) {
 	uint64_t last_call = 0;
 
 	int last_id = 0;
-	load_xml("/tmp/test.xml", 50);
 	{
 		gw_link.update_gw2(true);
 		std::string identity = gw2_data->get_identity();
@@ -427,7 +451,7 @@ int main(int argc, char** argv) {
 		if (ctx->mapId != last_id) {
 			printf("Map id changed to %d\n", ctx->mapId);
 			last_id = ctx->mapId;
-			load_xml("/tmp/test.xml", last_id);
+			load_xmls(xml_files, last_id);
 		}
 
 		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS)) {
