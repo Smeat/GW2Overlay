@@ -4,11 +4,10 @@ This is aimed to be a (very basic) GW2 overlay which runs natively on Linux as a
 The GW2 data is sent via UDP from a python script inside the wine environment, since using mmap with wine is not straightforward.
 
 ## Usage
- 1. Start GW2
- 2. _After_ GW2 is launched, start the "mumble.py" script inside the same wine prefix
- 3. Launch the Overlay
- 
-  I've tried launching the python program with a batch script with 20 sec delay, but that didn't work. I always need to open a wine console after GW2 is up an running. Not sure why
+ * Launch the `launch.sh` script with the path to the `GW2Overlay` binary
+ * Start GW2
+
+It shouldn't matter in which order you start the programs, but as there is a bit of work done to ensure the overlay is started at the correct time, it might help to start GW2 first and start the overlay once you are on the character select screen (or later).
 
 ### Status
  * Current status: Very early PoC
