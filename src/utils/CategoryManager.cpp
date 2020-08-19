@@ -1,7 +1,24 @@
-#include "TacoLoader.h"
+#include "CategoryManager.h"
 
-void load_xml_types(const std::string& filename, poi_container* poi_vec,
-					category_container* category_vec) {
+#include "POI.h"
+#include "xml/pugixml.hpp"
+
+void print_categories(const category_container* cat,
+					  const std::string& prefix = "") {
+	for (auto iter = cat->begin(); iter != cat->end(); ++iter) {
+		std::cout << prefix << "Display: " << (*iter)->m_display_name
+				  << " Name: " << (*iter)->m_name
+				  << " Children: " << (*iter)->get_children()->size()
+				  << std::endl;
+
+		print_categories((*iter)->get_children(), prefix + "-");
+	}
+}
+
+void CategoryManager::load_taco_xml(const std::string& filename) {
+	std::cout << "Loading taco xml file " << filename << " we already have "
+			  << this->m_pois.size() << " pois and "
+			  << this->m_categories.size() << " root categories" << std::endl;
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(filename.c_str());
 	// load textures
@@ -18,13 +35,13 @@ void load_xml_types(const std::string& filename, poi_container* poi_vec,
 			cat->m_display_name = node.attribute("DisplayName").value();
 			cat->m_name = node.attribute("name").value();
 			if (parent) {
-				parent->m_children.insert(cat);
+				auto ret = parent->m_children.insert(cat);
+				parent = *std::get<0>(ret);
+
 			} else {
-				// "root" node
-				category_vec->insert(cat);
+				auto ret = this->m_categories.insert(cat);
+				parent = *std::get<0>(ret);
 			}
-			// set new parent
-			parent = cat;
 		}
 		for (pugi::xml_node n : node.children()) {
 			traverse_markers_func(n, parent);
@@ -44,9 +61,21 @@ void load_xml_types(const std::string& filename, poi_container* poi_vec,
 			poi.m_pos.y = node.attribute("ypos").as_float();
 			poi.m_pos.z = node.attribute("zpos").as_float();
 			poi.m_type = node.attribute("type").value();
-			poi_vec->push_back(poi);
+			this->m_pois.push_back(poi);
 		}
 	};
 	traverse_markers_func(doc.child("OverlayData"), nullptr);
 	traverse_poi_func(doc.child("OverlayData"));
 }
+void CategoryManager::load_taco_xmls(
+	const std::vector<std::string>& filenames) {
+	for (auto iter = filenames.begin(); iter != filenames.end(); ++iter) {
+		this->load_taco_xml(*iter);
+		print_categories(&this->m_categories);
+	}
+}
+
+const category_container* CategoryManager::get_categories() const {
+	return &this->m_categories;
+}
+const poi_container* CategoryManager::get_pois() const { return &this->m_pois; }

@@ -2,9 +2,8 @@
 
 #include <iostream>
 
-OptionsIcon::OptionsIcon(category_container cats, QWidget* parent,
-						 Qt::WindowFlags f)
-	: QLabel(parent, f), m_option_window(cats) {
+OptionsIcon::OptionsIcon(QWidget* parent, Qt::WindowFlags f)
+	: QLabel(parent, f) {
 	this->m_option_window.setWindowFlags(Qt::Dialog);
 }
 

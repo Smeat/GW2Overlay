@@ -13,7 +13,7 @@ class OptionsIcon : public QLabel {
 	Q_OBJECT
 
  public:
-	OptionsIcon(category_container cats, QWidget* parent = nullptr,
+	OptionsIcon(QWidget* parent = nullptr,
 				Qt::WindowFlags f = Qt::WindowFlags());
 
  public slots:

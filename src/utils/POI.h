@@ -43,6 +43,7 @@ struct MarkerCategory {
 		return !this->operator==(other);
 	}
 
+	const category_container* get_children() const;
 	std::shared_ptr<MarkerCategory> get_child(const std::string& name);
 	static std::shared_ptr<MarkerCategory> find_children(
 		const category_container children, const std::string& name);

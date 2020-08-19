@@ -2,24 +2,29 @@
 #include <cstdlib>
 #include "ui_OptionsWindow.h"
 
+#include "../../utils/CategoryManager.h"
 #include "../../utils/POI.h"
 
-OptionsWindow::OptionsWindow(category_container cats, QWidget* parent)
+OptionsWindow::OptionsWindow(QWidget* parent)
 	: QMainWindow(parent), m_ui(new Ui::OptionsWindow) {
 	this->m_ui->setupUi(this);
 
 	this->m_ui->treeWidget->setColumnCount(2);
 	this->m_ui->treeWidget->setHeaderLabels({"Display Name", "Name"});
-
-	this->set_categories(cats);
+	this->update_categories();
 }
 
 OptionsWindow::~OptionsWindow() { delete this->m_ui; }
 
-void OptionsWindow::set_categories(category_container cats,
+void OptionsWindow::update_categories() {
+	// TODO: clear the tree before updating?
+	// this->m_ui->treeWidget.clear();
+	this->set_categories(CategoryManager::getInstance().get_categories());
+}
+
+void OptionsWindow::set_categories(const category_container* cats,
 								   QTreeWidgetItem* parent) {
-	for (auto iter = cats.begin(); iter != cats.end(); ++iter) {
-		std::cout << "Adding " << (*iter)->m_display_name << std::endl;
+	for (auto iter = cats->begin(); iter != cats->end(); ++iter) {
 		QTreeWidgetItem* item = nullptr;
 		if (parent) {
 			item = new QTreeWidgetItem();
@@ -38,8 +43,6 @@ void OptionsWindow::set_categories(category_container cats,
 			item->setCheckState(0, Qt::Checked);
 			this->m_ui->treeWidget->addTopLevelItem(item);
 		}
-		if ((*iter)->m_children.size()) {
-			this->set_categories((*iter)->m_children, item);
-		}
+		this->set_categories((*iter)->get_children(), item);
 	}
 }

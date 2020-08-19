@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "../../utils/POI.h"
-#include "../../utils/TacoLoader.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,11 +19,12 @@ class OptionsWindow : public QMainWindow {
 	Q_OBJECT
 
  public:
-	OptionsWindow(category_container cats, QWidget* parent = nullptr);
+	OptionsWindow(QWidget* parent = nullptr);
 	~OptionsWindow();
 
-	void set_categories(category_container cats,
+	void set_categories(const category_container* cats,
 						QTreeWidgetItem* parent = nullptr);
+	void update_categories();
 
  private:
 	Ui::OptionsWindow* m_ui;

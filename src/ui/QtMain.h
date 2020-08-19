@@ -6,6 +6,6 @@
 
 #include "../utils/POI.h"
 
-int qt_main(int argc, char** argv, category_container cats);
+int qt_main(int argc, char** argv);
 
 #endif

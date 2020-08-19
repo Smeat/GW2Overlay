@@ -8,9 +8,9 @@
 
 #include "../utils/POI.h"
 
-int qt_main(int argc, char** argv, category_container cats) {
+int qt_main(int argc, char** argv) {
 	QApplication a(argc, argv);
-	OptionsIcon options_icon(cats);
+	OptionsIcon options_icon;
 	options_icon.resize(100, 30);
 	// clang-format off
 	options_icon.setWindowFlags(

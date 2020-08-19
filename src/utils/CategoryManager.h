@@ -1,0 +1,28 @@
+#ifndef __CATEGORY_MANAGER_H__
+#define __CATEGORY_MANAGER_H__
+
+#include <memory>
+#include <vector>
+#include "POI.h"
+
+class CategoryManager {
+ public:
+	static CategoryManager& getInstance() {
+		static CategoryManager instance;
+		return instance;
+	}
+	void load_taco_xml(const std::string& filename);
+	void load_taco_xmls(const std::vector<std::string>& filenames);
+	const category_container* get_categories() const;
+	const poi_container* get_pois() const;
+
+ private:
+	CategoryManager() = default;
+	CategoryManager(CategoryManager const&);
+	void operator=(CategoryManager const&);
+
+	category_container m_categories;
+	poi_container m_pois;
+};
+
+#endif	// __CATEGORY_MANAGER_H__

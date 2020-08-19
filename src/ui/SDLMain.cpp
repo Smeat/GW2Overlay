@@ -90,9 +90,9 @@
 #include "Object.h"
 #include "Shader.h"
 
+#include "../utils/CategoryManager.h"
 #include "../utils/GW2Link.h"
 #include "../utils/POI.h"
-#include "../utils/TacoLoader.h"
 #include "../utils/json/json.hpp"
 #include "../utils/xml/pugixml.hpp"
 #include "QtMain.h"
@@ -107,8 +107,7 @@ Display* mXDisplay;
 std::vector<std::shared_ptr<Object>> objects;
 std::shared_ptr<Shader> my_shader(new Shader);
 
-void load_xmls(const std::vector<std::string>& xml_files, int mapid,
-			   std::shared_ptr<category_container>* marker_output = nullptr) {
+void load_objects(int mapid) {
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f),
 							  glm::vec3(1.0f, 0.0f, 0.0f),
@@ -123,15 +122,12 @@ void load_xmls(const std::vector<std::string>& xml_files, int mapid,
 							  glm::vec3(1.0f, 1.0f, 0.0f),
 							  glm::vec2(0.0f, 1.0f)));
 	objects.clear();
-	std::vector<POI> pois;
-	std::shared_ptr<category_container> markers(new category_container);
 	std::unordered_map<std::string, std::shared_ptr<Texture>> texture_file_map;
-	for (auto iter = xml_files.begin(); iter != xml_files.end(); ++iter) {
-		std::cout << "Loading " << *iter << std::endl;
-		load_xml_types(*iter, &pois, markers.get());
-	}
 
-	for (auto iter = pois.begin(); iter != pois.end(); ++iter) {
+	auto markers = CategoryManager::getInstance().get_categories();
+	auto pois = CategoryManager::getInstance().get_pois();
+
+	for (auto iter = pois->begin(); iter != pois->end(); ++iter) {
 		if (iter->m_map_id == mapid) {
 			auto cat = MarkerCategory::find_children(*markers, iter->m_type);
 			if (!cat) {
@@ -154,9 +150,6 @@ void load_xmls(const std::vector<std::string>& xml_files, int mapid,
 				{cat->m_icon_size * 3.0f, cat->m_icon_size * 3.0f, 1.0f});
 			objects.push_back(obj);
 		}
-	}
-	if (marker_output) {
-		*marker_output = markers;
 	}
 }
 
@@ -336,7 +329,6 @@ int main(int argc, char** argv) {
 				if (entry.is_regular_file() &&
 					entry.path().extension() == ".xml") {
 					xml_files.push_back(entry.path().string());
-					std::cout << entry.path() << std::endl;
 				}
 			}
 		}
@@ -407,6 +399,8 @@ int main(int argc, char** argv) {
 	my_shader->set_mat4("transform", model);
 	my_shader->set_mat4("view", view);
 
+	CategoryManager::getInstance().load_taco_xmls(xml_files);
+
 	GW2Link gw_link;
 	auto gw2_data = gw_link.get_gw2_data();
 
@@ -428,10 +422,7 @@ int main(int argc, char** argv) {
 		set_projection(fov, screenWidth, screenHeight);
 	}
 
-	// TODO FIXME: make this better, without this monster
-	std::shared_ptr<category_container> markers;
-	load_xmls(xml_files, last_id, &markers);
-	std::thread qt_thread([&]() { qt_main(argc, argv, *markers); });
+	std::thread qt_thread([&]() { qt_main(argc, argv); });
 	while (running) {
 		uint64_t delta = SDL_GetTicks() - last_call;
 		gw_link.update_gw2(true);
@@ -439,7 +430,8 @@ int main(int argc, char** argv) {
 		if (ctx->mapId != last_id) {
 			printf("Map id changed to %d\n", ctx->mapId);
 			last_id = ctx->mapId;
-			load_xmls(xml_files, last_id);
+			// TODO: load other objects into gl
+			load_objects(last_id);
 		}
 
 		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS)) {
