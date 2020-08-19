@@ -107,31 +107,35 @@ std::shared_ptr<Shader> my_shader(new Shader);
 
 typedef std::unordered_map<std::string, MarkerCategory> marker_type_map;
 
-void load_xml_types(const std::string& filename, std::vector<POI>* poi_vec,
-					marker_type_map* type_file_map) {
+void load_xml_types(
+	const std::string& filename, std::vector<POI>* poi_vec,
+	std::vector<std::shared_ptr<MarkerCategory>>* category_vec) {
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(filename.c_str());
 	// load textures
 
-	std::function<void(const std::string&, pugi::xml_node)>
+	std::function<void(pugi::xml_node, std::shared_ptr<MarkerCategory>)>
 		traverse_markers_func;
-	traverse_markers_func = [&](const std::string& name, pugi::xml_node node) {
-		for (pugi::xml_node n : node.children()) {
-			std::string new_name =
-				name.empty() ? n.attribute("name").value()
-							 : name + "." + n.attribute("name").value();
-			traverse_markers_func(new_name, n);
-		}
+	traverse_markers_func = [&](pugi::xml_node node,
+								std::shared_ptr<MarkerCategory> parent) {
 		if (node.name() == std::string("MarkerCategory")) {
-			if (!node.attribute("iconFile").empty()) {
-				MarkerCategory cat;
-				cat.m_icon_file = node.attribute("iconFile").value();
-				cat.m_icon_size = node.attribute("iconSize").as_float(1.0f);
-				cat.m_height_offset =
-					node.attribute("heightOffset").as_float(0);
-				cat.m_display_name = node.attribute("DisaplyName").value();
-				(*type_file_map)[name] = cat;
+			std::shared_ptr<MarkerCategory> cat(new MarkerCategory);
+			cat->m_icon_file = node.attribute("iconFile").value();
+			cat->m_icon_size = node.attribute("iconSize").as_float(1.0f);
+			cat->m_height_offset = node.attribute("heightOffset").as_float(0);
+			cat->m_display_name = node.attribute("DisaplayName").value();
+			cat->m_name = node.attribute("name").value();
+			if (parent) {
+				parent->m_children.push_back(cat);
+			} else {
+				// "root" node
+				category_vec->push_back(cat);
 			}
+			// set new parent
+			parent = cat;
+		}
+		for (pugi::xml_node n : node.children()) {
+			traverse_markers_func(n, parent);
 		}
 		return "";
 	};
@@ -151,7 +155,7 @@ void load_xml_types(const std::string& filename, std::vector<POI>* poi_vec,
 			poi_vec->push_back(poi);
 		}
 	};
-	traverse_markers_func("", doc.child("OverlayData"));
+	traverse_markers_func(doc.child("OverlayData"), nullptr);
 	traverse_poi_func(doc.child("OverlayData"));
 }
 
@@ -171,35 +175,34 @@ void load_xmls(const std::vector<std::string>& xml_files, int mapid) {
 							  glm::vec2(0.0f, 1.0f)));
 	objects.clear();
 	std::vector<POI> pois;
-	marker_type_map markers;
+	std::vector<std::shared_ptr<MarkerCategory>> markers;
 	std::unordered_map<std::string, std::shared_ptr<Texture>> texture_file_map;
 	for (auto iter = xml_files.begin(); iter != xml_files.end(); ++iter) {
 		std::cout << "Loading " << *iter << std::endl;
 		load_xml_types(*iter, &pois, &markers);
 	}
+
 	for (auto iter = pois.begin(); iter != pois.end(); ++iter) {
 		if (iter->m_map_id == mapid) {
-			auto type_it = markers.find(iter->m_type);
-			if (type_it == markers.end()) {
+			auto cat = MarkerCategory::find_children(markers, iter->m_type);
+			if (!cat) {
 				std::cout << "Couldn't find " << iter->m_type << std::endl;
 				continue;
 			}
-			if (texture_file_map.find(type_it->second.m_icon_file) ==
+			if (texture_file_map.find(cat->m_icon_file) ==
 				texture_file_map.end()) {
-				std::shared_ptr<Texture> tex(
-					new Texture(type_it->second.m_icon_file));
-				texture_file_map.insert({type_it->second.m_icon_file, tex});
+				std::shared_ptr<Texture> tex(new Texture(cat->m_icon_file));
+				texture_file_map.insert({cat->m_icon_file, tex});
 			}
-			auto tex_iter = texture_file_map.find(type_it->second.m_icon_file);
+			auto tex_iter = texture_file_map.find(cat->m_icon_file);
 			std::shared_ptr<Mesh> my_mesh(
 				new Mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second));
 			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));
-			auto marker = markers.find(iter->m_type);
 			auto pos = iter->m_pos;
-			pos.y += marker->second.m_height_offset;
+			pos.y += cat->m_height_offset;
 			obj->translate(pos);
-			obj->scale({marker->second.m_icon_size * 3.0f,
-						marker->second.m_icon_size * 3.0f, 1.0f});
+			obj->scale(
+				{cat->m_icon_size * 3.0f, cat->m_icon_size * 3.0f, 1.0f});
 			objects.push_back(obj);
 		}
 	}
@@ -408,7 +411,8 @@ int main(int argc, char** argv) {
 	glAlphaFunc(GL_GREATER, 0.5f);
 	glEnable(GL_ALPHA_TEST);
 
-	// TODO: fix blending
+	// TODO: fix blending. since almost all objects have transparency, they all
+	// need to be sorted and drawn in the correct order is that worth it?
 	// glEnable(GL_BLEND);
 	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
