@@ -53,6 +53,7 @@ struct POI {
 	std::string m_type;
 	int m_map_id;
 	glm::vec3 m_pos;
+	std::string m_icon_file;
 };
 
 typedef std::vector<POI> poi_container;

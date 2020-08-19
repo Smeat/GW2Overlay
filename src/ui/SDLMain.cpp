@@ -60,6 +60,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <thread>
 #include <unordered_map>
 
@@ -135,14 +136,23 @@ void load_objects(int mapid) {
 				continue;
 			}
 			if (!cat->m_enabled) continue;
-			if (texture_file_map.find(cat->m_icon_file) ==
-				texture_file_map.end()) {
-				std::shared_ptr<Texture> tex(new Texture(cat->m_icon_file));
-				std::cout << "Loading texture with path " << cat->m_icon_file
-						  << std::endl;
-				texture_file_map.insert({cat->m_icon_file, tex});
+			// let poi icon file overwrite the category icon file
+			std::string icon_file = cat->m_icon_file;
+			if (!iter->m_icon_file.empty()) {
+				icon_file = iter->m_icon_file;
+				std::cout << "Using icon from poi " << icon_file << std::endl;
 			}
-			auto tex_iter = texture_file_map.find(cat->m_icon_file);
+			if (icon_file.empty()) {
+				// use the default icon file
+				icon_file = "Data/arrow.png";
+			}
+			if (texture_file_map.find(icon_file) == texture_file_map.end()) {
+				std::shared_ptr<Texture> tex(new Texture(icon_file));
+				std::cout << "Loading texture with path " << icon_file
+						  << std::endl;
+				texture_file_map.insert({icon_file, tex});
+			}
+			auto tex_iter = texture_file_map.find(icon_file);
 			std::shared_ptr<Mesh> my_mesh(
 				new Mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second));
 			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));

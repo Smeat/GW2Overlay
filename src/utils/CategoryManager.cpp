@@ -66,6 +66,7 @@ void CategoryManager::load_taco_xml(const std::string& filename) {
 			poi.m_pos.y = node.attribute("ypos").as_float();
 			poi.m_pos.z = node.attribute("zpos").as_float();
 			poi.m_type = node.attribute("type").value();
+			poi.m_icon_file = node.attribute("iconFile").value();
 			this->m_pois.push_back(poi);
 		}
 	};
