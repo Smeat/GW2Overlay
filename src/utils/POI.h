@@ -4,11 +4,16 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include <glm/vec3.hpp>
+
+struct MarkerCategory;
+
+typedef std::set<std::shared_ptr<MarkerCategory>> category_container;
 
 struct MarkerCategory {
 	std::string m_name;
@@ -17,7 +22,7 @@ struct MarkerCategory {
 	float m_icon_size = 1.0f;
 	float m_height_offset = 0.0f;
 	bool m_active = true;
-	std::vector<std::shared_ptr<MarkerCategory>> m_children;
+	category_container m_children;
 
 	std::shared_ptr<MarkerCategory> get_child(const std::string& name) {
 		std::vector<std::string> tokens;
@@ -50,8 +55,7 @@ struct MarkerCategory {
 	}
 
 	static std::shared_ptr<MarkerCategory> find_children(
-		const std::vector<std::shared_ptr<MarkerCategory>> children,
-		const std::string& name) {
+		const category_container children, const std::string& name) {
 		for (auto iter = children.begin(); iter != children.end(); ++iter) {
 			auto child = (*iter)->get_child(name);
 			if (child) return child;
@@ -65,5 +69,7 @@ struct POI {
 	int m_map_id;
 	glm::vec3 m_pos;
 };
+
+typedef std::vector<POI> poi_container;
 
 #endif

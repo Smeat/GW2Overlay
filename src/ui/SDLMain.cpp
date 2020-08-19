@@ -92,8 +92,10 @@
 
 #include "../utils/GW2Link.h"
 #include "../utils/POI.h"
+#include "../utils/TacoLoader.h"
 #include "../utils/json/json.hpp"
 #include "../utils/xml/pugixml.hpp"
+#include "QtMain.h"
 #include "Texture.h"
 
 using json = nlohmann::json;
@@ -105,61 +107,8 @@ Display* mXDisplay;
 std::vector<std::shared_ptr<Object>> objects;
 std::shared_ptr<Shader> my_shader(new Shader);
 
-typedef std::unordered_map<std::string, MarkerCategory> marker_type_map;
-
-void load_xml_types(
-	const std::string& filename, std::vector<POI>* poi_vec,
-	std::vector<std::shared_ptr<MarkerCategory>>* category_vec) {
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file(filename.c_str());
-	// load textures
-
-	std::function<void(pugi::xml_node, std::shared_ptr<MarkerCategory>)>
-		traverse_markers_func;
-	traverse_markers_func = [&](pugi::xml_node node,
-								std::shared_ptr<MarkerCategory> parent) {
-		if (node.name() == std::string("MarkerCategory")) {
-			std::shared_ptr<MarkerCategory> cat(new MarkerCategory);
-			cat->m_icon_file = node.attribute("iconFile").value();
-			cat->m_icon_size = node.attribute("iconSize").as_float(1.0f);
-			cat->m_height_offset = node.attribute("heightOffset").as_float(0);
-			cat->m_display_name = node.attribute("DisaplayName").value();
-			cat->m_name = node.attribute("name").value();
-			if (parent) {
-				parent->m_children.push_back(cat);
-			} else {
-				// "root" node
-				category_vec->push_back(cat);
-			}
-			// set new parent
-			parent = cat;
-		}
-		for (pugi::xml_node n : node.children()) {
-			traverse_markers_func(n, parent);
-		}
-		return "";
-	};
-
-	std::function<void(pugi::xml_node)> traverse_poi_func;
-	traverse_poi_func = [&](pugi::xml_node node) {
-		for (pugi::xml_node n : node.children()) {
-			traverse_poi_func(n);
-		}
-		if (node.name() == std::string("POI")) {
-			POI poi;
-			poi.m_map_id = node.attribute("MapID").as_int();
-			poi.m_pos.x = node.attribute("xpos").as_float();
-			poi.m_pos.y = node.attribute("ypos").as_float();
-			poi.m_pos.z = node.attribute("zpos").as_float();
-			poi.m_type = node.attribute("type").value();
-			poi_vec->push_back(poi);
-		}
-	};
-	traverse_markers_func(doc.child("OverlayData"), nullptr);
-	traverse_poi_func(doc.child("OverlayData"));
-}
-
-void load_xmls(const std::vector<std::string>& xml_files, int mapid) {
+void load_xmls(const std::vector<std::string>& xml_files, int mapid,
+			   std::shared_ptr<category_container>* marker_output = nullptr) {
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f),
 							  glm::vec3(1.0f, 0.0f, 0.0f),
@@ -175,16 +124,16 @@ void load_xmls(const std::vector<std::string>& xml_files, int mapid) {
 							  glm::vec2(0.0f, 1.0f)));
 	objects.clear();
 	std::vector<POI> pois;
-	std::vector<std::shared_ptr<MarkerCategory>> markers;
+	std::shared_ptr<category_container> markers(new category_container);
 	std::unordered_map<std::string, std::shared_ptr<Texture>> texture_file_map;
 	for (auto iter = xml_files.begin(); iter != xml_files.end(); ++iter) {
 		std::cout << "Loading " << *iter << std::endl;
-		load_xml_types(*iter, &pois, &markers);
+		load_xml_types(*iter, &pois, markers.get());
 	}
 
 	for (auto iter = pois.begin(); iter != pois.end(); ++iter) {
 		if (iter->m_map_id == mapid) {
-			auto cat = MarkerCategory::find_children(markers, iter->m_type);
+			auto cat = MarkerCategory::find_children(*markers, iter->m_type);
 			if (!cat) {
 				std::cout << "Couldn't find " << iter->m_type << std::endl;
 				continue;
@@ -205,6 +154,9 @@ void load_xmls(const std::vector<std::string>& xml_files, int mapid) {
 				{cat->m_icon_size * 3.0f, cat->m_icon_size * 3.0f, 1.0f});
 			objects.push_back(obj);
 		}
+	}
+	if (marker_output) {
+		*marker_output = markers;
 	}
 }
 
@@ -476,6 +428,10 @@ int main(int argc, char** argv) {
 		set_projection(fov, screenWidth, screenHeight);
 	}
 
+	// TODO FIXME: make this better, without this monster
+	std::shared_ptr<category_container> markers;
+	load_xmls(xml_files, last_id, &markers);
+	std::thread qt_thread([&]() { qt_main(argc, argv, *markers); });
 	while (running) {
 		uint64_t delta = SDL_GetTicks() - last_call;
 		gw_link.update_gw2(true);
@@ -504,5 +460,6 @@ int main(int argc, char** argv) {
 		}
 		// SDL_Delay(1000 / 100);
 	}
+
 	return 0;
 }
