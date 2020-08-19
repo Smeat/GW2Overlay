@@ -32,6 +32,7 @@ add_executable(GW2Overlay
 	ui/Mesh.cpp
 	utils/GW2Link.cpp
 	utils/TacoLoader.cpp
+	utils/POI.cpp
 	ui/QtMain.cpp
 	ui/qt/OptionsIcon.cpp
 	ui/qt/OptionsWindow.ui

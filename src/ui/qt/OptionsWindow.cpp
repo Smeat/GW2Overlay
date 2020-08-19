@@ -8,16 +8,9 @@ OptionsWindow::OptionsWindow(category_container cats, QWidget* parent)
 	: QMainWindow(parent), m_ui(new Ui::OptionsWindow) {
 	this->m_ui->setupUi(this);
 
-	this->m_ui->treeWidget->setColumnCount(1);
-	this->m_ui->treeWidget->setHeaderLabels({"Category"});
+	this->m_ui->treeWidget->setColumnCount(2);
+	this->m_ui->treeWidget->setHeaderLabels({"Display Name", "Name"});
 
-	QTreeWidgetItem* root = new QTreeWidgetItem(this->m_ui->treeWidget);
-	root->setText(0, "test");
-	root->setFlags(root->flags() | Qt::ItemIsUserCheckable |
-				   Qt::ItemIsSelectable);
-	root->setCheckState(0, Qt::Checked);
-
-	this->m_ui->treeWidget->addTopLevelItem(root);
 	this->set_categories(cats);
 }
 
@@ -31,6 +24,7 @@ void OptionsWindow::set_categories(category_container cats,
 		if (parent) {
 			item = new QTreeWidgetItem();
 			item->setText(0, (*iter)->m_display_name.c_str());
+			item->setText(1, (*iter)->m_name.c_str());
 			item->setFlags(item->flags() | Qt::ItemIsUserCheckable |
 						   Qt::ItemIsSelectable);
 			item->setCheckState(0, Qt::Checked);
@@ -38,6 +32,7 @@ void OptionsWindow::set_categories(category_container cats,
 		} else {
 			item = new QTreeWidgetItem(this->m_ui->treeWidget);
 			item->setText(0, (*iter)->m_display_name.c_str());
+			item->setText(1, (*iter)->m_name.c_str());
 			item->setFlags(item->flags() | Qt::ItemIsUserCheckable |
 						   Qt::ItemIsSelectable);
 			item->setCheckState(0, Qt::Checked);
