@@ -16,6 +16,10 @@ class CategoryManager {
 	const category_container* get_categories() const;
 	const poi_container* get_pois() const;
 
+	// TODO: add mutex
+	bool state_changed() { return this->m_state_changed; }
+	void set_state_changed(bool state) { this->m_state_changed = state; }
+
  private:
 	CategoryManager() = default;
 	CategoryManager(CategoryManager const&);
@@ -23,6 +27,9 @@ class CategoryManager {
 
 	category_container m_categories;
 	poi_container m_pois;
+
+	// signals a changed state (e.g. activated)
+	bool m_state_changed;
 };
 
 #endif	// __CATEGORY_MANAGER_H__

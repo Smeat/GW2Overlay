@@ -134,9 +134,12 @@ void load_objects(int mapid) {
 				std::cout << "Couldn't find " << iter->m_type << std::endl;
 				continue;
 			}
+			if (!cat->m_enabled) continue;
 			if (texture_file_map.find(cat->m_icon_file) ==
 				texture_file_map.end()) {
 				std::shared_ptr<Texture> tex(new Texture(cat->m_icon_file));
+				std::cout << "Loading texture with path " << cat->m_icon_file
+						  << std::endl;
 				texture_file_map.insert({cat->m_icon_file, tex});
 			}
 			auto tex_iter = texture_file_map.find(cat->m_icon_file);
@@ -430,8 +433,11 @@ int main(int argc, char** argv) {
 		if (ctx->mapId != last_id) {
 			printf("Map id changed to %d\n", ctx->mapId);
 			last_id = ctx->mapId;
-			// TODO: load other objects into gl
+			CategoryManager::getInstance().set_state_changed(true);
+		}
+		if (CategoryManager::getInstance().state_changed()) {
 			load_objects(last_id);
+			CategoryManager::getInstance().set_state_changed(false);
 		}
 
 		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS)) {

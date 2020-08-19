@@ -33,7 +33,7 @@ struct MarkerCategory {
 	std::string m_icon_file;
 	float m_icon_size = 1.0f;
 	float m_height_offset = 0.0f;
-	bool m_active = true;
+	bool m_enabled = true;
 	category_container m_children;
 
 	bool operator==(const MarkerCategory& other) {

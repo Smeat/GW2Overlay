@@ -15,6 +15,17 @@ class OptionsWindow;
 }
 QT_END_NAMESPACE
 
+class CategoryTreeWidgetItem : public QTreeWidgetItem {
+ public:
+	CategoryTreeWidgetItem(QTreeWidget* p) : QTreeWidgetItem(p) {}
+	CategoryTreeWidgetItem() : QTreeWidgetItem() {}
+	void setCategoryMarker(std::shared_ptr<MarkerCategory> d);
+	std::shared_ptr<MarkerCategory> getCategoryMarker();
+
+ private:
+	std::shared_ptr<MarkerCategory> m_cat;
+};
+
 class OptionsWindow : public QMainWindow {
 	Q_OBJECT
 
@@ -25,6 +36,8 @@ class OptionsWindow : public QMainWindow {
 	void set_categories(const category_container* cats,
 						QTreeWidgetItem* parent = nullptr);
 	void update_categories();
+ public slots:
+	void on_tree_click(QTreeWidgetItem* item, int column);
 
  private:
 	Ui::OptionsWindow* m_ui;
