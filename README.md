@@ -25,3 +25,5 @@ It shouldn't matter in which order you start the programs, but as there is a bit
  * POIs are moving a little bit. Probably due to delay
  * GW2 doesn't report the UP vector, therefore the perspective is not perfect
   * The current imeplementation seems to be good enough
+  
+ ![screenshot](https://user-images.githubusercontent.com/1054449/90751525-89bd8880-e2d6-11ea-9985-2ffa561d9049.png)
