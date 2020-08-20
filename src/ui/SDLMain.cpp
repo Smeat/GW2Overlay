@@ -51,8 +51,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <X11/X.h>
-#include <X11/Xutil.h>
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
@@ -63,17 +61,19 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
+#include <X11/X.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib-xcb.h>
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <xcb/shape.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/xfixes.h>
 #include <xcb/xinput.h>
 #include <xcb/xproto.h>
-#include <vector>
 
 #include <arpa/inet.h>
 #include <locale.h>
@@ -110,18 +110,10 @@ std::shared_ptr<Shader> my_shader(new Shader);
 
 void load_objects(int mapid) {
 	std::vector<Vertex> vertices;
-	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f),
-							  glm::vec3(1.0f, 0.0f, 0.0f),
-							  glm::vec2(1.0f, 1.0f)));
-	vertices.push_back(Vertex(glm::vec3(0.5f, -0.5f, 0.0f),
-							  glm::vec3(0.0f, 1.0f, 0.0f),
-							  glm::vec2(1.0f, 0.0f)));
-	vertices.push_back(Vertex(glm::vec3(-0.5f, -0.5f, 0.0f),
-							  glm::vec3(0.0f, 0.0f, 1.0f),
-							  glm::vec2(0.0f, 0.0f)));
-	vertices.push_back(Vertex(glm::vec3(-0.5f, 0.5f, 0.0f),
-							  glm::vec3(1.0f, 1.0f, 0.0f),
-							  glm::vec2(0.0f, 1.0f)));
+	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)));
+	vertices.push_back(Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)));
+	vertices.push_back(Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)));
+	vertices.push_back(Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 1.0f)));
 	objects.clear();
 	std::unordered_map<std::string, std::shared_ptr<Texture>> texture_file_map;
 
@@ -148,26 +140,22 @@ void load_objects(int mapid) {
 			}
 			if (texture_file_map.find(icon_file) == texture_file_map.end()) {
 				std::shared_ptr<Texture> tex(new Texture(icon_file));
-				std::cout << "Loading texture with path " << icon_file
-						  << std::endl;
+				std::cout << "Loading texture with path " << icon_file << std::endl;
 				texture_file_map.insert({icon_file, tex});
 			}
 			auto tex_iter = texture_file_map.find(icon_file);
-			std::shared_ptr<Mesh> my_mesh(
-				new Mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second));
+			std::shared_ptr<Mesh> my_mesh(new Mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second));
 			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));
 			auto pos = iter->m_pos;
 			pos.y += cat->m_height_offset;
 			obj->translate(pos);
-			obj->scale(
-				{cat->m_icon_size * 3.0f, cat->m_icon_size * 3.0f, 1.0f});
+			obj->scale({cat->m_icon_size * 3.0f, cat->m_icon_size * 3.0f, 1.0f});
 			objects.push_back(obj);
 		}
 	}
 }
 
-SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w,
-										int h) {
+SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w, int h) {
 	mXDisplay = XOpenDisplay(0);
 
 	if (mXDisplay == 0) {
@@ -177,36 +165,30 @@ SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w,
 	xcb_connection_t* xconn = XGetXCBConnection(mXDisplay);
 
 	XVisualInfo visualinfo;
-	XMatchVisualInfo(mXDisplay, DefaultScreen(mXDisplay), 32, TrueColor,
-					 &visualinfo);
+	XMatchVisualInfo(mXDisplay, DefaultScreen(mXDisplay), 32, TrueColor, &visualinfo);
 
 	GC gc;
 	XSetWindowAttributes attr;
-	attr.colormap = XCreateColormap(mXDisplay, DefaultRootWindow(mXDisplay),
-									visualinfo.visual, AllocNone);
+	attr.colormap = XCreateColormap(mXDisplay, DefaultRootWindow(mXDisplay), visualinfo.visual, AllocNone);
 	attr.event_mask = NoEventMask;
 	attr.background_pixmap = None;
 	attr.border_pixel = 0;
 
-	mXWindow = XCreateWindow(
-		mXDisplay, DefaultRootWindow(mXDisplay), x, y, w,
-		h,	// x,y,width,height : are possibly opverwriteen by window manager
-		0, visualinfo.depth, InputOutput, visualinfo.visual,
-		CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
+	mXWindow = XCreateWindow(mXDisplay, DefaultRootWindow(mXDisplay), x, y, w,
+							 h,	 // x,y,width,height : are possibly opverwriteen by window manager
+							 0, visualinfo.depth, InputOutput, visualinfo.visual,
+							 CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
 	gc = XCreateGC(mXDisplay, mXWindow, 0, 0);
 	printf("Window has id: %lu\n", mXWindow);
 
-	int baseEventMask =
-		XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_STRUCTURE_NOTIFY |
-		XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
-	int transparentForInputEventMask =
-		baseEventMask | XCB_EVENT_MASK_VISIBILITY_CHANGE |
-		XCB_EVENT_MASK_RESIZE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
-		XCB_EVENT_MASK_COLOR_MAP_CHANGE | XCB_EVENT_MASK_OWNER_GRAB_BUTTON;
+	int baseEventMask = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE |
+						XCB_EVENT_MASK_FOCUS_CHANGE;
+	int transparentForInputEventMask = baseEventMask | XCB_EVENT_MASK_VISIBILITY_CHANGE |
+									   XCB_EVENT_MASK_RESIZE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
+									   XCB_EVENT_MASK_COLOR_MAP_CHANGE | XCB_EVENT_MASK_OWNER_GRAB_BUTTON;
 	const int mask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
 	const int values[] = {1, transparentForInputEventMask};
-	xcb_void_cookie_t cookie =
-		xcb_change_window_attributes_checked(xconn, mXWindow, mask, values);
+	xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(xconn, mXWindow, mask, values);
 	xcb_generic_error_t* error;
 	if ((error = xcb_request_check(xconn, cookie))) {
 		fprintf(stderr, "Could not reparent the window\n");
@@ -217,16 +199,13 @@ SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w,
 	}
 	// Mouse passthrough
 	// init xfixes
-	const xcb_query_extension_reply_t* reply =
-		xcb_get_extension_data(xconn, &xcb_xfixes_id);
+	const xcb_query_extension_reply_t* reply = xcb_get_extension_data(xconn, &xcb_xfixes_id);
 	if (!reply || !reply->present) {
 		return NULL;
 	}
 
-	auto xfixes_query = xcb_xfixes_query_version(
-		xconn, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
-	auto xfixesQuery =
-		xcb_xfixes_query_version_reply(xconn, xfixes_query, NULL);
+	auto xfixes_query = xcb_xfixes_query_version(xconn, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
+	auto xfixesQuery = xcb_xfixes_query_version_reply(xconn, xfixes_query, NULL);
 	if (!xfixesQuery || xfixesQuery->major_version < 2) {
 		printf("failed to initialize XFixes\n");
 		return NULL;
@@ -247,8 +226,7 @@ SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w,
 
 	xcb_xfixes_region_t region = xcb_generate_id(xconn);
 	xcb_xfixes_create_region(xconn, region, nrect, rect);
-	xcb_xfixes_set_window_shape_region_checked(
-		xconn, mXWindow, XCB_SHAPE_SK_INPUT, 0, 0, region);
+	xcb_xfixes_set_window_shape_region_checked(xconn, mXWindow, XCB_SHAPE_SK_INPUT, 0, 0, region);
 	xcb_xfixes_destroy_region(xconn, region);
 
 	GLXContext glcontext = glXCreateContext(mXDisplay, &visualinfo, 0, True);
@@ -272,8 +250,7 @@ void update_gl(int delta) {
 	glFlush();
 }
 
-void set_projection(float fov_rad, float w, float h, float near = 0.1f,
-					float far = 1000.0f) {
+void set_projection(float fov_rad, float w, float h, float near = 0.1f, float far = 1000.0f) {
 	glm::mat4 projection = glm::mat4(1.0f);
 	projection = glm::perspectiveFovLH(fov_rad, w, h, near, far);
 	my_shader->set_mat4("projection", projection);
@@ -292,10 +269,8 @@ void update_camera(const LinkedMem* gw2_data) {
 	cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	glm::vec3 cameraTarget = glm::make_vec3(gw2_data->fAvatarPosition);
-	glm::vec3 cameraDirection =
-		glm::normalize(cameraPos - glm::make_vec3(cameraTarget));
-	glm::vec3 cameraRight =
-		glm::normalize(glm::cross(cameraUp, cameraDirection));
+	glm::vec3 cameraDirection = glm::normalize(cameraPos - glm::make_vec3(cameraTarget));
+	glm::vec3 cameraRight = glm::normalize(glm::cross(cameraUp, cameraDirection));
 
 	auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 	my_shader->set_mat4("view", view);
@@ -337,10 +312,8 @@ int main(int argc, char** argv) {
 	if (vm.count("xml-folder")) {
 		auto folder_vec = vm["xml-folder"].as<std::vector<std::string>>();
 		for (auto iter = folder_vec.begin(); iter != folder_vec.end(); ++iter) {
-			for (const auto& entry :
-				 std::filesystem::directory_iterator(*iter)) {
-				if (entry.is_regular_file() &&
-					entry.path().extension() == ".xml") {
+			for (const auto& entry : std::filesystem::directory_iterator(*iter)) {
+				if (entry.is_regular_file() && entry.path().extension() == ".xml") {
 					xml_files.push_back(entry.path().string());
 				}
 			}
@@ -352,8 +325,7 @@ int main(int argc, char** argv) {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		printf("error initializing SDL: %s\n", SDL_GetError());
 	}
-	SDL_Window* window =
-		SDL_CreateTransparentWindow("GAME", 1280, 0, screenWidth, screenHeight);
+	SDL_Window* window = SDL_CreateTransparentWindow("GAME", 1280, 0, screenWidth, screenHeight);
 
 	int imgFlags = IMG_INIT_PNG;
 	if (!(IMG_Init(imgFlags) & imgFlags)) {

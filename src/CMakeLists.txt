@@ -50,10 +50,16 @@ TARGET_LINK_LIBRARIES(GW2Overlay
 	Threads::Threads
 	)
 
-#add_executable(QtGW2Overlay
-	#ui/QtMain.cpp
-	#ui/qt/OptionsIcon.cpp
-	#ui/qt/OptionsWindow.ui
-	#ui/qt/OptionsWindow.cpp
-	#	)
-#TARGET_LINK_LIBRARIES(QtGW2Overlay ${Qt5Widgets_LIBRARIES})
+
+add_executable(vkTest
+	ui/vk/main.cpp)
+
+TARGET_LINK_LIBRARIES(vkTest
+	${SDL2_LIBRARIES}
+	${SDL2IMAGE_LIBRARIES}
+	${X11_LIBRARIES}
+	${GLEW_LIBRARIES}
+	xcb X11-xcb xcb-xfixes
+	glfw
+	vulkan
+	  )

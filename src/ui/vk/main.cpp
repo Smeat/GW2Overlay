@@ -1,8 +1,6 @@
+#define VK_USE_PLATFORM_XLIB_KHR
 #include <bits/stdint-uintn.h>
-#include <vulkan/vulkan_core.h>
 #include <string>
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 
 #include <cstdint>
 #include <cstdlib>
@@ -14,10 +12,34 @@
 #include <stdexcept>
 #include <vector>
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_syswm.h>
+#include <SDL2/SDL_timer.h>
+#include <SDL2/SDL_video.h>
+
+#include <X11/X.h>
+#include <X11/Xatom.h>
+#include <X11/Xlib-xcb.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <xcb/shape.h>
+#include <xcb/xcb.h>
+#include <xcb/xcb_icccm.h>
+#include <xcb/xfixes.h>
+#include <xcb/xinput.h>
+#include <xcb/xproto.h>
+
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan_xlib.h>
+
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
 const std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+const std::vector<const char*> vkExtensions = {"VK_KHR_surface", "VK_KHR_xlib_surface"};
 
 const std::vector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -29,6 +51,88 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+Window mXWindow;
+Display* mXDisplay;
+
+SDL_Window* SDL_CreateTransparentWindow(const char* title, int x, int y, int w, int h) {
+	mXDisplay = XOpenDisplay(0);
+
+	if (mXDisplay == 0) {
+		printf("Failed to connect to the Xserver\n");
+		return NULL;
+	}
+	xcb_connection_t* xconn = XGetXCBConnection(mXDisplay);
+
+	XVisualInfo visualinfo;
+	XMatchVisualInfo(mXDisplay, DefaultScreen(mXDisplay), 32, TrueColor, &visualinfo);
+
+	GC gc;
+	XSetWindowAttributes attr;
+	attr.colormap = XCreateColormap(mXDisplay, DefaultRootWindow(mXDisplay), visualinfo.visual, AllocNone);
+	attr.event_mask = NoEventMask;
+	attr.background_pixmap = None;
+	attr.border_pixel = 0;
+
+	mXWindow = XCreateWindow(mXDisplay, DefaultRootWindow(mXDisplay), x, y, w,
+							 h,	 // x,y,width,height : are possibly opverwriteen by window manager
+							 0, visualinfo.depth, InputOutput, visualinfo.visual,
+							 CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
+	gc = XCreateGC(mXDisplay, mXWindow, 0, 0);
+	printf("Window has id: %lu\n", mXWindow);
+
+	int baseEventMask = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE |
+						XCB_EVENT_MASK_FOCUS_CHANGE;
+	int transparentForInputEventMask = baseEventMask | XCB_EVENT_MASK_VISIBILITY_CHANGE |
+									   XCB_EVENT_MASK_RESIZE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
+									   XCB_EVENT_MASK_COLOR_MAP_CHANGE | XCB_EVENT_MASK_OWNER_GRAB_BUTTON;
+	const int mask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
+	const int values[] = {1, transparentForInputEventMask};
+	xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(xconn, mXWindow, mask, values);
+	xcb_generic_error_t* error;
+	if ((error = xcb_request_check(xconn, cookie))) {
+		fprintf(stderr, "Could not reparent the window\n");
+		free(error);
+		return NULL;
+	} else {
+		printf("Changed attributes\n");
+	}
+	// Mouse passthrough
+	// init xfixes
+	const xcb_query_extension_reply_t* reply = xcb_get_extension_data(xconn, &xcb_xfixes_id);
+	if (!reply || !reply->present) {
+		return NULL;
+	}
+
+	auto xfixes_query = xcb_xfixes_query_version(xconn, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
+	auto xfixesQuery = xcb_xfixes_query_version_reply(xconn, xfixes_query, NULL);
+	if (!xfixesQuery || xfixesQuery->major_version < 2) {
+		printf("failed to initialize XFixes\n");
+		return NULL;
+	}
+
+	xcb_rectangle_t rectangle;
+
+	xcb_rectangle_t* rect = nullptr;
+	int nrect = 0;
+
+	int offset = w;
+	rectangle.x = offset;
+	rectangle.y = 0;
+	rectangle.width = w + offset;
+	rectangle.height = h;
+	rect = &rectangle;
+	nrect = 1;
+
+	xcb_xfixes_region_t region = xcb_generate_id(xconn);
+	xcb_xfixes_create_region(xconn, region, nrect, rect);
+	xcb_xfixes_set_window_shape_region_checked(xconn, mXWindow, XCB_SHAPE_SK_INPUT, 0, 0, region);
+	xcb_xfixes_destroy_region(xconn, region);
+
+	XMapWindow(mXDisplay, mXWindow);
+	SDL_Window* sdl_window = SDL_CreateWindowFrom((void*)mXWindow);
+	return sdl_window;
+}
+
 class HelloTriangleApplication {
  public:
 	void run() {
@@ -39,7 +143,7 @@ class HelloTriangleApplication {
 	}
 
  private:
-	GLFWwindow* window;
+	Window* window;
 	VkInstance instance;
 	VkSurfaceKHR surface;
 	VkDevice device;
@@ -63,16 +167,7 @@ class HelloTriangleApplication {
 	std::vector<VkFence> imagesInFlight;
 	size_t currentFrame = 0;
 
-	void initWindow() {
-		glfwInit();
-
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-		glfwWindowHint(GLFW_DEPTH_BITS, 32);
-		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-		window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-	}
+	void initWindow() { SDL_CreateTransparentWindow("Test", 0, 0, 1680, 1050); }
 
 	void initVulkan() {
 		createInstance();
@@ -481,9 +576,12 @@ class HelloTriangleApplication {
 	}
 
 	void createSurface() {
-		if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create window surface!");
-		}
+		VkXlibSurfaceCreateInfoKHR createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+		createInfo.dpy = mXDisplay;
+		createInfo.window = mXWindow;
+
+		vkCreateXlibSurfaceKHR(instance, &createInfo, nullptr, &surface);
 	}
 
 	void createLogicalDevice() {
@@ -616,7 +714,9 @@ class HelloTriangleApplication {
 		if (capabilities.currentExtent.width != UINT32_MAX) {
 			return capabilities.currentExtent;
 		} else {
-			VkExtent2D actualExtent = {WIDTH, HEIGHT};
+			int width = 1680, height = 1050;
+
+			VkExtent2D actualExtent = {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
 
 			actualExtent.width = std::max(capabilities.minImageExtent.width,
 										  std::min(capabilities.maxImageExtent.width, actualExtent.width));
@@ -715,14 +815,8 @@ class HelloTriangleApplication {
 		VkInstanceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		createInfo.pApplicationInfo = &appInfo;
-
-		uint32_t glfwExtensionCount = 0;
-		const char** glfwExtensions;
-
-		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-		createInfo.enabledExtensionCount = glfwExtensionCount;
-		createInfo.ppEnabledExtensionNames = glfwExtensions;
+		createInfo.enabledExtensionCount = vkExtensions.size();
+		createInfo.ppEnabledExtensionNames = vkExtensions.data();
 
 		if (enableValidationLayers) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -748,8 +842,7 @@ class HelloTriangleApplication {
 	}
 
 	void mainLoop() {
-		while (!glfwWindowShouldClose(window)) {
-			glfwPollEvents();
+		while (true) {
 			drawFrame();
 		}
 		vkDeviceWaitIdle(device);
@@ -758,8 +851,15 @@ class HelloTriangleApplication {
 	void drawFrame() {
 		vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 		uint32_t imageIndex;
-		vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE,
-							  &imageIndex);
+		VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame],
+												VK_NULL_HANDLE, &imageIndex);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+			recreateSwapChain();
+			return;
+		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+			throw std::runtime_error("failed to acquire swap chain image!");
+		}
 
 		// Check if a previous frame is using this image (i.e. there is its fence to wait on)
 		if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
@@ -797,36 +897,49 @@ class HelloTriangleApplication {
 		presentInfo.pSwapchains = swapChains;
 		presentInfo.pImageIndices = &imageIndex;
 		presentInfo.pResults = nullptr;	 // Optional
-		vkQueuePresentKHR(presentQueue, &presentInfo);
+
+		result = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+			recreateSwapChain();
+		} else if (result != VK_SUCCESS) {
+			throw std::runtime_error("failed to present swap chain image!");
+		}
 
 		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
+	void cleanupSwapChain() {
+		for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
+			vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+		}
+
+		vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+		vkDestroyPipeline(device, graphicsPipeline, nullptr);
+		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+		vkDestroyRenderPass(device, renderPass, nullptr);
+
+		for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+			vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+		}
+
+		vkDestroySwapchainKHR(device, swapChain, nullptr);
+	}
+
 	void cleanup() {
+		cleanupSwapChain();
+
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
 			vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
 			vkDestroyFence(device, inFlightFences[i], nullptr);
 		}
+
 		vkDestroyCommandPool(device, commandPool, nullptr);
-		for (auto framebuffer : swapChainFramebuffers) {
-			vkDestroyFramebuffer(device, framebuffer, nullptr);
-		}
-		vkDestroyPipeline(device, graphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-		vkDestroyRenderPass(device, renderPass, nullptr);
-		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-		for (auto imageView : swapChainImageViews) {
-			vkDestroyImageView(device, imageView, nullptr);
-		}
-		vkDestroySwapchainKHR(device, swapChain, nullptr);
+		vkDestroyDevice(device, nullptr);
 		vkDestroySurfaceKHR(instance, surface, nullptr);
 		vkDestroyInstance(instance, nullptr);
-		vkDestroyDevice(device, nullptr);
-		vkDestroyInstance(instance, nullptr);
-		glfwDestroyWindow(window);
-
-		glfwTerminate();
 	}
 };
 
