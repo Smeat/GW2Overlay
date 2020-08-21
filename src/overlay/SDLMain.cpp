@@ -185,6 +185,7 @@ int main(int argc, char** argv) {
 		("height", po::value<float>()->default_value(1050.0f),
 			"Display height")
 		("vulkan", "Enable vulkan renderer")
+		("f", "Force output")
 		;
 	// clang-format on
 	po::variables_map vm;
@@ -317,7 +318,7 @@ int main(int argc, char** argv) {
 			CategoryManager::getInstance().set_state_changed(false);
 		}
 
-		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS)) {
+		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS) || vm.count("f")) {
 			update_camera(gw2_data);
 			renderer->update();
 		} else {
