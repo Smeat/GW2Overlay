@@ -92,6 +92,7 @@
 #include "Window.h"
 #include "renderer/GLRenderer.h"
 #include "renderer/Renderer.h"
+#include "renderer/VKRenderer.h"
 
 using json = nlohmann::json;
 namespace po = boost::program_options;
@@ -217,8 +218,17 @@ int main(int argc, char** argv) {
 
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();
-	WindowData window = createTransparentWindow("GAME", 1280, 0, screenWidth, screenHeight, true);
-	std::shared_ptr<Renderer> renderer(new GLRenderer);
+
+	bool use_vulkan = vm.count("vulkan");
+
+	WindowData window = createTransparentWindow("GAME", 1280, 0, screenWidth, screenHeight, !use_vulkan);
+	std::shared_ptr<Renderer> renderer;
+
+	if (use_vulkan) {
+		renderer.reset(new VKRenderer(window));
+	} else {
+		renderer.reset(new GLRenderer);
+	}
 
 	int imgFlags = IMG_INIT_PNG;
 	if (!(IMG_Init(imgFlags) & imgFlags)) {

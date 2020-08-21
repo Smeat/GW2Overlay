@@ -34,9 +34,7 @@
 
 #include "../Mesh.h"
 #include "../Window.h"
-
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+#include "../renderer/Renderer.h"
 
 const std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 const std::vector<const char*> vkExtensions = {"VK_KHR_surface", "VK_KHR_xlib_surface"};
@@ -68,15 +66,7 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-class HelloTriangleApplication {
- public:
-	void run() {
-		initWindow();
-		initVulkan();
-		mainLoop();
-		cleanup();
-	}
-
+class VKRenderer : public Renderer {
  private:
 	Window* window;
 	VkInstance instance;
@@ -112,6 +102,17 @@ class HelloTriangleApplication {
 	std::vector<VkDescriptorSet> descriptorSets;
 
 	WindowData windowHandle;
+
+ public:
+	VKRenderer(WindowData win) { this->windowHandle = win; }
+	VKRenderer() = default;
+
+	virtual void init() override {}
+	virtual void clear() override {}
+	virtual void update(std::vector<std::shared_ptr<Object>> objs) override {}
+	virtual std::shared_ptr<Texture> load_texture(const std::string& path) override {}
+	virtual std::shared_ptr<Mesh> load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) override {}
+	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override {}
 
 	void initWindow() { windowHandle = createTransparentWindow("Test", 1280, 0, 1680, 1050); }
 
@@ -1141,15 +1142,3 @@ class HelloTriangleApplication {
 	}
 };
 
-int main() {
-	HelloTriangleApplication app;
-
-	try {
-		app.run();
-	} catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	return EXIT_SUCCESS;
-}

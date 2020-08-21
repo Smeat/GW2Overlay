@@ -22,7 +22,7 @@
 
 #include <string>
 
-#include "../Texture.h"
+#include "../../Texture.h"
 
 class GLTexture : public Texture {
  public:

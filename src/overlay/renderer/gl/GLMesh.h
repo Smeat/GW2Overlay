@@ -20,8 +20,6 @@
 #ifndef __GLMESH_H__
 #define __GLMESH_H__
 
-#include "../Texture.h"
-
 #include <vulkan/vulkan.h>
 #include <glm/fwd.hpp>
 #include <memory>
@@ -29,7 +27,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../Mesh.h"
+#include "../../Mesh.h"
 
 class GLMesh : public Mesh {
  public:

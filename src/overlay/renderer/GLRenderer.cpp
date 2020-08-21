@@ -8,9 +8,9 @@
 #include <memory>
 #include <vector>
 
-#include "../gl/GLMesh.h"
-#include "../gl/GLShader.h"
-#include "../gl/GLTexture.h"
+#include "gl/GLMesh.h"
+#include "gl/GLShader.h"
+#include "gl/GLTexture.h"
 
 void GLRenderer::init() {
 	glewInit();
