@@ -104,15 +104,25 @@ class VKRenderer : public Renderer {
 	VkDescriptorPool descriptorPool;
 	std::vector<VkDescriptorSet> descriptorSets;
 
-	WindowData windowHandle;
+	WindowData windowHandle = {0, 0};
 
  public:
-	VKRenderer(WindowData win) { this->windowHandle = win; }
+	VKRenderer(WindowData win) {
+		std::cout << "Initializing vulkan..." << std::endl;
+		this->windowHandle = win;
+		this->init();
+	}
 	VKRenderer() = default;
 
-	virtual void init() override {}
+	virtual void init() override {
+		if (this->windowHandle.display == nullptr) {
+			this->initWindow();
+		}
+		this->initVulkan();
+	}
+
 	virtual void clear() override {}
-	virtual void update(std::vector<std::shared_ptr<Object>> objs) override {}
+	virtual void update(std::vector<std::shared_ptr<Object>> objs) override { this->drawFrame(); }
 	virtual std::shared_ptr<Texture> load_texture(const std::string& path) override {
 		return std::shared_ptr<Texture>(new VKTexture(path));
 	}
