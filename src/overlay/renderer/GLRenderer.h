@@ -2,11 +2,15 @@
 #define __GLRENDERER_H__
 
 #include <memory>
+#include "../Window.h"
 #include "Renderer.h"
 
 class GLRenderer : public Renderer {
  public:
-	GLRenderer() { this->init(); }
+	GLRenderer(WindowData data) {
+		this->m_window = data;
+		this->init();
+	}
 	virtual void init() override;
 	virtual void set_objects(std::vector<std::shared_ptr<Object>> objs) override;
 	virtual void update() override;
@@ -17,6 +21,7 @@ class GLRenderer : public Renderer {
 
  private:
 	std::vector<std::shared_ptr<Object>> m_objects;
+	WindowData m_window;
 };
 
 #endif	// __GLRENDERER_H__

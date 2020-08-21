@@ -228,7 +228,7 @@ int main(int argc, char** argv) {
 	if (use_vulkan) {
 		renderer.reset(new VKRenderer(window));
 	} else {
-		renderer.reset(new GLRenderer);
+		renderer.reset(new GLRenderer(window));
 	}
 
 	int imgFlags = IMG_INIT_PNG;
@@ -323,7 +323,6 @@ int main(int argc, char** argv) {
 		} else {
 			renderer->clear();
 		}
-		glXSwapBuffers(window.display, window.window);
 		SDL_Event event;
 
 		while (SDL_PollEvent(&event)) {

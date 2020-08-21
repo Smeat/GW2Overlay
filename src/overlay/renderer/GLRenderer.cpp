@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 
 #include <GL/gl.h>
+#include <GL/glx.h>
 
 #include <cstdio>
 #include <memory>
@@ -26,6 +27,7 @@ void GLRenderer::update() {
 		(*iter)->update();
 	}
 	glFlush();
+	glXSwapBuffers(this->m_window.display, this->m_window.window);
 }
 void GLRenderer::clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 

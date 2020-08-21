@@ -50,6 +50,7 @@ SET(SOURCES
 	overlay/qt/OptionsIcon.cpp
 	overlay/qt/OptionsWindow.ui
 	overlay/qt/OptionsWindow.cpp
+	overlay/Window.cpp
 )
 
 add_executable(GW2Overlay
