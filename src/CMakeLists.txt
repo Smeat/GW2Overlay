@@ -24,19 +24,21 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS} ${SDL2IMAGE_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 
 add_executable(GW2Overlay
-	ui/SDLMain.cpp
-	ui/Shader.cpp
-	ui/Object.cpp
+	overlay/SDLMain.cpp
+	overlay/Shader.cpp
+	overlay/Object.cpp
 	utils/xml/pugixml.cpp
-	ui/Texture.cpp
-	ui/Mesh.cpp
+	overlay/Texture.cpp
+	overlay/Mesh.cpp
 	utils/GW2Link.cpp
 	utils/CategoryManager.cpp
 	utils/POI.cpp
-	ui/QtMain.cpp
-	ui/qt/OptionsIcon.cpp
-	ui/qt/OptionsWindow.ui
-	ui/qt/OptionsWindow.cpp
+	overlay/QtMain.cpp
+	overlay/qt/OptionsIcon.cpp
+	overlay/qt/OptionsWindow.ui
+	overlay/qt/OptionsWindow.cpp
+
+	overlay/renderer/GLRenderer.cpp
 	)
 TARGET_LINK_LIBRARIES(GW2Overlay 
 	${SDL2_LIBRARIES}
@@ -48,18 +50,22 @@ TARGET_LINK_LIBRARIES(GW2Overlay
 	${Boost_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 	Threads::Threads
+	vulkan
 	)
 
 
 add_executable(vkTest
-	ui/vk/main.cpp)
+	overlay/vk/main.cpp)
 
 TARGET_LINK_LIBRARIES(vkTest
 	${SDL2_LIBRARIES}
 	${SDL2IMAGE_LIBRARIES}
 	${X11_LIBRARIES}
+	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
 	xcb X11-xcb xcb-xfixes
-	glfw
+	${Boost_LIBRARIES}
+	${Qt5Widgets_LIBRARIES}
+	Threads::Threads
 	vulkan
 	  )
