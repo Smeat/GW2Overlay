@@ -24,12 +24,13 @@
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <memory>
 
 #include <GL/gl.h>
 
 Object::Object(std::shared_ptr<Shader> s, std::vector<std::shared_ptr<TexturedMesh>> vertex_data) {
 	this->m_shader = s;
-	this->m_meshes = vertex_data;
+	this->m_meshes = std::make_shared<std::vector<std::shared_ptr<TexturedMesh>>>(vertex_data);
 }
 void Object::translate(glm::vec3 pos) { this->m_pos = pos; }
 
@@ -49,7 +50,11 @@ void Object::update() {
 
 	this->m_shader->set_active();
 	this->m_shader->set_model(this->m_model);
-	for (auto iter = this->m_meshes.begin(); iter != this->m_meshes.end(); ++iter) {
+	for (auto iter = this->m_meshes->begin(); iter != this->m_meshes->end(); ++iter) {
 		(*iter)->draw();
 	}
+}
+
+const std::shared_ptr<std::vector<std::shared_ptr<TexturedMesh>>> Object::get_textured_meshes() const {
+	return this->m_meshes;
 }

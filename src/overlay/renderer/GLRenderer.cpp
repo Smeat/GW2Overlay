@@ -20,9 +20,9 @@ void GLRenderer::init() {
 	glEnable(GL_ALPHA_TEST);
 }
 
-void GLRenderer::update(std::vector<std::shared_ptr<Object>> objects) {
+void GLRenderer::update() {
 	this->clear();
-	for (auto iter = objects.begin(); iter != objects.end(); ++iter) {
+	for (auto iter = this->m_objects.begin(); iter != this->m_objects.end(); ++iter) {
 		(*iter)->update();
 	}
 	glFlush();
@@ -41,3 +41,4 @@ std::shared_ptr<Shader> GLRenderer::load_shader(const std::string& vert, const s
 	return std::shared_ptr<Shader>(new GLShader(vert, frag));
 }
 
+void GLRenderer::set_objects(std::vector<std::shared_ptr<Object>> objs) { this->m_objects = objs; }

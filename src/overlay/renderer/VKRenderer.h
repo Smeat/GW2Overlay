@@ -45,7 +45,7 @@ const std::vector<const char*> vkExtensions = {"VK_KHR_surface", "VK_KHR_xlib_su
 const std::vector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-const std::vector<Vertex> vertices = {
+const std::vector<Vertex> vertices_static = {
 	//	Vertex(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)),
 	//	Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)),
 	//	Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f))};
@@ -105,6 +105,7 @@ class VKRenderer : public Renderer {
 	std::vector<VkDescriptorSet> descriptorSets;
 
 	WindowData windowHandle = {0, 0};
+	std::vector<Vertex> vertices;
 
  public:
 	VKRenderer(WindowData win) {
@@ -115,14 +116,19 @@ class VKRenderer : public Renderer {
 	VKRenderer() = default;
 
 	virtual void init() override {
+		this->vertices = vertices_static;
 		if (this->windowHandle.display == nullptr) {
 			this->initWindow();
 		}
 		this->initVulkan();
 	}
 
+	virtual void set_objects(std::vector<std::shared_ptr<Object>> objs) override{
+		// this->vertices = *(objs[0]->get_textured_meshes()->at(0)->get_mesh()->get_vertices());
+		// this->recreateSwapChain();
+	};
 	virtual void clear() override {}
-	virtual void update(std::vector<std::shared_ptr<Object>> objs) override { this->drawFrame(); }
+	virtual void update() override { this->drawFrame(); }
 	virtual std::shared_ptr<Texture> load_texture(const std::string& path) override {
 		return std::shared_ptr<Texture>(new VKTexture(path));
 	}

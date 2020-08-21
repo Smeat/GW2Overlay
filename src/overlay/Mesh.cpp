@@ -30,8 +30,8 @@
 #include <vector>
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
-	this->m_vertices = vertices;
-	this->m_indices = indices;
+	this->m_vertices = std::make_shared<std::vector<Vertex>>(vertices);
+	this->m_indices = std::make_shared<std::vector<unsigned int>>(indices);
 }
 
 TexturedMesh::TexturedMesh(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex) : m_mesh(mesh), m_texture(tex) {}

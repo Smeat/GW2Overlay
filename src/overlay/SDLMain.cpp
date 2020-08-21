@@ -300,6 +300,8 @@ int main(int argc, char** argv) {
 		my_shader->set_projection(fov, screenWidth, screenHeight);
 	}
 
+	renderer->set_objects(objects);
+
 	std::thread qt_thread([&]() { qt_main(argc, argv); });
 	while (running) {
 		uint64_t delta = SDL_GetTicks() - last_call;
@@ -317,7 +319,7 @@ int main(int argc, char** argv) {
 
 		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS)) {
 			update_camera(gw2_data);
-			renderer->update(objects);
+			renderer->update();
 		} else {
 			renderer->clear();
 		}

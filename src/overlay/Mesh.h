@@ -69,16 +69,20 @@ class Mesh {
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 	virtual ~Mesh() = default;
 	virtual void draw() = 0;
+	const std::shared_ptr<std::vector<Vertex>> get_vertices() const { return this->m_vertices; }
+	const std::shared_ptr<std::vector<unsigned int>> get_indices() const { return this->m_indices; }
 
  protected:
-	std::vector<Vertex> m_vertices;
-	std::vector<unsigned int> m_indices;
+	std::shared_ptr<std::vector<Vertex>> m_vertices;
+	std::shared_ptr<std::vector<unsigned int>> m_indices;
 };
 
 class TexturedMesh {
  public:
 	TexturedMesh(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex);
 	void draw();
+	const std::shared_ptr<Mesh> get_mesh() const { return this->m_mesh; }
+	const std::shared_ptr<Texture> get_texture() const { return this->m_texture; }
 
  private:
 	std::shared_ptr<Mesh> m_mesh;

@@ -35,10 +35,11 @@ class Object {
 	void scale(glm::vec3 scale);
 	void rotate(float deg, glm::vec3 v);
 	void update();
+	const std::shared_ptr<std::vector<std::shared_ptr<TexturedMesh>>> get_textured_meshes() const;
 
  private:
 	std::shared_ptr<Shader> m_shader;
-	std::vector<std::shared_ptr<TexturedMesh>> m_meshes;
+	std::shared_ptr<std::vector<std::shared_ptr<TexturedMesh>>> m_meshes;
 	glm::mat4 m_model;
 
 	// position etc
