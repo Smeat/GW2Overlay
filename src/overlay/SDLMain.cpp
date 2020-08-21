@@ -301,8 +301,6 @@ int main(int argc, char** argv) {
 		my_shader->set_projection(fov, screenWidth, screenHeight);
 	}
 
-	renderer->set_objects(objects);
-
 	std::thread qt_thread([&]() { qt_main(argc, argv); });
 	while (running) {
 		uint64_t delta = SDL_GetTicks() - last_call;
@@ -315,6 +313,7 @@ int main(int argc, char** argv) {
 		}
 		if (CategoryManager::getInstance().state_changed()) {
 			load_objects(last_id, renderer);
+			renderer->set_objects(objects);
 			CategoryManager::getInstance().set_state_changed(false);
 		}
 
