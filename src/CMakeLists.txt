@@ -31,9 +31,15 @@ SET(GL_SOURCES
 	overlay/renderer/GLRenderer.cpp
 	)
 
+SET(VK_SOURCES
+	overlay/renderer/vk/VKShader.cpp
+	overlay/renderer/vk/VKTexture.cpp
+	overlay/renderer/vk/VKMesh.cpp
 
-add_executable(GW2Overlay
-	overlay/SDLMain.cpp
+	#overlay/renderer/VKRenderer.cpp
+	)
+
+SET(SOURCES
 	overlay/Object.cpp
 	utils/xml/pugixml.cpp
 	overlay/Mesh.cpp
@@ -44,8 +50,14 @@ add_executable(GW2Overlay
 	overlay/qt/OptionsIcon.cpp
 	overlay/qt/OptionsWindow.ui
 	overlay/qt/OptionsWindow.cpp
+)
 
+add_executable(GW2Overlay
+	overlay/SDLMain.cpp
+
+	${SOURCES}
 	${GL_SOURCES}
+	${VK_SOURCES}
 	)
 TARGET_LINK_LIBRARIES(GW2Overlay 
 	${SDL2_LIBRARIES}
@@ -62,7 +74,11 @@ TARGET_LINK_LIBRARIES(GW2Overlay
 
 
 add_executable(vkTest
-	overlay/renderer/main.cpp)
+	overlay/renderer/main.cpp
+	${SOURCES}
+	${GL_SOURCES}
+	${VK_SOURCES}
+	)
 
 TARGET_LINK_LIBRARIES(vkTest
 	${SDL2_LIBRARIES}

@@ -34,7 +34,10 @@
 
 #include "../Mesh.h"
 #include "../Window.h"
-#include "../renderer/Renderer.h"
+#include "Renderer.h"
+#include "vk/VKMesh.h"
+#include "vk/VKShader.h"
+#include "vk/VKTexture.h"
 
 const std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 const std::vector<const char*> vkExtensions = {"VK_KHR_surface", "VK_KHR_xlib_surface"};
@@ -110,9 +113,15 @@ class VKRenderer : public Renderer {
 	virtual void init() override {}
 	virtual void clear() override {}
 	virtual void update(std::vector<std::shared_ptr<Object>> objs) override {}
-	virtual std::shared_ptr<Texture> load_texture(const std::string& path) override {}
-	virtual std::shared_ptr<Mesh> load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) override {}
-	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override {}
+	virtual std::shared_ptr<Texture> load_texture(const std::string& path) override {
+		return std::shared_ptr<Texture>(new VKTexture(path));
+	}
+	virtual std::shared_ptr<Mesh> load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) override {
+		return std::shared_ptr<Mesh>(new VKMesh(vertices, indices));
+	}
+	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override {
+		return std::shared_ptr<Shader>(new VKShader(vert, frag));
+	}
 
 	void initWindow() { windowHandle = createTransparentWindow("Test", 1280, 0, 1680, 1050); }
 
