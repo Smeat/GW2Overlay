@@ -30,14 +30,9 @@
  *   - Probably due to socket delay
  */
 
-#include <GL/glew.h>
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_image.h>
-
-#include <GL/gl.h>
-#include <GL/glx.h>
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -105,7 +100,7 @@ namespace po = boost::program_options;
 std::vector<std::shared_ptr<Object>> objects;
 std::shared_ptr<Shader> my_shader(new Shader);
 
-void load_objects(int mapid) {
+void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)));
 	vertices.push_back(Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)));
@@ -137,11 +132,14 @@ void load_objects(int mapid) {
 			}
 			if (texture_file_map.find(icon_file) == texture_file_map.end()) {
 				std::shared_ptr<Texture> tex(new Texture(icon_file));
+				rend->allocate_texture(tex);
 				std::cout << "Loading texture with path " << icon_file << std::endl;
 				texture_file_map.insert({icon_file, tex});
 			}
 			auto tex_iter = texture_file_map.find(icon_file);
+			// TODO: this creates a new mesh, while they are all the same...
 			std::shared_ptr<Mesh> my_mesh(new Mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second));
+			rend->allocate_mesh(my_mesh);
 			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));
 			auto pos = iter->m_pos;
 			pos.y += cat->m_height_offset;
@@ -307,7 +305,7 @@ int main(int argc, char** argv) {
 			CategoryManager::getInstance().set_state_changed(true);
 		}
 		if (CategoryManager::getInstance().state_changed()) {
-			load_objects(last_id);
+			load_objects(last_id, renderer);
 			CategoryManager::getInstance().set_state_changed(false);
 		}
 

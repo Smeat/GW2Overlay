@@ -69,6 +69,7 @@ class Mesh {
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::shared_ptr<Texture> tex);
 	virtual ~Mesh();
 	void draw();
+	void init_gl();
 
  private:
 	std::vector<Vertex> m_vertices;

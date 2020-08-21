@@ -24,3 +24,6 @@ void GLRenderer::update(std::vector<std::shared_ptr<Object>> objects) {
 	glFlush();
 }
 void GLRenderer::clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+
+void GLRenderer::allocate_mesh(std::shared_ptr<Mesh> v) { v->init_gl(); }
+void GLRenderer::allocate_texture(std::shared_ptr<Texture> v) { v->init_gl(); }
