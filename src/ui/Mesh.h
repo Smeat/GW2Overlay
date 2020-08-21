@@ -22,6 +22,7 @@
 
 #include "Texture.h"
 
+#include <vulkan/vulkan.h>
 #include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
@@ -38,12 +39,34 @@ struct Vertex {
 		this->color = c;
 		this->tex_coord = t;
 	}
+	static VkVertexInputBindingDescription getBindingDescription() {
+		VkVertexInputBindingDescription bindingDescription{};
+		bindingDescription.binding = 0;
+		bindingDescription.stride = sizeof(Vertex);
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+		return bindingDescription;
+	}
+
+	static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+		attributeDescriptions[0].binding = 0;
+		attributeDescriptions[0].location = 0;
+		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+		attributeDescriptions[1].binding = 0;
+		attributeDescriptions[1].location = 1;
+		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+		return attributeDescriptions;
+	}
 };
 
 class Mesh {
  public:
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
-		 std::shared_ptr<Texture> tex);
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::shared_ptr<Texture> tex);
 	virtual ~Mesh();
 	void draw();
 
