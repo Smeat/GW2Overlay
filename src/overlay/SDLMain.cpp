@@ -98,7 +98,7 @@ namespace po = boost::program_options;
 
 // TODO: remove this global mess and create more files
 std::vector<std::shared_ptr<Object>> objects;
-std::shared_ptr<Shader> my_shader(new Shader);
+std::shared_ptr<Shader> my_shader;
 
 void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	std::vector<Vertex> vertices;
@@ -150,12 +150,6 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	}
 }
 
-void set_projection(float fov_rad, float w, float h, float near = 0.1f, float far = 1000.0f) {
-	glm::mat4 projection = glm::mat4(1.0f);
-	projection = glm::perspectiveFovLH(fov_rad, w, h, near, far);
-	my_shader->set_mat4("projection", projection);
-}
-
 void update_camera(const LinkedMem* gw2_data) {
 	//	auto ctx = gw2_data->get_context();
 	//	TODO: draw POIs on the map, if it is open
@@ -173,7 +167,7 @@ void update_camera(const LinkedMem* gw2_data) {
 	glm::vec3 cameraRight = glm::normalize(glm::cross(cameraUp, cameraDirection));
 
 	auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
-	my_shader->set_mat4("view", view);
+	my_shader->set_view(view);
 }
 
 int main(int argc, char** argv) {
@@ -266,10 +260,12 @@ int main(int argc, char** argv) {
 	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 view = glm::mat4(1.0f);
 
+	my_shader = renderer->load_shader("", "");
+
 	my_shader->load_from_string(vertex_shader_src, fragment_shader_src);
 	my_shader->set_active();
-	my_shader->set_mat4("transform", model);
-	my_shader->set_mat4("view", view);
+	my_shader->set_model(model);
+	my_shader->set_view(view);
 
 	CategoryManager::getInstance().load_taco_xmls(xml_files);
 
@@ -291,7 +287,7 @@ int main(int argc, char** argv) {
 			fov = json["fov"];
 		} catch (...) {
 		}
-		set_projection(fov, screenWidth, screenHeight);
+		my_shader->set_projection(fov, screenWidth, screenHeight);
 	}
 
 	std::thread qt_thread([&]() { qt_main(argc, argv); });

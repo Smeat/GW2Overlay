@@ -48,7 +48,7 @@ void Object::update() {
 	this->m_model = glm::scale(this->m_model, this->m_scale);
 
 	this->m_shader->set_active();
-	this->m_shader->set_mat4("transform", this->m_model);
+	this->m_shader->set_model(this->m_model);
 	for (auto iter = this->m_meshes.begin(); iter != this->m_meshes.end(); ++iter) {
 		(*iter)->draw();
 	}

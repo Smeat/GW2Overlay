@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "../gl/GLMesh.h"
+#include "../gl/GLShader.h"
 #include "../gl/GLTexture.h"
 
 void GLRenderer::init() {
@@ -31,6 +32,12 @@ void GLRenderer::clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 std::shared_ptr<Texture> GLRenderer::load_texture(const std::string& path) {
 	return std::shared_ptr<Texture>(new GLTexture(path));
 }
+
 std::shared_ptr<Mesh> GLRenderer::load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
 	return std::shared_ptr<Mesh>(new GLMesh(vertices, indices));
 }
+
+std::shared_ptr<Shader> GLRenderer::load_shader(const std::string& vert, const std::string& frag) {
+	return std::shared_ptr<Shader>(new GLShader(vert, frag));
+}
+

@@ -20,22 +20,25 @@
 #ifndef __SHADER__H_
 #define __SHADER__H_
 
+#include <glm/fwd.hpp>
 #include <string>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 class Shader {
  public:
-	Shader() = default;
-	Shader(const std::string& vertex_path, const std::string& fragment_path);
-	virtual ~Shader();
-	void load_from_string(const std::string& vertex_src,
-						  const std::string& fragment_src);
-	void set_active();
-	void set_mat4(const std::string& name, const glm::mat4& mat);
+	virtual void set_active() = 0;
+	virtual void set_projection(glm::mat4 p) = 0;
+	virtual void set_view(glm::mat4 v) = 0;
+	virtual void set_model(glm::mat4 m) = 0;
 
- private:
-	int m_program_id = 0;
+	virtual void set_projection(float fov_rad, float w, float h, float near = 0.1f, float far = 1000.0f) {
+		glm::mat4 projection = glm::mat4(1.0f);
+		projection = glm::perspectiveFovLH(fov_rad, w, h, near, far);
+		this->set_projection(projection);
+	}
+	virtual void load_from_string(const std::string& vert, const std::string& frag){};
 };
 
 #endif	// __SHADER__H_

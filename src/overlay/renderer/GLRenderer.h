@@ -12,6 +12,7 @@ class GLRenderer : public Renderer {
 	virtual void clear() override;
 	virtual std::shared_ptr<Texture> load_texture(const std::string& path) override;
 	virtual std::shared_ptr<Mesh> load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) override;
+	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override;
 };
 
 #endif	// __GLRENDERER_H__

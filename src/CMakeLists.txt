@@ -23,13 +23,19 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS} ${SDL2IMAGE_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 
-add_executable(GW2Overlay
-	overlay/SDLMain.cpp
-	overlay/Shader.cpp
-	overlay/Object.cpp
-	utils/xml/pugixml.cpp
+SET(GL_SOURCES
+	overlay/gl/GLShader.cpp
 	overlay/gl/GLTexture.cpp
 	overlay/gl/GLMesh.cpp
+
+	overlay/renderer/GLRenderer.cpp
+	)
+
+
+add_executable(GW2Overlay
+	overlay/SDLMain.cpp
+	overlay/Object.cpp
+	utils/xml/pugixml.cpp
 	overlay/Mesh.cpp
 	utils/GW2Link.cpp
 	utils/CategoryManager.cpp
@@ -38,8 +44,7 @@ add_executable(GW2Overlay
 	overlay/qt/OptionsIcon.cpp
 	overlay/qt/OptionsWindow.ui
 	overlay/qt/OptionsWindow.cpp
-
-	overlay/renderer/GLRenderer.cpp
+	${GL_SOURCES}
 	)
 TARGET_LINK_LIBRARIES(GW2Overlay 
 	${SDL2_LIBRARIES}
