@@ -66,7 +66,7 @@ struct Vertex {
 
 class Mesh {
  public:
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::shared_ptr<Texture> tex);
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 	virtual ~Mesh();
 	void draw();
 	void init_gl();
@@ -74,8 +74,17 @@ class Mesh {
  private:
 	std::vector<Vertex> m_vertices;
 	std::vector<unsigned int> m_indices;
-	std::shared_ptr<Texture> m_texture;
 	unsigned int m_vao, m_vbo, m_ebo;
+};
+
+class TexturedMesh {
+ public:
+	TexturedMesh(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex);
+	void draw();
+
+ private:
+	std::shared_ptr<Mesh> m_mesh;
+	std::shared_ptr<Texture> m_texture;
 };
 
 #endif

@@ -29,8 +29,7 @@
 #include <memory>
 #include <vector>
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::shared_ptr<Texture> tex) {
-	this->m_texture = tex;
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
 	this->m_vertices = vertices;
 	this->m_indices = indices;
 }
@@ -67,8 +66,14 @@ Mesh::~Mesh() {
 }
 
 void Mesh::draw() {
-	this->m_texture->set_active();
 	glBindVertexArray(this->m_vao);
 	glDrawElements(GL_TRIANGLES, this->m_indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
+TexturedMesh::TexturedMesh(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex) : m_mesh(mesh), m_texture(tex) {}
+
+void TexturedMesh::draw() {
+	this->m_texture->set_active();
+	this->m_mesh->draw();
+}
+

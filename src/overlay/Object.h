@@ -30,8 +30,7 @@
 
 class Object {
  public:
-	Object(std::shared_ptr<Shader> s,
-		   std::vector<std::shared_ptr<Mesh>> vertex_data);
+	Object(std::shared_ptr<Shader> s, std::vector<std::shared_ptr<TexturedMesh>> vertex_data);
 	void translate(glm::vec3 pos);
 	void scale(glm::vec3 scale);
 	void rotate(float deg, glm::vec3 v);
@@ -39,7 +38,7 @@ class Object {
 
  private:
 	std::shared_ptr<Shader> m_shader;
-	std::vector<std::shared_ptr<Mesh>> m_meshes;
+	std::vector<std::shared_ptr<TexturedMesh>> m_meshes;
 	glm::mat4 m_model;
 
 	// position etc

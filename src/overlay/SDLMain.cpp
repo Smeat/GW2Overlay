@@ -112,6 +112,9 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	auto markers = CategoryManager::getInstance().get_categories();
 	auto pois = CategoryManager::getInstance().get_pois();
 
+	std::shared_ptr<Mesh> cube_mesh(new Mesh(vertices, {0, 1, 3, 1, 2, 3}));
+	rend->allocate_mesh(cube_mesh);
+
 	for (auto iter = pois->begin(); iter != pois->end(); ++iter) {
 		if (iter->m_map_id == mapid) {
 			auto cat = MarkerCategory::find_children(*markers, iter->m_type);
@@ -138,8 +141,7 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 			}
 			auto tex_iter = texture_file_map.find(icon_file);
 			// TODO: this creates a new mesh, while they are all the same...
-			std::shared_ptr<Mesh> my_mesh(new Mesh(vertices, {0, 1, 3, 1, 2, 3}, tex_iter->second));
-			rend->allocate_mesh(my_mesh);
+			std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex_iter->second));
 			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));
 			auto pos = iter->m_pos;
 			pos.y += cat->m_height_offset;
