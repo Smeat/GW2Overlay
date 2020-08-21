@@ -28,7 +28,8 @@ add_executable(GW2Overlay
 	overlay/Shader.cpp
 	overlay/Object.cpp
 	utils/xml/pugixml.cpp
-	overlay/Texture.cpp
+	overlay/gl/GLTexture.cpp
+	overlay/gl/GLMesh.cpp
 	overlay/Mesh.cpp
 	utils/GW2Link.cpp
 	utils/CategoryManager.cpp

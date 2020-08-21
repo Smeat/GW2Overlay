@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "Texture.h"
+#include "GLTexture.h"
 #include <GL/glew.h>
 
 #include <SDL2/SDL.h>
@@ -28,12 +28,10 @@
 #include <SDL2/SDL_surface.h>
 #include <iostream>
 
-Texture::Texture(const std::string& path) { this->m_path = path; }
-
-void Texture::init_gl() {
-	SDL_Surface* surf = IMG_Load(this->m_path.c_str());
+GLTexture::GLTexture(const std::string& path) {
+	SDL_Surface* surf = IMG_Load(path.c_str());
 	if (!surf) {
-		std::cerr << "Failed to load texture " << this->m_path << std::endl;
+		std::cerr << "Failed to load texture " << path << std::endl;
 		SDL_FreeSurface(surf);
 		return;
 	}
@@ -53,9 +51,9 @@ void Texture::init_gl() {
 	SDL_FreeSurface(surf);
 }
 
-Texture::~Texture() {
+GLTexture::~GLTexture() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDeleteTextures(1, &this->m_id);
 }
 
-void Texture::set_active() { glBindTexture(GL_TEXTURE_2D, this->m_id); }
+void GLTexture::set_active() { glBindTexture(GL_TEXTURE_2D, this->m_id); }

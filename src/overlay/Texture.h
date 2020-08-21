@@ -24,14 +24,7 @@
 
 class Texture {
  public:
-	Texture(const std::string& path);
-	virtual ~Texture();
-	void set_active();
-	void init_gl();
-
- private:
-	unsigned int m_id;
-	std::string m_path;
+	virtual void set_active() = 0;
 };
 
 #endif

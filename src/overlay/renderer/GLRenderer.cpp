@@ -8,6 +8,9 @@
 #include <memory>
 #include <vector>
 
+#include "../gl/GLMesh.h"
+#include "../gl/GLTexture.h"
+
 void GLRenderer::init() {
 	glewInit();
 	printf("OpenGL version %s\n", glGetString(GL_VERSION));
@@ -25,5 +28,9 @@ void GLRenderer::update(std::vector<std::shared_ptr<Object>> objects) {
 }
 void GLRenderer::clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
-void GLRenderer::allocate_mesh(std::shared_ptr<Mesh> v) { v->init_gl(); }
-void GLRenderer::allocate_texture(std::shared_ptr<Texture> v) { v->init_gl(); }
+std::shared_ptr<Texture> GLRenderer::load_texture(const std::string& path) {
+	return std::shared_ptr<Texture>(new GLTexture(path));
+}
+std::shared_ptr<Mesh> GLRenderer::load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
+	return std::shared_ptr<Mesh>(new GLMesh(vertices, indices));
+}

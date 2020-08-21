@@ -10,8 +10,8 @@ class GLRenderer : public Renderer {
 	virtual void init() override;
 	virtual void update(std::vector<std::shared_ptr<Object>> objs) override;
 	virtual void clear() override;
-	virtual void allocate_mesh(std::shared_ptr<Mesh> v) override;
-	virtual void allocate_texture(std::shared_ptr<Texture> t) override;
+	virtual std::shared_ptr<Texture> load_texture(const std::string& path) override;
+	virtual std::shared_ptr<Mesh> load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) override;
 };
 
 #endif	// __GLRENDERER_H__

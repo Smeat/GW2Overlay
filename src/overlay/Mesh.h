@@ -67,14 +67,12 @@ struct Vertex {
 class Mesh {
  public:
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
-	virtual ~Mesh();
-	void draw();
-	void init_gl();
+	virtual ~Mesh() = default;
+	virtual void draw() = 0;
 
- private:
+ protected:
 	std::vector<Vertex> m_vertices;
 	std::vector<unsigned int> m_indices;
-	unsigned int m_vao, m_vbo, m_ebo;
 };
 
 class TexturedMesh {

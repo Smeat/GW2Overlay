@@ -12,8 +12,8 @@ class Renderer {
 	virtual void update(std::vector<std::shared_ptr<Object>> objs) = 0;
 	virtual void clear() = 0;
 
-	virtual void allocate_mesh(std::shared_ptr<Mesh> v) = 0;
-	virtual void allocate_texture(std::shared_ptr<Texture> t) = 0;
+	virtual std::shared_ptr<Texture> load_texture(const std::string& path) = 0;
+	virtual std::shared_ptr<Mesh> load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) = 0;
 };
 
 #endif	// __RENDERER_H__

@@ -112,8 +112,7 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	auto markers = CategoryManager::getInstance().get_categories();
 	auto pois = CategoryManager::getInstance().get_pois();
 
-	std::shared_ptr<Mesh> cube_mesh(new Mesh(vertices, {0, 1, 3, 1, 2, 3}));
-	rend->allocate_mesh(cube_mesh);
+	auto cube_mesh = rend->load_mesh(vertices, {0, 1, 3, 1, 2, 3});
 
 	for (auto iter = pois->begin(); iter != pois->end(); ++iter) {
 		if (iter->m_map_id == mapid) {
@@ -134,8 +133,7 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 				icon_file = "Data/arrow.png";
 			}
 			if (texture_file_map.find(icon_file) == texture_file_map.end()) {
-				std::shared_ptr<Texture> tex(new Texture(icon_file));
-				rend->allocate_texture(tex);
+				auto tex = rend->load_texture(icon_file);
 				std::cout << "Loading texture with path " << icon_file << std::endl;
 				texture_file_map.insert({icon_file, tex});
 			}

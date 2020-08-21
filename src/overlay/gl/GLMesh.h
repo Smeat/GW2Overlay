@@ -17,27 +17,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "Mesh.h"
+#ifndef __GLMESH_H__
+#define __GLMESH_H__
 
-#include "Texture.h"
+#include "../Texture.h"
 
-#include <GL/glew.h>
-
-#include <GL/gl.h>
-#include <cstddef>
-#include <cstdint>
+#include <vulkan/vulkan.h>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
-	this->m_vertices = vertices;
-	this->m_indices = indices;
-}
+#include <glm/glm.hpp>
 
-TexturedMesh::TexturedMesh(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex) : m_mesh(mesh), m_texture(tex) {}
+#include "../Mesh.h"
 
-void TexturedMesh::draw() {
-	this->m_texture->set_active();
-	this->m_mesh->draw();
-}
+class GLMesh : public Mesh {
+ public:
+	GLMesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
+	virtual ~GLMesh();
+	virtual void draw() override;
 
+ private:
+	unsigned int m_vao, m_vbo, m_ebo;
+};
+
+#endif
