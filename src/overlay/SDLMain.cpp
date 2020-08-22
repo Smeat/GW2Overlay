@@ -152,23 +152,54 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 }
 
 void update_camera(const LinkedMem* gw2_data) {
-	//	auto ctx = gw2_data->get_context();
+	auto ctx = gw2_data->get_context();
 	//	TODO: draw POIs on the map, if it is open
 	//	This requires to translate the position of all objects to map
 	// coordinates
-	glm::vec3 cameraPos = glm::make_vec3(gw2_data->fCameraPosition);
-	glm::vec3 cameraFront = glm::make_vec3(gw2_data->fCameraFront);
-	glm::vec3 cameraUp = glm::make_vec3(gw2_data->fCameraTop);
-	// TODO: proper camera UP! Any way to get the target? Mumble link cam up
-	// is always 0 this is good enough for now
-	cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	// get map bounds from api
+	if (ctx->get_ui_state(UI_STATE::MAP_OPEN)) {
+		float frac_x = ctx->playerX / gw2_data->fAvatarPosition[0];
+		float frac_y = ctx->playerY / gw2_data->fAvatarPosition[2];
+		glm::vec3 cameraPos;
+		cameraPos.x = ctx->mapCenterX / frac_x;
+		cameraPos.z = ctx->mapCenterY / frac_y;
+		cameraPos.y = 50;
+		// XXX: font x mustn't be 0. No clue why
+		auto cameraFront = glm::vec3(-0.00001f, -1.0f, 0.0f);
+		auto cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	glm::vec3 cameraTarget = glm::make_vec3(gw2_data->fAvatarPosition);
-	glm::vec3 cameraDirection = glm::normalize(cameraPos - glm::make_vec3(cameraTarget));
-	glm::vec3 cameraRight = glm::normalize(glm::cross(cameraUp, cameraDirection));
+		auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
+		my_shader->set_view(view);
 
-	auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
-	my_shader->set_view(view);
+		/*printf("map (%f, %f) map player (%f %f) player (%f %f) scale %f frac(%f %f)\n", ctx->mapCenterX,
+			   ctx->mapCenterY, ctx->playerX, ctx->playerY, gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[2],
+			   ctx->mapScale, frac_x, frac_y);
+		printf("cam diff to player (%f %f %f)\n", cameraPos.x - gw2_data->fAvatarPosition[0],
+			   cameraPos.y - gw2_data->fAvatarPosition[1], cameraPos.z - gw2_data->fAvatarPosition[2]);
+		printf("Pos (%f %f %f)\n", cameraPos.x, cameraPos.y, cameraPos.z);
+		printf("Front (%f %f %f)\n", cameraFront.x, cameraFront.y, cameraFront.z);
+		*/
+
+	} else {
+		glm::vec3 cameraPos = glm::make_vec3(gw2_data->fCameraPosition);
+		glm::vec3 cameraFront = glm::make_vec3(gw2_data->fCameraFront);
+		glm::vec3 cameraUp = glm::make_vec3(gw2_data->fCameraTop);
+		// TODO: proper camera UP! Any way to get the target? Mumble link cam up
+		// is always 0 this is good enough for now
+		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+		// XXX: seems like I didn't understand this part :) doesn't change anything
+		// glm::vec3 cameraTarget = glm::make_vec3(gw2_data->fAvatarPosition);
+		// glm::vec3 cameraDirection = glm::normalize(cameraPos - glm::make_vec3(cameraTarget));
+		// glm::vec3 cameraRight = glm::normalize(glm::cross(cameraUp, cameraDirection));
+		// cameraUp = glm::cross(cameraDirection, cameraRight);
+		// printf("New up (%f %f %f)\n", cameraUp.x, cameraUp.y, cameraUp.z);
+		// printf("Pos (%f %f %f)\n", cameraPos.x, cameraPos.y, cameraPos.z);
+		// printf("Front (%f %f %f)\n", cameraFront.x, cameraFront.y, cameraFront.z);
+
+		auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
+		my_shader->set_view(view);
+	}
 }
 
 int main(int argc, char** argv) {
