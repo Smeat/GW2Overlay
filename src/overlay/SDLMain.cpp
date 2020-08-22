@@ -83,6 +83,7 @@
 #include "Shader.h"
 
 #include "../utils/CategoryManager.h"
+#include "../utils/GW2Api.h"
 #include "../utils/GW2Link.h"
 #include "../utils/POI.h"
 #include "../utils/json/json.hpp"
@@ -247,6 +248,9 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
+
+	GW2Api api("./cache");
+	api.get_value("v2/maps/15");
 
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();

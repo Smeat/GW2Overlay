@@ -10,6 +10,7 @@ find_package(X11 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options)
+find_package(OpenSSL REQUIRED)
 INCLUDE(FindPkgConfig)
 
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
@@ -48,6 +49,7 @@ SET(SOURCES
 	utils/GW2Link.cpp
 	utils/CategoryManager.cpp
 	utils/POI.cpp
+	utils/GW2Api.cpp
 	overlay/QtMain.cpp
 	overlay/qt/OptionsIcon.cpp
 	overlay/qt/OptionsWindow.ui
@@ -73,25 +75,5 @@ TARGET_LINK_LIBRARIES(GW2Overlay
 	${Qt5Widgets_LIBRARIES}
 	Threads::Threads
 	vulkan
+	OpenSSL::SSL
 	)
-
-
-add_executable(vkTest
-	overlay/renderer/main.cpp
-	${SOURCES}
-	${GL_SOURCES}
-	${VK_SOURCES}
-	)
-
-TARGET_LINK_LIBRARIES(vkTest
-	${SDL2_LIBRARIES}
-	${SDL2IMAGE_LIBRARIES}
-	${X11_LIBRARIES}
-	${OPENGL_LIBRARIES}
-	${GLEW_LIBRARIES}
-	xcb X11-xcb xcb-xfixes
-	${Boost_LIBRARIES}
-	${Qt5Widgets_LIBRARIES}
-	Threads::Threads
-	vulkan
-	  )
