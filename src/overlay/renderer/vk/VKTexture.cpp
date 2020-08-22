@@ -116,9 +116,6 @@ void VKTexture::createTextureImage(const std::string& filename) {
 	transitionImageLayout(this->m_texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 						  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-	transitionImageLayout(this->m_texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-						  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
 	vkDestroyBuffer(this->m_device, stagingBuffer, nullptr);
 	vkFreeMemory(this->m_device, stagingBufferMemory, nullptr);
 }
