@@ -181,12 +181,11 @@ void update_camera(const LinkedMem* gw2_data) {
 		*/
 
 	} else {
-		glm::vec3 cameraPos = glm::make_vec3(gw2_data->fCameraPosition);
-		glm::vec3 cameraFront = glm::make_vec3(gw2_data->fCameraFront);
-		glm::vec3 cameraUp = glm::make_vec3(gw2_data->fCameraTop);
-		// TODO: proper camera UP! Any way to get the target? Mumble link cam up
-		// is always 0 this is good enough for now
-		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+		glm::vec3 cameraPos =
+			glm::vec3(gw2_data->fCameraPosition[0], gw2_data->fCameraPosition[1], gw2_data->fCameraPosition[2]);
+		glm::vec3 cameraFront =
+			glm::vec3(gw2_data->fCameraFront[0], gw2_data->fCameraFront[1], gw2_data->fCameraFront[2]);
+		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 		// XXX: seems like I didn't understand this part :) doesn't change anything
 		// glm::vec3 cameraTarget = glm::make_vec3(gw2_data->fAvatarPosition);
