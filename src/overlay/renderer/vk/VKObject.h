@@ -45,8 +45,8 @@ class VKObject : public Object {
 	virtual void update() override;
 	const std::shared_ptr<std::vector<std::shared_ptr<TexturedMesh>>> get_textured_meshes() const;
 	const std::shared_ptr<Shader> get_shader() const { return this->m_shader; }
-	std::vector<VkDescriptorSet> get_descriptor_sets();
-	std::vector<VkDeviceMemory> get_uniform_buffers_memory() { return this->m_uniform_buffers_memory; }
+	std::vector<VkDescriptorSet>* get_descriptor_sets();
+	std::vector<VkDeviceMemory>* get_uniform_buffers_memory() { return &this->m_uniform_buffers_memory; }
 
  private:
 	VkDevice m_device;

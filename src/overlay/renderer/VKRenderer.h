@@ -184,10 +184,10 @@ class VKRenderer : public Renderer {
 			VkDeviceSize offsets[] = {0};
 			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-			// TODO: bind descriptor sets for every object here
+			// TODO: shrink this to a single call
 			for (const auto& obj : objs) {
 				vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-										&std::dynamic_pointer_cast<VKObject>(obj)->get_descriptor_sets().at(i), 0,
+										&std::dynamic_pointer_cast<VKObject>(obj)->get_descriptor_sets()->at(i), 0,
 										nullptr);
 				vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 			}
@@ -1082,25 +1082,11 @@ class VKRenderer : public Renderer {
 	}
 
 	void updateUniformBuffer(uint32_t currentImage) {
-		static auto startTime = std::chrono::high_resolution_clock::now();
-
-		auto currentTime = std::chrono::high_resolution_clock::now();
-		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
 		UniformBufferObject ubo{};
-		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.model = glm::scale(ubo.model, glm::vec3(20.0f));
-		ubo.view = glm::lookAtLH(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		//	ubo.proj =
-		//		glm::perspective(glm::radians(90.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f,
-		// 1000.0f);
 
-		// TODO: fix y axis
 		ubo.view = this->m_shader->get_view();
 		ubo.proj = this->m_shader->get_projection();
 		ubo.proj[1][1] *= -1;
-
-		// std::cout << "View: " << glm::to_string(ubo.view) << std::endl;
 
 		void* data;
 		vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
@@ -1112,9 +1098,9 @@ class VKRenderer : public Renderer {
 			auto vkobj = std::dynamic_pointer_cast<VKObject>(obj);
 			auto buffers = vkobj->get_uniform_buffers_memory();
 			ubo.model = this->m_shader->get_model();
-			vkMapMemory(device, buffers.at(currentImage), 0, sizeof(ubo), 0, &data);
+			vkMapMemory(device, buffers->at(currentImage), 0, sizeof(ubo), 0, &data);
 			memcpy(data, &ubo, sizeof(ubo));
-			vkUnmapMemory(device, buffers.at(currentImage));
+			vkUnmapMemory(device, buffers->at(currentImage));
 		}
 	}
 

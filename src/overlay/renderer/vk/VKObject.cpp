@@ -112,4 +112,4 @@ void VKObject::update() {
 	this->m_shader->set_model(this->m_model);
 }
 
-std::vector<VkDescriptorSet> VKObject::get_descriptor_sets() { return this->m_descriptor_sets; }
+std::vector<VkDescriptorSet>* VKObject::get_descriptor_sets() { return &this->m_descriptor_sets; }
