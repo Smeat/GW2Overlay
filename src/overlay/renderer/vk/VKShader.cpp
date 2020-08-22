@@ -32,7 +32,11 @@ VKShader::~VKShader() {}
 
 void VKShader::set_active() {}
 
-void VKShader::set_projection(glm::mat4 projection) {}
+void VKShader::set_projection(glm::mat4 projection) { this->m_projection = projection; }
 
-void VKShader::set_view(glm::mat4 v) {}
-void VKShader::set_model(glm::mat4 m) {}
+void VKShader::set_view(glm::mat4 v) { this->m_view = v; }
+void VKShader::set_model(glm::mat4 m) { this->m_model = m; }
+
+glm::mat4 VKShader::get_projection() { return this->m_projection; }
+glm::mat4 VKShader::get_view() { return this->m_view; }
+glm::mat4 VKShader::get_model() { return this->m_model; }

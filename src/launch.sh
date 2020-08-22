@@ -28,15 +28,19 @@ sleep 5
 echo ""
 echo "Found gw2 process ${GW2_PID}"
 
+OLD_ENV=$(export -p)
+
 source <(xargs -0 bash -c 'printf "export %q\n" "$@"' -- < /proc/${GW2_PID}/environ)
 unset WINESERVERSOCKET
 unset WINELOADERNOEXEC
 unset WINEPRELOADRESERVE
+unset LD_PRELOAD
 
 echo ${WINEPREFIX}
 PYTHON_BIN="${WINEPREFIX}/drive_c/Program Files/Python38/python.exe"
 "${WINE}" "${PYTHON_BIN}" "${WINEPREFIX}/mumble.py" &
 MUMBLE_PID=$!
+
 $OVERLAY_CMD &
 OVERLAY_PID=$!
 

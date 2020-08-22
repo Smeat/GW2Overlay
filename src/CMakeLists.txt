@@ -35,6 +35,7 @@ SET(VK_SOURCES
 	overlay/renderer/vk/VKShader.cpp
 	overlay/renderer/vk/VKTexture.cpp
 	overlay/renderer/vk/VKMesh.cpp
+	overlay/renderer/vk/VKCommon.cpp
 
 	#overlay/renderer/VKRenderer.cpp
 	)

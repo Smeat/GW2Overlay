@@ -22,14 +22,17 @@ void GLRenderer::init() {
 }
 
 void GLRenderer::update() {
-	this->clear();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for (auto iter = this->m_objects.begin(); iter != this->m_objects.end(); ++iter) {
 		(*iter)->update();
 	}
 	glFlush();
 	glXSwapBuffers(this->m_window.display, this->m_window.window);
 }
-void GLRenderer::clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+void GLRenderer::clear() {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glXSwapBuffers(this->m_window.display, this->m_window.window);
+}
 
 std::shared_ptr<Texture> GLRenderer::load_texture(const std::string& path) {
 	return std::shared_ptr<Texture>(new GLTexture(path));

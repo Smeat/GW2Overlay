@@ -27,6 +27,9 @@
 
 #include "../../Shader.h"
 
+/**
+ * To use multiple shaders, we need to create separate pipelines
+ */
 class VKShader : public Shader {
  public:
 	VKShader(const std::string& vertex_path, const std::string& fragment_path);
@@ -36,6 +39,15 @@ class VKShader : public Shader {
 	virtual void set_projection(glm::mat4 p) override;
 	virtual void set_view(glm::mat4 v) override;
 	virtual void set_model(glm::mat4 m) override;
+
+	glm::mat4 get_projection();
+	glm::mat4 get_view();
+	glm::mat4 get_model();
+
+ private:
+	glm::mat4 m_projection = glm::mat4(1.0f);
+	glm::mat4 m_view = glm::mat4(1.0f);
+	glm::mat4 m_model = glm::mat4(1.0f);
 };
 
 #endif	// __VKSHADER__H_
