@@ -40,6 +40,7 @@
 #include "../Window.h"
 #include "Renderer.h"
 #include "vk/VKMesh.h"
+#include "vk/VKObject.h"
 #include "vk/VKShader.h"
 #include "vk/VKTexture.h"
 
@@ -61,12 +62,6 @@ const std::vector<Vertex> vertices_static = {
 	Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 1.0f))};
 
 const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
-
-struct UniformBufferObject {
-	glm::mat4 model;
-	glm::mat4 view;
-	glm::mat4 proj;
-};
 
 #undef NDEBUG
 #ifdef NDEBUG
@@ -113,6 +108,7 @@ class VKRenderer : public Renderer {
 	WindowData windowHandle = {0, 0};
 	std::vector<Vertex> vertices;
 	std::shared_ptr<VKShader> m_shader;
+	std::vector<std::shared_ptr<Object>> m_objects;
 
  public:
 	VKRenderer(WindowData win) {
@@ -131,13 +127,20 @@ class VKRenderer : public Renderer {
 		}
 		this->initVulkan();
 	}
+	virtual std::shared_ptr<Object> load_object(std::shared_ptr<Shader> s,
+												std::vector<std::shared_ptr<TexturedMesh>> m) override {
+		return std::shared_ptr<VKObject>(
+			new VKObject(s, m, device, physicalDevice, descriptorSetLayout, swapChainImages.size()));
+	}
 
+	// TODO: set the descriptors here?
 	virtual void set_objects(std::vector<std::shared_ptr<Object>> objs) override {
 		//	this->vertices = *(objs[0]->get_textured_meshes()->at(0)->get_mesh()->get_vertices());
 		// this->recreateSwapChain();
-		std::cout << "Setting objects!!!" << std::endl;
+		std::cout << "Loading " << objs.size() << " objects!!!" << std::endl;
 		auto obj = objs[0];
 		this->m_shader = std::dynamic_pointer_cast<VKShader>(obj->get_shader());
+		this->m_objects = objs;
 
 		vkDeviceWaitIdle(device);
 		vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
@@ -182,9 +185,12 @@ class VKRenderer : public Renderer {
 			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 			// TODO: bind descriptor sets for every object here
-			vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-									&descriptorSets[i], 0, nullptr);
-			vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+			for (const auto& obj : objs) {
+				vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
+										&std::dynamic_pointer_cast<VKObject>(obj)->get_descriptor_sets().at(i), 0,
+										nullptr);
+				vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+			}
 			vkCmdEndRenderPass(commandBuffers[i]);
 			if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
 				throw std::runtime_error("failed to record command buffer!");
@@ -1088,15 +1094,11 @@ class VKRenderer : public Renderer {
 		//	ubo.proj =
 		//		glm::perspective(glm::radians(90.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f,
 		// 1000.0f);
-		glm::mat4 projection = glm::mat4(1.0f);
-		projection = glm::perspectiveFovLH(1.222f, 1680.0f, 1050.0f, 0.1f, 10000.0f);
-		//		projection[1][1] *= -1;
-		ubo.proj = projection;
 
 		// TODO: fix y axis
-		// ubo.model = this->m_shader->get_model();
 		ubo.view = this->m_shader->get_view();
 		ubo.proj = this->m_shader->get_projection();
+		ubo.proj[1][1] *= -1;
 
 		// std::cout << "View: " << glm::to_string(ubo.view) << std::endl;
 
@@ -1104,6 +1106,16 @@ class VKRenderer : public Renderer {
 		vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
 		memcpy(data, &ubo, sizeof(ubo));
 		vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
+
+		for (const auto& obj : this->m_objects) {
+			obj->update();
+			auto vkobj = std::dynamic_pointer_cast<VKObject>(obj);
+			auto buffers = vkobj->get_uniform_buffers_memory();
+			ubo.model = this->m_shader->get_model();
+			vkMapMemory(device, buffers.at(currentImage), 0, sizeof(ubo), 0, &data);
+			memcpy(data, &ubo, sizeof(ubo));
+			vkUnmapMemory(device, buffers.at(currentImage));
+		}
 	}
 
 	void drawFrame() {

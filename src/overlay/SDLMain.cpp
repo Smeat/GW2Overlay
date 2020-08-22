@@ -141,7 +141,7 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 			auto tex_iter = texture_file_map.find(icon_file);
 			// TODO: this creates a new mesh, while they are all the same...
 			std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex_iter->second));
-			std::shared_ptr<Object> obj(new Object(my_shader, {my_mesh}));
+			std::shared_ptr<Object> obj = rend->load_object(my_shader, {my_mesh});
 			auto pos = iter->m_pos;
 			pos.y += cat->m_height_offset;
 			obj->translate(pos);
