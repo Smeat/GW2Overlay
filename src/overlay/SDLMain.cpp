@@ -185,6 +185,7 @@ int main(int argc, char** argv) {
 		("height", po::value<float>()->default_value(1050.0f),
 			"Display height")
 		("vulkan", "Enable vulkan renderer")
+		("validation", "Enable validation layers for vulkan")
 		("f", "Force output")
 		;
 	// clang-format on
@@ -226,7 +227,7 @@ int main(int argc, char** argv) {
 	std::shared_ptr<Renderer> renderer;
 
 	if (use_vulkan) {
-		renderer.reset(new VKRenderer(window));
+		renderer.reset(new VKRenderer(window, vm.count("validation")));
 	} else {
 		renderer.reset(new GLRenderer(window));
 	}

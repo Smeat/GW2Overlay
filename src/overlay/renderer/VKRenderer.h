@@ -65,13 +65,6 @@ const std::vector<Vertex> vertices_static = {
 
 const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
-#undef NDEBUG
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
-const bool enableValidationLayers = true;
-#endif
-
 class VKRenderer : public Renderer {
  private:
 	Window* window;
@@ -112,8 +105,11 @@ class VKRenderer : public Renderer {
 	std::shared_ptr<VKShader> m_shader;
 	std::vector<std::shared_ptr<Object>> m_objects;
 
+	bool m_enable_validation_layers = false;
+
  public:
-	VKRenderer(WindowData win) {
+	VKRenderer(WindowData win, bool enable_validation_layers = false) {
+		this->m_enable_validation_layers = enable_validation_layers;
 		// TODO: remove this dummy shader
 		this->m_shader.reset(new VKShader("", ""));
 		std::cout << "Initializing vulkan..." << std::endl;
@@ -772,7 +768,7 @@ class VKRenderer : public Renderer {
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-		if (enableValidationLayers) {
+		if (this->m_enable_validation_layers) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			createInfo.ppEnabledLayerNames = validationLayers.data();
 		} else {
@@ -974,7 +970,7 @@ class VKRenderer : public Renderer {
 	}
 
 	void createInstance() {
-		if (enableValidationLayers && !checkValidationLayerSupport()) {
+		if (this->m_enable_validation_layers && !checkValidationLayerSupport()) {
 			throw std::runtime_error("validation layers requested, but not available!");
 		}
 		VkApplicationInfo appInfo{};
@@ -991,7 +987,7 @@ class VKRenderer : public Renderer {
 		createInfo.enabledExtensionCount = vkExtensions.size();
 		createInfo.ppEnabledExtensionNames = vkExtensions.data();
 
-		if (enableValidationLayers) {
+		if (this->m_enable_validation_layers) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			createInfo.ppEnabledLayerNames = validationLayers.data();
 		} else {
