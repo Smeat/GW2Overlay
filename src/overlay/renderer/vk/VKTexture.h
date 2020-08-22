@@ -20,16 +20,41 @@
 #ifndef __VKTEXTURE_H__
 #define __VKTEXTURE_H__
 
+#include <vulkan/vulkan_core.h>
+
 #include <string>
 
 #include "../../Texture.h"
 
 class VKTexture : public Texture {
  public:
-	VKTexture(const std::string& path);
+	VKTexture(const std::string& path, VkDevice device, VkPhysicalDevice physical_device, VkCommandPool command_pool,
+			  VkQueue graphics_queue);
 	virtual ~VKTexture();
 
 	virtual void set_active() override;
+
+	VkImageView get_image_view() { return this->m_texture_image_view; }
+	VkSampler get_sampler() { return this->m_texture_sampler; }
+
+ private:
+	void createTextureSampler();
+	void createTextureImageView();
+	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+					 VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+	void createTextureImage(const std::string& filename);
+	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+	VkDevice m_device;
+	VkPhysicalDevice m_physical_device;
+	VkCommandPool m_command_pool;
+	VkQueue m_graphics_queue;
+
+	VkImage m_texture_image;
+	VkDeviceMemory m_texture_image_memory;
+	VkImageView m_texture_image_view;
+	VkSampler m_texture_sampler;
 };
 
 #endif

@@ -33,6 +33,8 @@
 #include <xcb/xinput.h>
 #include <xcb/xproto.h>
 
+#include <SDL2/SDL_image.h>
+
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_xlib.h>
 
@@ -200,7 +202,7 @@ class VKRenderer : public Renderer {
 	virtual void clear() override {}
 	virtual void update() override { this->drawFrame(); }
 	virtual std::shared_ptr<Texture> load_texture(const std::string& path) override {
-		return std::shared_ptr<Texture>(new VKTexture(path));
+		return std::shared_ptr<Texture>(new VKTexture(path, device, physicalDevice, commandPool, graphicsQueue));
 	}
 	virtual std::shared_ptr<Mesh> load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) override {
 		return std::shared_ptr<Mesh>(new VKMesh(vertices, indices));
@@ -231,6 +233,21 @@ class VKRenderer : public Renderer {
 		createCommandBuffers();
 		createSemaphores();
 	};
+
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
+					  VkDeviceMemory& bufferMemory) {
+		::createBuffer(device, physicalDevice, size, usage, properties, buffer, bufferMemory);
+	}
+
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+		::findMemoryType(physicalDevice, typeFilter, properties);
+	}
+
+	VkCommandBuffer beginSingleTimeCommands() { ::beginSingleTimeCommands(device, commandPool); }
+
+	void endSingleTimeCommands(VkCommandBuffer buf) {
+		::endSingleTimeCommands(device, commandPool, buf, graphicsQueue);
+	}
 
 	void createDescriptorSets() {
 		std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
@@ -288,7 +305,7 @@ class VKRenderer : public Renderer {
 		uniformBuffersMemory.resize(swapChainImages.size());
 
 		for (size_t i = 0; i < swapChainImages.size(); i++) {
-			createBuffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 						 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i],
 						 uniformBuffersMemory[i]);
 		}
@@ -302,10 +319,19 @@ class VKRenderer : public Renderer {
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 		uboLayoutBinding.pImmutableSamplers = nullptr;	// Optional
 
+		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+		samplerLayoutBinding.binding = 1;
+		samplerLayoutBinding.descriptorCount = 1;
+		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		samplerLayoutBinding.pImmutableSamplers = nullptr;
+		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layoutInfo.bindingCount = 1;
-		layoutInfo.pBindings = &uboLayoutBinding;
+		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+		layoutInfo.pBindings = bindings.data();
 
 		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create descriptor set layout!");
@@ -317,7 +343,7 @@ class VKRenderer : public Renderer {
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
-		createBuffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 					 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
 					 stagingBufferMemory);
 
@@ -326,8 +352,7 @@ class VKRenderer : public Renderer {
 		memcpy(data, indices.data(), (size_t)bufferSize);
 		vkUnmapMemory(device, stagingBufferMemory);
 
-		createBuffer(device, physicalDevice, bufferSize,
-					 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 					 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
 
 		copyBuffer(stagingBuffer, indexBuffer, bufferSize);
@@ -337,34 +362,13 @@ class VKRenderer : public Renderer {
 	}
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = commandPool;
-		allocInfo.commandBufferCount = 1;
+		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
-		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer(commandBuffer, &beginInfo);
 		VkBufferCopy copyRegion{};
-		copyRegion.srcOffset = 0;  // Optional
-		copyRegion.dstOffset = 0;  // Optional
 		copyRegion.size = size;
 		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-		vkEndCommandBuffer(commandBuffer);
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
 
-		vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(graphicsQueue);
-		vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+		endSingleTimeCommands(commandBuffer);
 	}
 
 	void createVertexBuffer() {
@@ -373,7 +377,7 @@ class VKRenderer : public Renderer {
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
 
-		createBuffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 					 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
 					 stagingBufferMemory);
 
@@ -382,8 +386,7 @@ class VKRenderer : public Renderer {
 		memcpy(data, vertices.data(), (size_t)bufferSize);
 		vkUnmapMemory(device, stagingBufferMemory);
 
-		createBuffer(device, physicalDevice, bufferSize,
-					 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 					 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 		copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
@@ -723,24 +726,8 @@ class VKRenderer : public Renderer {
 	}
 	void createImageViews() {
 		swapChainImageViews.resize(swapChainImages.size());
-		for (size_t i = 0; i < swapChainImages.size(); ++i) {
-			VkImageViewCreateInfo createInfo{};
-			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			createInfo.image = swapChainImages[i];
-			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			createInfo.format = swapChainImageFormat;
-			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			createInfo.subresourceRange.baseMipLevel = 0;
-			createInfo.subresourceRange.levelCount = 1;
-			createInfo.subresourceRange.baseArrayLayer = 0;
-			createInfo.subresourceRange.layerCount = 1;
-			if (vkCreateImageView(device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
-				throw std::runtime_error("failed to create image views!");
-			}
+		for (uint32_t i = 0; i < swapChainImages.size(); i++) {
+			swapChainImageViews[i] = createImageView(device, swapChainImages[i], swapChainImageFormat);
 		}
 	}
 
@@ -825,6 +812,7 @@ class VKRenderer : public Renderer {
 
 		// TODO: actually enable features we might need
 		VkPhysicalDeviceFeatures deviceFeatures{};
+		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -891,7 +879,10 @@ class VKRenderer : public Renderer {
 			swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 		}
 
-		return indices.isComplete() && extensionsSupported && swapChainAdequate;
+		VkPhysicalDeviceFeatures supportedFeatures;
+		vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
+		return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
 	}
 
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device) {

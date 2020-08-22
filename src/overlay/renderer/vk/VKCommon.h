@@ -6,5 +6,9 @@
 void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage,
 				  VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+void endSingleTimeCommands(VkDevice device, VkCommandPool commandPool, VkCommandBuffer commandBuffer,
+						   VkQueue graphicsQueue);
+VkCommandBuffer beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
+VkImageView createImageView(VkDevice device, VkImage image, VkFormat format);
 
 #endif
