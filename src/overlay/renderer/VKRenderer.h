@@ -644,9 +644,10 @@ class VKRenderer : public Renderer {
 		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;			 // Optional
 		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;	 // Optional
 		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;							 // Optional
-		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;					 // Optional
-		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;				 // Optional
-		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;							 // Optional
+		// XXX: Setting this to ZERO results in the same visuals as the current GL implementation (which is wrong)
+		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;	  // Optional
+		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
+		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;			  // Optional
 
 		VkPipelineColorBlendStateCreateInfo colorBlending{};
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
