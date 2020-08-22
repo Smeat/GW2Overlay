@@ -235,10 +235,10 @@ class VKRenderer : public Renderer {
 	}
 
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
-		::findMemoryType(physicalDevice, typeFilter, properties);
+		return ::findMemoryType(physicalDevice, typeFilter, properties);
 	}
 
-	VkCommandBuffer beginSingleTimeCommands() { ::beginSingleTimeCommands(device, commandPool); }
+	VkCommandBuffer beginSingleTimeCommands() { return ::beginSingleTimeCommands(device, commandPool); }
 
 	void endSingleTimeCommands(VkCommandBuffer buf) {
 		::endSingleTimeCommands(device, commandPool, buf, graphicsQueue);
