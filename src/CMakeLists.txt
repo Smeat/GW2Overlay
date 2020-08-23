@@ -50,6 +50,7 @@ SET(SOURCES
 	utils/CategoryManager.cpp
 	utils/POI.cpp
 	utils/GW2Api.cpp
+	utils/GW2Map.cpp
 	overlay/QtMain.cpp
 	overlay/qt/OptionsIcon.cpp
 	overlay/qt/OptionsWindow.ui

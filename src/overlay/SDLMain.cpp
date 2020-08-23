@@ -85,9 +85,11 @@
 #include "../utils/CategoryManager.h"
 #include "../utils/GW2Api.h"
 #include "../utils/GW2Link.h"
+#include "../utils/GW2Map.h"
 #include "../utils/POI.h"
 #include "../utils/json/json.hpp"
 #include "../utils/xml/pugixml.hpp"
+
 #include "QtMain.h"
 #include "Texture.h"
 #include "Window.h"
@@ -101,6 +103,8 @@ namespace po = boost::program_options;
 // TODO: remove this global mess and create more files
 std::vector<std::shared_ptr<Object>> objects;
 std::shared_ptr<Shader> my_shader;
+GW2Api api("./cache");
+GW2Map map;
 
 void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	std::vector<Vertex> vertices;
@@ -159,27 +163,30 @@ void update_camera(const LinkedMem* gw2_data) {
 	// coordinates
 	// get map bounds from api
 	if (ctx->get_ui_state(UI_STATE::MAP_OPEN)) {
-		float frac_x = ctx->playerX / gw2_data->fAvatarPosition[0];
-		float frac_y = ctx->playerY / gw2_data->fAvatarPosition[2];
 		glm::vec3 cameraPos;
-		cameraPos.x = ctx->mapCenterX / frac_x;
-		cameraPos.z = ctx->mapCenterY / frac_y;
-		cameraPos.y = 50;
-		// XXX: font x mustn't be 0. No clue why
-		auto cameraFront = glm::vec3(-0.00001f, -1.0f, 0.0f);
-		auto cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+		cameraPos.x = map.continentToMapX(ctx->mapCenterX);
+		cameraPos.z = map.continentToMapY(ctx->mapCenterY);
+		// TODO: find correct scale!
+		// 500 is pretty close in LA, but differs from map to map
+		// TODO: scale objects up, when on map?
+		cameraPos.y = 500 * ctx->mapScale;
+		auto cameraFront = glm::vec3(0.0f, -1.0f, 0.0f);
+		auto cameraUp = glm::vec3(0.0f, 1.0f, 1.0f);
 
 		auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_view(view);
-
-		/*printf("map (%f, %f) map player (%f %f) player (%f %f) scale %f frac(%f %f)\n", ctx->mapCenterX,
-			   ctx->mapCenterY, ctx->playerX, ctx->playerY, gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[2],
-			   ctx->mapScale, frac_x, frac_y);
-		printf("cam diff to player (%f %f %f)\n", cameraPos.x - gw2_data->fAvatarPosition[0],
-			   cameraPos.y - gw2_data->fAvatarPosition[1], cameraPos.z - gw2_data->fAvatarPosition[2]);
-		printf("Pos (%f %f %f)\n", cameraPos.x, cameraPos.y, cameraPos.z);
-		printf("Front (%f %f %f)\n", cameraFront.x, cameraFront.y, cameraFront.z);
-		*/
+		/*
+				printf("map (%f, %f) map player (%f %f) player (%f %f) scale %f\n", ctx->mapCenterX, ctx->mapCenterY,
+					   ctx->playerX, ctx->playerY, gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[2],
+		   ctx->mapScale); printf("cam diff to player (%f %f %f)\n", cameraPos.x - gw2_data->fAvatarPosition[0],
+					   cameraPos.y - gw2_data->fAvatarPosition[1], cameraPos.z - gw2_data->fAvatarPosition[2]);
+				printf("Pos (%f %f %f)\n", cameraPos.x, cameraPos.y, cameraPos.z);
+				printf("Front (%f %f %f)\n", cameraFront.x, cameraFront.y, cameraFront.z);
+				printf("Map rect ((%f %f),(%f %f))\n", map.get_map_rect(0, 0), map.get_map_rect(0, 1),
+		   map.get_map_rect(1, 0), map.get_map_rect(1, 1)); printf("Cont rect ((%f %f),(%f %f))\n",
+		   map.get_continent_rect(0, 0), map.get_continent_rect(0, 1), map.get_continent_rect(1, 0),
+		   map.get_continent_rect(1, 1));
+					   */
 
 	} else {
 		glm::vec3 cameraPos =
@@ -200,6 +207,11 @@ void update_camera(const LinkedMem* gw2_data) {
 		auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_view(view);
 	}
+}
+
+void update_map(int id) {
+	auto d = api.get_value(std::string("v2/maps/") + std::to_string(id));
+	map.load_map(d);
 }
 
 int main(int argc, char** argv) {
@@ -248,9 +260,6 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
-
-	GW2Api api("./cache");
-	api.get_value("v2/maps/15");
 
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();
@@ -345,6 +354,7 @@ int main(int argc, char** argv) {
 			printf("Map id changed to %d\n", ctx->mapId);
 			last_id = ctx->mapId;
 			CategoryManager::getInstance().set_state_changed(true);
+			update_map(last_id);
 		}
 		if (CategoryManager::getInstance().state_changed()) {
 			load_objects(last_id, renderer);
