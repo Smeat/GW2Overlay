@@ -85,7 +85,7 @@ void VKTexture::createTextureImage(const std::string& filename) {
 	if (!surf) {
 		std::cerr << "Failed to load texture " << filename << std::endl;
 		SDL_FreeSurface(surf);
-		return;
+		throw std::runtime_error("failed to load image file!");
 	}
 
 	int texWidth = surf->w;

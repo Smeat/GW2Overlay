@@ -24,6 +24,15 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS} ${SDL2IMAGE_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 
+ADD_CUSTOM_COMMAND(
+	OUTPUT vert.spv
+	COMMAND glslc ${CMAKE_SOURCE_DIR}/overlay/renderer/vk/shader/shader.vert -o ${CMAKE_BINARY_DIR}/vert.spv
+	)
+ADD_CUSTOM_COMMAND(
+	OUTPUT frag.spv
+	COMMAND glslc ${CMAKE_SOURCE_DIR}/overlay/renderer/vk/shader/shader.frag -o ${CMAKE_BINARY_DIR}/frag.spv
+	)
+
 SET(GL_SOURCES
 	overlay/renderer/gl/GLShader.cpp
 	overlay/renderer/gl/GLTexture.cpp
@@ -78,3 +87,10 @@ TARGET_LINK_LIBRARIES(GW2Overlay
 	vulkan
 	OpenSSL::SSL
 	)
+
+ADD_CUSTOM_TARGET(
+	shader ALL
+	DEPENDS vert.spv frag.spv
+	)
+
+ADD_DEPENDENCIES(GW2Overlay shader)

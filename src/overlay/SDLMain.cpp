@@ -25,14 +25,7 @@
  *    - Currently GW2 needs to be started and then start the mumble script via
  * the wine cmd
  *
- * FIXME:
- *  - Objects are moving a little bit
- *   - Probably due to socket delay
  */
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_image.h>
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -53,18 +46,6 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-
-#include <X11/X.h>
-#include <X11/Xatom.h>
-#include <X11/Xlib-xcb.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <xcb/shape.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_icccm.h>
-#include <xcb/xfixes.h>
-#include <xcb/xinput.h>
-#include <xcb/xproto.h>
 
 #include <arpa/inet.h>
 #include <locale.h>
@@ -139,9 +120,14 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 				icon_file = "Data/arrow.png";
 			}
 			if (texture_file_map.find(icon_file) == texture_file_map.end()) {
-				auto tex = rend->load_texture(icon_file);
-				std::cout << "Loading texture with path " << icon_file << std::endl;
-				texture_file_map.insert({icon_file, tex});
+				// TODO: handle missing texture
+				try {
+					auto tex = rend->load_texture(icon_file);
+					std::cout << "Loading texture with path " << icon_file << std::endl;
+					texture_file_map.insert({icon_file, tex});
+				} catch (...) {
+					continue;
+				}
 			}
 			auto tex_iter = texture_file_map.find(icon_file);
 			// TODO: this creates a new mesh, while they are all the same...
@@ -312,15 +298,10 @@ int main(int argc, char** argv) {
 		"FragColor = texture(ourTexture, TexCoord);"
 		"}";
 
-	glm::mat4 model = glm::mat4(1.0f);
-	glm::mat4 view = glm::mat4(1.0f);
-
 	my_shader = renderer->load_shader("", "");
 
 	my_shader->load_from_string(vertex_shader_src, fragment_shader_src);
 	my_shader->set_active();
-	my_shader->set_model(model);
-	my_shader->set_view(view);
 
 	CategoryManager::getInstance().load_taco_xmls(xml_files);
 
@@ -368,16 +349,6 @@ int main(int argc, char** argv) {
 		} else {
 			renderer->clear();
 		}
-		SDL_Event event;
-
-		while (SDL_PollEvent(&event)) {
-			switch (event.type) {
-				case SDL_QUIT:
-					running = false;
-					break;
-			}
-		}
-		// SDL_Delay(1000 / 100);
 	}
 
 	return 0;

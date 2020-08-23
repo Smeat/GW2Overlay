@@ -83,6 +83,9 @@ GLShader::GLShader(const std::string& vertex_path, const std::string& fragment_p
 		f_stream << f_stream.rdbuf();
 		this->load_from_string(v_stream.str(), f_stream.str());
 	}
+	this->set_projection(glm::mat4(1.0f));
+	this->set_view(glm::mat4(1.0f));
+	this->set_model(glm::mat4(1.0f));
 }
 
 GLShader::~GLShader() {
