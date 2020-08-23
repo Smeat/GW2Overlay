@@ -146,7 +146,7 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 			auto pos = iter->m_pos;
 			pos.y += cat->m_height_offset;
 			obj->translate(pos);
-			obj->scale({cat->m_icon_size * 3.0f, cat->m_icon_size * 3.0f, 1.0f});
+			obj->scale({cat->m_icon_size * 1.0f, cat->m_icon_size * 1.0f, 1.0f});
 			objects.push_back(obj);
 		}
 	}
