@@ -39,6 +39,7 @@ class Object {
 	const std::shared_ptr<Shader> get_shader() const { return this->m_shader; }
 
  protected:
+	void update_model_matrix();
 	std::shared_ptr<Shader> m_shader;
 	std::shared_ptr<std::vector<std::shared_ptr<TexturedMesh>>> m_meshes;
 	glm::mat4 m_model;

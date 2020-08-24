@@ -32,22 +32,31 @@ Object::Object(std::shared_ptr<Shader> s, std::vector<std::shared_ptr<TexturedMe
 	this->m_shader = s;
 	this->m_meshes = std::make_shared<std::vector<std::shared_ptr<TexturedMesh>>>(vertex_data);
 }
-void Object::translate(glm::vec3 pos) { this->m_pos = pos; }
+void Object::translate(glm::vec3 pos) {
+	this->m_pos = pos;
+	this->update_model_matrix();
+}
 
-void Object::scale(glm::vec3 scale) { this->m_scale = scale; }
+void Object::scale(glm::vec3 scale) {
+	this->m_scale = scale;
+	this->update_model_matrix();
+}
 
 void Object::rotate(float deg, glm::vec3 v) {
 	this->m_rotation = glm::radians(deg);
 	this->m_rotation_vec = v;
+	this->update_model_matrix();
 }
 
-void Object::update() {
+void Object::update_model_matrix() {
 	// update model pos
 	this->m_model = glm::mat4(1.0f);
 	this->m_model = glm::translate(this->m_model, this->m_pos);
 	this->m_model = glm::rotate(this->m_model, this->m_rotation, this->m_rotation_vec);
 	this->m_model = glm::scale(this->m_model, this->m_scale);
+}
 
+void Object::update() {
 	this->m_shader->set_active();
 	this->m_shader->set_model(this->m_model);
 	for (auto iter = this->m_meshes->begin(); iter != this->m_meshes->end(); ++iter) {

@@ -120,15 +120,4 @@ VKObject::~VKObject() {
 	vkDestroyDescriptorPool(this->m_device, this->m_descriptor_pool, nullptr);
 }
 
-void VKObject::update() {
-	// update model pos
-	this->m_model = glm::mat4(1.0f);
-	this->m_model = glm::translate(this->m_model, this->m_pos);
-	this->m_model = glm::rotate(this->m_model, this->m_rotation, this->m_rotation_vec);
-	this->m_model = glm::scale(this->m_model, this->m_scale);
-
-	this->m_shader->set_active();
-	this->m_shader->set_model(this->m_model);
-}
-
 std::vector<VkDescriptorSet>* VKObject::get_descriptor_sets() { return &this->m_descriptor_sets; }
