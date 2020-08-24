@@ -31,6 +31,7 @@
 class Object {
  public:
 	Object(std::shared_ptr<Shader> s, std::vector<std::shared_ptr<TexturedMesh>> vertex_data);
+	virtual ~Object() = default;
 	void translate(glm::vec3 pos);
 	void scale(glm::vec3 scale);
 	void rotate(float deg, glm::vec3 v);
