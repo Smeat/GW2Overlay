@@ -203,7 +203,10 @@ class VKRenderer : public Renderer {
 		return std::shared_ptr<Mesh>(new VKMesh(vertices, indices));
 	}
 	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override {
-		return std::shared_ptr<Shader>(new VKShader(vert, frag));
+		auto shader = std::shared_ptr<VKShader>(new VKShader(vert, frag));
+		// FIXME: allow multiple shader
+		this->m_shader = shader;
+		return shader;
 	}
 
 	void initWindow() { windowHandle = createTransparentWindow("Test", 1280, 0, 1680, 1050); }
