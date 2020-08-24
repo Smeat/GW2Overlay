@@ -63,11 +63,11 @@ SET(SOURCES
 	overlay/Object.cpp
 	utils/xml/pugixml.cpp
 	overlay/Mesh.cpp
-	utils/GW2Link.cpp
+	utils/GW2/GW2Link.cpp
+	utils/GW2/GW2Api.cpp
+	utils/GW2/GW2Map.cpp
 	utils/CategoryManager.cpp
 	utils/POI.cpp
-	utils/GW2Api.cpp
-	utils/GW2Map.cpp
 	overlay/QtMain.cpp
 	overlay/qt/OptionsIcon.cpp
 	overlay/qt/OptionsWindow.ui

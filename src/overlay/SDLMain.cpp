@@ -64,9 +64,9 @@
 #include "Shader.h"
 
 #include "../utils/CategoryManager.h"
-#include "../utils/GW2Api.h"
-#include "../utils/GW2Link.h"
-#include "../utils/GW2Map.h"
+#include "../utils/GW2/GW2Api.h"
+#include "../utils/GW2/GW2Link.h"
+#include "../utils/GW2/GW2Map.h"
 #include "../utils/POI.h"
 #include "../utils/json/json.hpp"
 #include "../utils/xml/pugixml.hpp"
