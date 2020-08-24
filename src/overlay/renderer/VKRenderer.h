@@ -136,8 +136,7 @@ class VKRenderer : public Renderer {
 		//	this->vertices = *(objs[0]->get_textured_meshes()->at(0)->get_mesh()->get_vertices());
 		// this->recreateSwapChain();
 		std::cout << "Loading " << objs.size() << " objects!!!" << std::endl;
-		auto obj = objs[0];
-		this->m_shader = std::dynamic_pointer_cast<VKShader>(obj->get_shader());
+		// FIXME: There is currently only support for a single shader/pipeline, so we get the shader of the first object
 		this->m_objects = objs;
 
 		vkDeviceWaitIdle(device);
