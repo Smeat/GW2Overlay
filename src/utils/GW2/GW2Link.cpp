@@ -50,6 +50,10 @@ void GW2Link::update_gw2(bool block) {
 		// clang-format on
 
 		this->m_gw2_data = data;
+		if (data.uiTick == 0) {
+			std::cout << "UiTick is 0. If this message doesn't stop, make sure the mumble script is running!"
+					  << std::endl;
+		}
 	}
 }
 
