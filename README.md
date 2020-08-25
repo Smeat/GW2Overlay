@@ -32,6 +32,7 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
  * Position is currently hardcoded for my setup
  * OpenGL and Vulkan renderers both working
    * CPU usage with Vulkan is pretty much non existent. Most is just calculating the view matrix
+   * Seeing as a very bad Vulkan implementation, is much faster than the OpenGL version, the OpenGL version won't get any further updates
 
 ### TODO
  * Some kind of GUI for settings etc. (Very basic one is implemented)
