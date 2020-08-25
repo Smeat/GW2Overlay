@@ -40,7 +40,7 @@ unset LD_PRELOAD
 
 echo ${WINEPREFIX}
 PYTHON_BIN="${WINEPREFIX}/drive_c/Program Files/Python38/python.exe"
-"${WINE}" "${SCRIPT_DIR}/helper/mumble.exe"
+#"${WINE}" "${SCRIPT_DIR}/helper/mumble.exe" &
 "${WINE}" "${PYTHON_BIN}" "${SCRIPT_DIR}/helper/mumble.py" &
 MUMBLE_PID=$!
 

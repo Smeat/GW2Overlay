@@ -42,7 +42,6 @@ class Link(ctypes.Structure):
 		# ("description", ctypes.c_byte * 2048) # 2048 bytes, always empty
 	]
 
-
 class Context(ctypes.Structure):
 	_fields_ = [
 		("serverAddress", ctypes.c_byte * 28),	# 28 bytes
@@ -64,6 +63,8 @@ class Context(ctypes.Structure):
 		("mountIndex", ctypes.c_uint8)
 	]
 
+LINKED_MEM_SIZE = 5460
+
 
 class MumbleLink:
 
@@ -72,7 +73,7 @@ class MumbleLink:
 		self.size_context = ctypes.sizeof(Context)
 		print("Size link {} context {} wchar {} float {}".format(self.size_link, self.size_context, ctypes.sizeof(ctypes.c_wchar), ctypes.sizeof(ctypes.c_float)))
 
-		self.memfile = mmap.mmap(0, self.size_link + self.size_context, "MumbleLink", mmap.ACCESS_READ)
+		self.memfile = mmap.mmap(0, 5460, "MumbleLink", mmap.ACCESS_READ)
 		self.memfile.seek(0)
 		print("Memfile is closed? {}".format(self.memfile.closed))
 		obj = ctypes.py_object(self.memfile)
