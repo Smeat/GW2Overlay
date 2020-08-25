@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+
 #GW2_PID=$(pidof GW2-64.exe)
 OVERLAY_CMD=$@
 
@@ -38,7 +40,7 @@ unset LD_PRELOAD
 
 echo ${WINEPREFIX}
 PYTHON_BIN="${WINEPREFIX}/drive_c/Program Files/Python38/python.exe"
-"${WINE}" "${PYTHON_BIN}" "${WINEPREFIX}/mumble.py" &
+"${WINE}" "${PYTHON_BIN}" "${SCRIPT_DIR}/helper/mumble.py" &
 MUMBLE_PID=$!
 
 $OVERLAY_CMD &

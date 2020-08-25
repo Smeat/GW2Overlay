@@ -21,6 +21,8 @@ import ctypes
 import mmap
 import socket
 import time
+from subprocess import Popen, PIPE
+import os
 
 
 class Link(ctypes.Structure):
@@ -102,6 +104,13 @@ class MumbleLink:
 		return ctype_instance
 
 def main():
+	script_path = os.path.dirname(os.path.realpath(__file__))
+	cmd = "{}/mumble.exe".format(script_path);
+	print("Running {}".format(cmd))
+	process = Popen([cmd], stdout=PIPE)
+	output, err = process.communicate()
+	print(output)
+	print(err)
 	ml = MumbleLink()
 	
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
