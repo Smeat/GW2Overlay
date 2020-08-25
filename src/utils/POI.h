@@ -20,14 +20,11 @@ struct MarkerCategory {
 		};
 	};
 	struct my_comp {
-		bool operator()(const std::shared_ptr<MarkerCategory>& a,
-						const std::shared_ptr<MarkerCategory>& b) const {
+		bool operator()(const std::shared_ptr<MarkerCategory>& a, const std::shared_ptr<MarkerCategory>& b) const {
 			return *a == *b;
 		}
 	};
-	typedef std::unordered_set<std::shared_ptr<MarkerCategory>, my_hash,
-							   my_comp>
-		category_container;
+	typedef std::unordered_set<std::shared_ptr<MarkerCategory>, my_hash, my_comp> category_container;
 	std::string m_name;
 	std::string m_display_name;
 	std::string m_icon_file;
@@ -36,17 +33,12 @@ struct MarkerCategory {
 	bool m_enabled = true;
 	category_container m_children;
 
-	bool operator==(const MarkerCategory& other) {
-		return this->m_name == other.m_name;
-	}
-	bool operator!=(const MarkerCategory& other) {
-		return !this->operator==(other);
-	}
+	bool operator==(const MarkerCategory& other) { return this->m_name == other.m_name; }
+	bool operator!=(const MarkerCategory& other) { return !this->operator==(other); }
 
 	const category_container* get_children() const;
 	std::shared_ptr<MarkerCategory> get_child(const std::string& name);
-	static std::shared_ptr<MarkerCategory> find_children(
-		const category_container children, const std::string& name);
+	static std::shared_ptr<MarkerCategory> find_children(const category_container children, const std::string& name);
 };
 
 struct POI {

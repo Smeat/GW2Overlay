@@ -4,14 +4,14 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <iostream>
 #include <sstream>
 
 GW2Link::GW2Link() {
 	this->m_socket = this->create_socket();
 	memset(&this->m_gw2_data, 0, sizeof(this->m_gw2_data));
-	printf("Init GW2Link with Linkedmem size %lu, context size %lu total %lu\n",
-		   sizeof(LinkedMem), sizeof(MumbleContext),
-		   sizeof(LinkedMem) + sizeof(MumbleContext));
+	printf("Init GW2Link with Linkedmem size %lu, context size %lu total %lu\n", sizeof(LinkedMem),
+		   sizeof(MumbleContext), sizeof(LinkedMem) + sizeof(MumbleContext));
 }
 
 void GW2Link::update_gw2(bool block) {
@@ -31,9 +31,8 @@ void GW2Link::update_gw2(bool block) {
 	} else {
 		flags |= MSG_DONTWAIT;
 	}
-	if ((len = ::recvfrom(this->m_socket, &data, sizeof(data), MSG_DONTWAIT,
-						  (struct sockaddr *)&si_other, (socklen_t *)&slen)) >
-		0) {
+	if ((len = ::recvfrom(this->m_socket, &data, sizeof(data), MSG_DONTWAIT, (struct sockaddr *)&si_other,
+						  (socklen_t *)&slen)) > 0) {
 		// clang-format off
 		/*
 		printf("uiVersion %d, uiTick %d\n", data.uiVersion, data.uiTick);
@@ -70,8 +69,7 @@ int GW2Link::create_socket() {
 	servaddr.sin_port = htons(7070);
 
 	// TODO: proper getaddr
-	if (::bind(fd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) ==
-		-1) {
+	if (::bind(fd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) == -1) {
 		printf("Failed to bind socket\n");
 		::close(fd);
 		fd = -1;
@@ -93,6 +91,4 @@ std::string LinkedMem::get_identity() const {
 	return ss.str();
 }
 
-const MumbleContext *LinkedMem::get_context() const {
-	return (MumbleContext *)this->context;
-}
+const MumbleContext *LinkedMem::get_context() const { return (MumbleContext *)this->context; }
