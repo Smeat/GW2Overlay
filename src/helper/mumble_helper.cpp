@@ -38,7 +38,7 @@ HANDLE initFileMapping() {
 
 		if (hMapObject == NULL) {
 			printf("Could not create file mapping object (%d).\n", GetLastError());
-			return;
+			return NULL;
 		}
 	}
 	printf("File fd %d\n", hMapObject);
@@ -80,7 +80,8 @@ int init_socket() {
 }
 
 int main() {
-	initFileMapping() return;
+	initFileMapping();
+	return 0;
 	sock = init_socket();
 	int last_tick = 0;
 	while (true) {
