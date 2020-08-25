@@ -53,13 +53,32 @@ void CategoryManager::load_taco_xml(const std::string& filename) {
 			traverse_poi_func(n);
 		}
 		if (node.name() == std::string("POI")) {
+			// TODO: inherit values from category
 			POI poi;
 			poi.m_map_id = node.attribute("MapID").as_int();
 			poi.m_pos.x = node.attribute("xpos").as_float();
 			poi.m_pos.y = node.attribute("ypos").as_float();
 			poi.m_pos.z = node.attribute("zpos").as_float();
 			poi.m_type = node.attribute("type").value();
-			poi.m_icon_file = node.attribute("iconFile").value();
+			// poi.m_icon_file = node.attribute("iconFile").value();
+			poi.m_guid = node.attribute("GUID").value();
+			poi.m_icon_size = node.attribute("iconSize").as_float(poi.m_icon_size);
+			poi.m_alpha = node.attribute("alpha").as_float(poi.m_alpha);
+			poi.m_behavior = node.attribute("behavior").as_int(poi.m_behavior);
+			poi.m_fade_near = node.attribute("fadeNear").as_float(poi.m_fade_near);
+			poi.m_fade_far = node.attribute("fadeFar").as_float(poi.m_fade_far);
+			poi.m_height_offset = node.attribute("heightOffset").as_float(poi.m_height_offset);
+			poi.m_reset_length = node.attribute("resetLength").as_int(poi.m_reset_length);
+			poi.m_display_name = node.attribute("DisplayName").as_string(poi.m_display_name.c_str());
+			poi.m_auto_trigger = node.attribute("autoTrigger").as_bool(poi.m_auto_trigger);
+			poi.m_trigger_range = node.attribute("triggerRange").as_float(poi.m_trigger_range);
+			poi.m_has_countdown = node.attribute("hasCountdown").as_bool(poi.m_has_countdown);
+			poi.m_achievement_id = node.attribute("achievementId").as_int(poi.m_achievement_id);
+			// TODO
+			// poi.m_achievement_bits;
+			poi.m_info = node.attribute("info").as_string(poi.m_info.c_str());
+			poi.m_info_range = node.attribute("infoRange").as_float(poi.m_info_range);
+
 			this->m_pois.push_back(poi);
 		}
 	};
