@@ -38,6 +38,7 @@ class Object {
 	virtual void update();
 	const std::shared_ptr<std::vector<std::shared_ptr<TexturedMesh>>> get_textured_meshes() const;
 	const std::shared_ptr<Shader> get_shader() const { return this->m_shader; }
+	const glm::vec3* get_position() const { return &this->m_pos; }
 
  protected:
 	void update_model_matrix();
