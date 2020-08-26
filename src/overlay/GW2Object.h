@@ -11,7 +11,7 @@ class GW2Object {
  public:
 	GW2Object(std::shared_ptr<Object> obj, std::shared_ptr<POI> poi);
 
-	void check_trigger(const glm::vec3& pos);
+	void check_trigger(const glm::vec3& pos, bool f_pressed);
 
 	const std::shared_ptr<Object> get_object() const { return this->m_object; }
 

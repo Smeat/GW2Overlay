@@ -21,10 +21,15 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <functional>
+#include <string>
+
 struct WindowData {
 	Display* display;
 	Window window;
 };
 
 WindowData createTransparentWindow(const char* title, int x, int y, int w, int h, bool create_gl_surface = false);
+void setup_input_events(WindowData window, std::function<void(std::string)> cb, const bool* running);
+
 #endif

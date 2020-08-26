@@ -89,7 +89,7 @@ TARGET_LINK_LIBRARIES(GW2Overlay
 	${X11_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
-	xcb X11-xcb xcb-xfixes
+	xcb X11-xcb xcb-xfixes Xi
 	${Boost_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 	Threads::Threads

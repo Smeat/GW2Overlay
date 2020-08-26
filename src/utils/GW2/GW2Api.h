@@ -2,8 +2,12 @@
 #define __GW2API_H__
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 const std::string GW2_HOST = "api.guildwars2.com";
+
+const std::vector<std::string> AUTHENTICATED_ENDPOINTS = {"v2/account"};
 
 class GW2Api {
  public:
@@ -16,6 +20,7 @@ class GW2Api {
 
  private:
 	std::string m_cache_folder;
+	std::string m_api_key;
 };
 
 #endif

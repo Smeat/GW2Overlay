@@ -1,5 +1,14 @@
 #include "Window.h"
 
+#include <X11/X.h>
+#include <X11/XKBlib.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/XI2.h>
+#include <X11/extensions/XInput2.h>
+
+#include <functional>
+#include <string>
+
 WindowData createTransparentWindow(const char* title, int x, int y, int w, int h, bool create_gl_surface) {
 	Window mXWindow;
 	Display* mXDisplay;
@@ -87,4 +96,37 @@ WindowData createTransparentWindow(const char* title, int x, int y, int w, int h
 
 	XMapWindow(mXDisplay, mXWindow);
 	return {mXDisplay, mXWindow};
+}
+
+void setup_input_events(WindowData window, std::function<void(std::string)> cb, const bool* running) {
+	window.display = XOpenDisplay(":0");
+	int xiOpcode, queryEvent, queryError;
+	if (!XQueryExtension(window.display, "XInputExtension", &xiOpcode, &queryEvent, &queryError)) {
+		printf("Failed to find XInput!\n");
+		return;
+	}
+
+	XIEventMask eventMask;
+	eventMask.deviceid = XIAllMasterDevices;
+	eventMask.mask_len = XIMaskLen(XI_LASTEVENT);
+	eventMask.mask = (unsigned char*)calloc(eventMask.mask_len, sizeof(char));
+	XISetMask(eventMask.mask, XI_RawKeyPress);
+	XISelectEvents(window.display, DefaultRootWindow(window.display), &eventMask, 1);
+	XSync(window.display, false);
+	free(eventMask.mask);
+
+	while (*running) {
+		XEvent event;
+		XGenericEventCookie* cookie = (XGenericEventCookie*)&event.xcookie;
+		XNextEvent(window.display, &event);
+
+		if (XGetEventData(window.display, cookie)) {
+			if (cookie->evtype == XI_RawKeyPress) {
+				XIRawEvent* raw_event = (XIRawEvent*)cookie->data;
+				KeySym sym = XkbKeycodeToKeysym(window.display, raw_event->detail, 0, 0);
+				std::string str = XKeysymToString(sym);
+				cb(str);
+			}
+		}
+	}
 }

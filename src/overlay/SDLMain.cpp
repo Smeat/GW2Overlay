@@ -27,6 +27,7 @@
  *
  */
 
+#include <algorithm>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/vector_float3.hpp>
@@ -79,6 +80,11 @@
 #include "renderer/Renderer.h"
 #include "renderer/VKRenderer.h"
 
+#include <shared_mutex>
+using mutex_type = std::shared_timed_mutex;
+using read_lock = std::shared_lock<mutex_type>;
+using write_lock = std::unique_lock<mutex_type>;
+
 using json = nlohmann::json;
 namespace po = boost::program_options;
 
@@ -87,6 +93,8 @@ std::vector<std::shared_ptr<GW2Object>> objects;
 std::shared_ptr<Shader> my_shader;
 GW2Api api("./cache");
 GW2Map map;
+std::vector<std::string> key_presses;
+mutex_type key_mutex;
 
 void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	std::vector<Vertex> vertices;
@@ -205,8 +213,14 @@ void update_map(int id) {
 // TODO: Think of a better structure
 // TODO: efficiency? sort complete list by distance, then only parts of the list?
 void update_objects(const LinkedMem* gw2_data) {
+	bool pressed_f = false;
+	read_lock lock(key_mutex);
+	auto iter = std::find(key_presses.begin(), key_presses.end(), "f");
+	pressed_f = iter != key_presses.end();
+	lock.unlock();
 	for (const auto& obj : objects) {
-		obj->check_trigger({gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[1], gw2_data->fAvatarPosition[2]});
+		obj->check_trigger({gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[1], gw2_data->fAvatarPosition[2]},
+						   pressed_f);
 	}
 }
 
@@ -337,6 +351,14 @@ int main(int argc, char** argv) {
 	}
 
 	std::thread qt_thread([&]() { qt_main(argc, argv); });
+	std::thread input_thread([&] {
+		std::function<void(std::string)> cb;
+		cb = [&](std::string key) {
+			write_lock lock(key_mutex);
+			key_presses.push_back(key);
+		};
+		setup_input_events(window, cb, &running);
+	});
 	while (running) {
 		uint64_t delta = SDL_GetTicks() - last_call;
 		gw_link.update_gw2(true);
@@ -361,6 +383,8 @@ int main(int argc, char** argv) {
 			update_camera(gw2_data);
 			update_objects(gw2_data);
 			renderer->update();
+			write_lock lock(key_mutex);
+			key_presses.clear();
 		} else {
 			renderer->clear();
 		}
