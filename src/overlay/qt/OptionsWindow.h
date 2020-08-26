@@ -33,11 +33,11 @@ class OptionsWindow : public QMainWindow {
 	OptionsWindow(QWidget* parent = nullptr);
 	~OptionsWindow();
 
-	void set_categories(const category_container* cats,
-						QTreeWidgetItem* parent = nullptr);
+	void set_categories(const category_container* cats, QTreeWidgetItem* parent = nullptr);
 	void update_categories();
  public slots:
 	void on_tree_click(QTreeWidgetItem* item, int column);
+	void set_all(bool state);
 
  private:
 	Ui::OptionsWindow* m_ui;
