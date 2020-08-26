@@ -79,7 +79,7 @@ struct POI {
 	std::shared_ptr<MarkerCategory> m_parent;
 };
 
-typedef std::vector<POI> poi_container;
+typedef std::vector<std::shared_ptr<POI>> poi_container;
 typedef MarkerCategory::category_container category_container;
 
 #endif

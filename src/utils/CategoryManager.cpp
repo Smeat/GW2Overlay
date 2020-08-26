@@ -1,6 +1,7 @@
 #include "CategoryManager.h"
 #include <algorithm>
 #include <cctype>
+#include <memory>
 
 #include "POI.h"
 #include "xml/pugixml.hpp"
@@ -79,7 +80,7 @@ void CategoryManager::load_taco_xml(const std::string& filename) {
 			poi.m_info = node.attribute("info").as_string(poi.m_info.c_str());
 			poi.m_info_range = node.attribute("infoRange").as_float(poi.m_info_range);
 
-			this->m_pois.push_back(poi);
+			this->m_pois.push_back(std::make_shared<POI>(poi));
 		}
 	};
 	traverse_markers_func(doc.child("OverlayData"), nullptr);

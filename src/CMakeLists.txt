@@ -73,6 +73,7 @@ SET(SOURCES
 	overlay/qt/OptionsWindow.ui
 	overlay/qt/OptionsWindow.cpp
 	overlay/Window.cpp
+	overlay/GW2Object.cpp
 )
 
 add_executable(GW2Overlay

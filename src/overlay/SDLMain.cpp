@@ -59,6 +59,7 @@
 
 #include <boost/program_options.hpp>
 
+#include "GW2Object.h"
 #include "Mesh.h"
 #include "Object.h"
 #include "Shader.h"
@@ -82,7 +83,7 @@ using json = nlohmann::json;
 namespace po = boost::program_options;
 
 // TODO: remove this global mess and create more files
-std::vector<std::shared_ptr<Object>> objects;
+std::vector<std::shared_ptr<GW2Object>> objects;
 std::shared_ptr<Shader> my_shader;
 GW2Api api("./cache");
 GW2Map map;
@@ -102,17 +103,17 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	auto cube_mesh = rend->load_mesh(vertices, {0, 1, 3, 1, 2, 3});
 
 	for (auto iter = pois->begin(); iter != pois->end(); ++iter) {
-		if (iter->m_map_id == mapid) {
-			auto cat = MarkerCategory::find_children(*markers, iter->m_type);
+		if ((*iter)->m_map_id == mapid) {
+			auto cat = MarkerCategory::find_children(*markers, (*iter)->m_type);
 			if (!cat) {
-				std::cout << "Couldn't find " << iter->m_type << std::endl;
+				std::cout << "Couldn't find " << (*iter)->m_type << std::endl;
 				continue;
 			}
 			if (!cat->m_enabled) continue;
 			// let poi icon file overwrite the category icon file
 			std::string icon_file = cat->m_icon_file;
-			if (!iter->m_icon_file.empty()) {
-				icon_file = iter->m_icon_file;
+			if (!(*iter)->m_icon_file.empty()) {
+				icon_file = (*iter)->m_icon_file;
 				std::cout << "Using icon from poi " << icon_file << std::endl;
 			}
 			if (icon_file.empty()) {
@@ -133,11 +134,12 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 			// TODO: this creates a new mesh, while they are all the same...
 			std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex_iter->second));
 			std::shared_ptr<Object> obj = rend->load_object(my_shader, {my_mesh});
-			auto pos = iter->m_pos;
+			auto pos = (*iter)->m_pos;
 			pos.y += cat->m_height_offset;
 			obj->translate(pos);
 			obj->scale({cat->m_icon_size * 1.0f, cat->m_icon_size * 1.0f, 1.0f});
-			objects.push_back(obj);
+			std::shared_ptr<GW2Object> gw2obj(new GW2Object(obj, *iter));
+			objects.push_back(gw2obj);
 		}
 	}
 }
@@ -198,6 +200,14 @@ void update_camera(const LinkedMem* gw2_data) {
 void update_map(int id) {
 	auto d = api.get_value(std::string("v2/maps/") + std::to_string(id));
 	map.load_map(d);
+}
+
+// TODO: Think of a better structure
+// TODO: efficiency? sort complete list by distance, then only parts of the list?
+void update_objects(const LinkedMem* gw2_data) {
+	for (const auto& obj : objects) {
+		obj->check_trigger({gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[1], gw2_data->fAvatarPosition[2]});
+	}
 }
 
 int main(int argc, char** argv) {
@@ -339,12 +349,17 @@ int main(int argc, char** argv) {
 		}
 		if (CategoryManager::getInstance().state_changed()) {
 			load_objects(last_id, renderer);
-			renderer->set_objects(objects);
+			std::vector<std::shared_ptr<Object>> render_objects;
+			for (const auto& obj : objects) {
+				render_objects.push_back(obj->get_object());
+			}
+			renderer->set_objects(render_objects);
 			CategoryManager::getInstance().set_state_changed(false);
 		}
 
 		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS) || vm.count("f")) {
 			update_camera(gw2_data);
+			update_objects(gw2_data);
 			renderer->update();
 		} else {
 			renderer->clear();
