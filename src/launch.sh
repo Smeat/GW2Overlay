@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
-#GW2_PID=$(pidof GW2-64.exe)
+GW2_PID=$(pidof GW2-64.exe)
 OVERLAY_CMD=$@
 
 echo -n "Waiting for GW2 to start"
@@ -10,26 +10,8 @@ while [ -z ${GW2_PID} ]
 do
 	echo -n "."
 	sleep 2
-	UI_PIDS=($(pidof CoherentUI_Host))
-	RUNNING=${#UI_PIDS[@]}
-	if [ -z ${RUNNING} ]; then
-		RUNNING=0
-	fi
-	for PID in "${UI_PIDS[@]}"
-	do
-		OUTPUT=$(cat /proc/${PID}/cmdline |  tr '\0' '\n')
-		if [[ "${OUTPUT}" == *"type=renderer"* ]]; then
-			RUNNING=0
-		fi
-	done
-	if [ $RUNNING -eq 1 ]; then
-		GW2_PID=$(pidof GW2-64.exe)
-	fi
+	GW2_PID=$(pidof GW2-64.exe)
 done
-sleep 5
-echo ""
-echo "Found gw2 process ${GW2_PID}"
-
 OLD_ENV=$(export -p)
 
 source <(xargs -0 bash -c 'printf "export %q\n" "$@"' -- < /proc/${GW2_PID}/environ)
