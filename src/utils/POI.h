@@ -47,6 +47,7 @@ struct POI {
 	const poi_container* get_children() const;
 	std::shared_ptr<POI> get_child(const std::string& name);
 	static std::shared_ptr<POI> find_children(const poi_container children, const std::string& name);
+	static std::shared_ptr<POI> create_child(const std::shared_ptr<POI> parent);
 
 	std::string m_type;
 	int m_map_id;

@@ -51,7 +51,7 @@ void CategoryManager::load_taco_xml_categories(const std::string& filename) {
 	std::function<void(pugi::xml_node, std::shared_ptr<POI>)> traverse_markers_func;
 	traverse_markers_func = [&](pugi::xml_node node, std::shared_ptr<POI> parent) {
 		if (node.name() == std::string("MarkerCategory")) {
-			std::shared_ptr<POI> cat(new POI);
+			std::shared_ptr<POI> cat = POI::create_child(parent);
 			fill_poi(cat.get(), node);
 			std::transform(cat->m_name.begin(), cat->m_name.end(), cat->m_name.begin(),
 						   [](unsigned char c) { return std::tolower(c); });
@@ -86,12 +86,10 @@ void CategoryManager::load_taco_xml_pois(const std::string& filename) {
 			auto parent = POI::find_children(this->m_pois, (node.attribute("type").value()));
 			// TODO: handle loading pois before the categories (different files etc)
 			if (!parent) return;
-			POI poi = *parent;
-			poi.m_children.clear();
-			poi.m_parent = parent;
-			fill_poi(&poi, node);
-			poi.m_is_poi = true;
-			parent->m_children.insert(std::make_shared<POI>(poi));
+			auto poi = POI::create_child(parent);
+			fill_poi(poi.get(), node);
+			poi->m_is_poi = true;
+			parent->m_children.insert(poi);
 		}
 	};
 	traverse_poi_func(doc.child("OverlayData"));
