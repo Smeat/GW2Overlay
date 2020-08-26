@@ -64,7 +64,7 @@ struct POI {
 	std::string m_display_name;
 	bool m_auto_trigger = false;
 	bool m_has_countdown = false;
-	float m_trigger_range = 0;
+	float m_trigger_range = 5;
 	// TODO: max/min size
 	int m_achievement_id = 0;
 	std::vector<int> m_achievement_bits;
