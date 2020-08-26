@@ -11,9 +11,9 @@ class CategoryManager {
 		static CategoryManager instance;
 		return instance;
 	}
-	void load_taco_xml(const std::string& filename);
+	void load_taco_xml_categories(const std::string& filename);
+	void load_taco_xml_pois(const std::string& filename);
 	void load_taco_xmls(const std::vector<std::string>& filenames);
-	const category_container* get_categories() const;
 	const poi_container* get_pois() const;
 
 	// TODO: add mutex
@@ -25,7 +25,6 @@ class CategoryManager {
 	CategoryManager(CategoryManager const&);
 	void operator=(CategoryManager const&);
 
-	category_container m_categories;
 	poi_container m_pois;
 
 	// signals a changed state (e.g. activated)

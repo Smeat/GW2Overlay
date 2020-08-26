@@ -42,7 +42,7 @@ void OptionsWindow::set_all(bool state) {
 }
 
 void OptionsWindow::on_tree_click(QTreeWidgetItem* item, int column) {
-	std::shared_ptr<MarkerCategory> cat_item = dynamic_cast<CategoryTreeWidgetItem*>(item)->getCategoryMarker();
+	std::shared_ptr<POI> cat_item = dynamic_cast<CategoryTreeWidgetItem*>(item)->getCategoryMarker();
 	bool enabled = item->checkState(0) == 2;
 	if (enabled != cat_item->m_enabled) {
 		cat_item->m_enabled = !cat_item->m_enabled;
@@ -55,11 +55,14 @@ void OptionsWindow::on_tree_click(QTreeWidgetItem* item, int column) {
 void OptionsWindow::update_categories() {
 	// TODO: clear the tree before updating?
 	// this->m_ui->treeWidget.clear();
-	this->set_categories(CategoryManager::getInstance().get_categories());
+	std::cout << "Starting setting categories" << std::endl;
+	this->set_categories(CategoryManager::getInstance().get_pois());
+	std::cout << "Finished setting categories" << std::endl;
 }
 
-void OptionsWindow::set_categories(const category_container* cats, QTreeWidgetItem* parent) {
+void OptionsWindow::set_categories(const poi_container* cats, QTreeWidgetItem* parent) {
 	for (auto iter = cats->begin(); iter != cats->end(); ++iter) {
+		if ((*iter)->m_is_poi) continue;
 		CategoryTreeWidgetItem* item = nullptr;
 		if (parent) {
 			item = new CategoryTreeWidgetItem();
@@ -76,5 +79,5 @@ void OptionsWindow::set_categories(const category_container* cats, QTreeWidgetIt
 		this->set_categories((*iter)->get_children(), item);
 	}
 }
-void CategoryTreeWidgetItem::setCategoryMarker(std::shared_ptr<MarkerCategory> d) { this->m_cat = d; }
-std::shared_ptr<MarkerCategory> CategoryTreeWidgetItem::getCategoryMarker() { return this->m_cat; }
+void CategoryTreeWidgetItem::setCategoryMarker(std::shared_ptr<POI> d) { this->m_cat = d; }
+std::shared_ptr<POI> CategoryTreeWidgetItem::getCategoryMarker() { return this->m_cat; }

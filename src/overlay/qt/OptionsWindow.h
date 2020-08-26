@@ -19,11 +19,11 @@ class CategoryTreeWidgetItem : public QTreeWidgetItem {
  public:
 	CategoryTreeWidgetItem(QTreeWidget* p) : QTreeWidgetItem(p) {}
 	CategoryTreeWidgetItem() : QTreeWidgetItem() {}
-	void setCategoryMarker(std::shared_ptr<MarkerCategory> d);
-	std::shared_ptr<MarkerCategory> getCategoryMarker();
+	void setCategoryMarker(std::shared_ptr<POI> d);
+	std::shared_ptr<POI> getCategoryMarker();
 
  private:
-	std::shared_ptr<MarkerCategory> m_cat;
+	std::shared_ptr<POI> m_cat;
 };
 
 class OptionsWindow : public QMainWindow {
@@ -33,7 +33,7 @@ class OptionsWindow : public QMainWindow {
 	OptionsWindow(QWidget* parent = nullptr);
 	~OptionsWindow();
 
-	void set_categories(const category_container* cats, QTreeWidgetItem* parent = nullptr);
+	void set_categories(const poi_container* cats, QTreeWidgetItem* parent = nullptr);
 	void update_categories();
  public slots:
 	void on_tree_click(QTreeWidgetItem* item, int column);

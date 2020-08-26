@@ -41,6 +41,7 @@
 #include <cstdio>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -79,6 +80,7 @@
 #include "renderer/GLRenderer.h"
 #include "renderer/Renderer.h"
 #include "renderer/VKRenderer.h"
+#include "renderer/vk/VKCommon.h"
 
 #include <shared_mutex>
 using mutex_type = std::shared_timed_mutex;
@@ -97,6 +99,7 @@ std::vector<std::string> key_presses;
 mutex_type key_mutex;
 
 void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
+	std::cout << "Loading objects" << std::endl;
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)));
 	vertices.push_back(Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)));
@@ -105,25 +108,24 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	objects.clear();
 	std::unordered_map<std::string, std::shared_ptr<Texture>> texture_file_map;
 
-	auto markers = CategoryManager::getInstance().get_categories();
 	auto pois = CategoryManager::getInstance().get_pois();
 
 	auto cube_mesh = rend->load_mesh(vertices, {0, 1, 3, 1, 2, 3});
+	std::vector<std::shared_ptr<POI>> poi_to_search;
+	std::copy(pois->begin(), pois->end(), std::back_inserter(poi_to_search));
 
-	for (auto iter = pois->begin(); iter != pois->end(); ++iter) {
-		if ((*iter)->m_map_id == mapid) {
-			auto cat = MarkerCategory::find_children(*markers, (*iter)->m_type);
-			if (!cat) {
-				std::cout << "Couldn't find " << (*iter)->m_type << std::endl;
-				continue;
-			}
-			if (!cat->m_enabled) continue;
-			// let poi icon file overwrite the category icon file
-			std::string icon_file = cat->m_icon_file;
-			if (!(*iter)->m_icon_file.empty()) {
-				icon_file = (*iter)->m_icon_file;
-				std::cout << "Using icon from poi " << icon_file << std::endl;
-			}
+	while (!poi_to_search.empty()) {
+		auto curr_poi = poi_to_search.back();
+		poi_to_search.pop_back();
+		if (!curr_poi->m_enabled) continue;
+		if (curr_poi->get_children()->size()) {
+			std::copy(curr_poi->get_children()->begin(), curr_poi->get_children()->end(),
+					  std::back_inserter(poi_to_search));
+		}
+		if (curr_poi->m_is_poi) {
+			// leaf
+			if (curr_poi->m_map_id != mapid) continue;
+			std::string icon_file = curr_poi->m_icon_file;
 			if (icon_file.empty()) {
 				// use the default icon file
 				icon_file = "Data/arrow.png";
@@ -142,14 +144,15 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 			// TODO: this creates a new mesh, while they are all the same...
 			std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex_iter->second));
 			std::shared_ptr<Object> obj = rend->load_object(my_shader, {my_mesh});
-			auto pos = (*iter)->m_pos;
-			pos.y += cat->m_height_offset;
+			auto pos = curr_poi->m_pos;
+			pos.y += curr_poi->m_height_offset;
 			obj->translate(pos);
-			obj->scale({cat->m_icon_size * 1.0f, cat->m_icon_size * 1.0f, 1.0f});
-			std::shared_ptr<GW2Object> gw2obj(new GW2Object(obj, *iter));
+			obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
+			std::shared_ptr<GW2Object> gw2obj(new GW2Object(obj, curr_poi));
 			objects.push_back(gw2obj);
 		}
 	}
+	std::cout << "Finished loading objects" << std::endl;
 }
 
 void update_camera(const LinkedMem* gw2_data) {

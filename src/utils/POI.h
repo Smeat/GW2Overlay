@@ -12,35 +12,6 @@
 
 #include <glm/vec3.hpp>
 
-struct MarkerCategory {
-	struct my_hash {
-		size_t operator()(const std::shared_ptr<MarkerCategory>& v) const {
-			size_t h = std::hash<std::string>{}(v->m_name);
-			return h;
-		};
-	};
-	struct my_comp {
-		bool operator()(const std::shared_ptr<MarkerCategory>& a, const std::shared_ptr<MarkerCategory>& b) const {
-			return *a == *b;
-		}
-	};
-	typedef std::unordered_set<std::shared_ptr<MarkerCategory>, my_hash, my_comp> category_container;
-	std::string m_name;
-	std::string m_display_name;
-	std::string m_icon_file;
-	float m_icon_size = 1.0f;
-	float m_height_offset = 0.0f;
-	bool m_enabled = true;
-	category_container m_children;
-
-	bool operator==(const MarkerCategory& other) { return this->m_name == other.m_name; }
-	bool operator!=(const MarkerCategory& other) { return !this->operator==(other); }
-
-	const category_container* get_children() const;
-	std::shared_ptr<MarkerCategory> get_child(const std::string& name);
-	static std::shared_ptr<MarkerCategory> find_children(const category_container children, const std::string& name);
-};
-
 enum poiBehavior {
 	DEFAULT = 0,
 	REAPPEAR_ON_MAP_CHANGE = 1,
@@ -54,6 +25,29 @@ enum poiBehavior {
 
 // TODO: are POI and MarkerCategory effectively the same?
 struct POI {
+	struct my_hash {
+		size_t operator()(const std::shared_ptr<POI>& v) const {
+			size_t h = std::hash<std::string>{}(v->m_name);
+			return h;
+		};
+	};
+	struct my_comp {
+		bool operator()(const std::shared_ptr<POI>& a, const std::shared_ptr<POI>& b) const { return *a == *b; }
+	};
+	typedef std::unordered_set<std::shared_ptr<POI>, my_hash, my_comp> poi_container;
+	std::string m_name;
+	bool m_enabled = true;
+
+	bool operator==(const POI& other) {
+		return this->m_name == other.m_name && this->m_type == other.m_type && this->m_pos == other.m_pos &&
+			   this->m_guid == other.m_guid;
+	}
+	bool operator!=(const POI& other) { return !this->operator==(other); }
+
+	const poi_container* get_children() const;
+	std::shared_ptr<POI> get_child(const std::string& name);
+	static std::shared_ptr<POI> find_children(const poi_container children, const std::string& name);
+
 	std::string m_type;
 	int m_map_id;
 	glm::vec3 m_pos;
@@ -75,11 +69,12 @@ struct POI {
 	std::vector<int> m_achievement_bits;
 	std::string m_info;
 	float m_info_range = 0;
+	bool m_is_poi = false;
 
-	std::shared_ptr<MarkerCategory> m_parent;
+	std::shared_ptr<POI> m_parent;
+	poi_container m_children;
 };
 
-typedef std::vector<std::shared_ptr<POI>> poi_container;
-typedef MarkerCategory::category_container category_container;
+typedef POI::poi_container poi_container;
 
 #endif
