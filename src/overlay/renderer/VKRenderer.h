@@ -133,6 +133,8 @@ class VKRenderer : public Renderer {
 
 	// TODO: set the descriptors here?
 	virtual void set_objects(std::vector<std::shared_ptr<Object>> objs) override {
+		vkQueueWaitIdle(this->graphicsQueue);
+		vkDeviceWaitIdle(this->device);
 		//	this->vertices = *(objs[0]->get_textured_meshes()->at(0)->get_mesh()->get_vertices());
 		// this->recreateSwapChain();
 		std::cout << "Loading " << objs.size() << " objects!!!" << std::endl;
