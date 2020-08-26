@@ -10,8 +10,9 @@ void GW2Object::check_trigger(const glm::vec3& pos, bool pressed_f) {
 	if (glm::distance(*this->m_object->get_position(), pos) <= this->m_poi->m_trigger_range) {
 		bool remove = this->m_poi->m_auto_trigger;
 		// TODO: set flag in config for daily reset etc
-		remove |= (this->m_poi->m_behavior == poiBehavior::REAPPEAR_ON_DAILY_RESET) ||
-				  (this->m_poi->m_behavior == poiBehavior::ONLY_VISIBLE_BEFORE_ACTIVATION);
+		remove |= ((this->m_poi->m_behavior == poiBehavior::REAPPEAR_ON_DAILY_RESET) ||
+				   (this->m_poi->m_behavior == poiBehavior::ONLY_VISIBLE_BEFORE_ACTIVATION)) &&
+				  pressed_f;
 		if (remove) {
 			// XXX: just scale it down, since we'd need to rebuild the command queue otherwise
 			this->m_object->scale({0, 0, 0});
