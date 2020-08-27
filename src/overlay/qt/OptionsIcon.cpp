@@ -2,11 +2,8 @@
 
 #include <iostream>
 
-OptionsIcon::OptionsIcon(QWidget* parent, Qt::WindowFlags f)
-	: QLabel(parent, f) {
-	this->m_option_window.setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint |
-										 Qt::X11BypassWindowManagerHint |
-										 Qt::FramelessWindowHint);
+OptionsIcon::OptionsIcon(QWidget* parent, Qt::WindowFlags f) : QLabel(parent, f) {
+	this->m_option_window.setWindowFlags(Qt::Popup);
 	this->m_option_window.move(1580, 200);
 }
 
