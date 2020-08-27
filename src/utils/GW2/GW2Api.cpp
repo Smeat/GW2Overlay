@@ -1,7 +1,9 @@
 #include "GW2Api.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <memory>
 #include <string>
 
@@ -67,22 +69,43 @@ std::string GW2Api::get_value(const std::string& endpoint, bool cached) {
 	}
 	printf("SSL connection using %s\n", SSL_get_cipher(ssl));
 
-	std::string msg = "GET https://api.guildwars2.com/" + endpoint + "\n\n";
+	std::string msg = "GET https://api.guildwars2.com/" + endpoint;
+	if (std::find_if(AUTHENTICATED_ENDPOINTS.begin(), AUTHENTICATED_ENDPOINTS.end(), [&](const std::string& s) {
+			return endpoint.find(s) != std::string::npos;
+		}) != AUTHENTICATED_ENDPOINTS.end()) {
+		msg += "?access_token=" + this->m_api_key + "\n";
+	}
+
+	msg += "\r\n";
 	std::cout << msg << std::endl;
 
 	if (SSL_write(ssl, msg.c_str(), msg.size()) == msg.size()) {
-		char buf[2048];
-		memset(buf, 0, 2048);
+#define BUF_SIZE (1024 * 2)
+		std::vector<char> data;
+		char buf[BUF_SIZE];
+		memset(buf, 0, BUF_SIZE);
 		// TODO: read more data?
-		SSL_read(ssl, buf, 2048);
+		int bytes = 0;
+		int total_bytes = 0;
+		do {
+			bytes = SSL_read(ssl, buf, BUF_SIZE);
+			std::copy(buf, buf + bytes, std::back_inserter(data));
+			total_bytes += bytes;
+		} while (bytes != 0);
+		std::cout << "Reading done with total bytes of " << total_bytes << std::endl;
 		try {
-			auto j = json::parse(buf);
+			auto j = json::parse(data.data());
 			// valid answer
-			value = buf;
+			value = data.data();
 			this->save_to_cache(endpoint, value);
 		} catch (...) {
+			std::cout << "Failed to decode answer : " << data.data() << std::endl;
 		}
+	} else {
+		std::cout << "Failed to send request" << std::endl;
 	}
+
+	std::cout << "End request" << std::endl;
 
 	return value;
 }
