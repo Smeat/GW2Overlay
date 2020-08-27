@@ -91,7 +91,9 @@ std::string GW2Api::get_value(const std::string& endpoint, bool cached) {
 			bytes = SSL_read(ssl, buf, BUF_SIZE);
 			std::copy(buf, buf + bytes, std::back_inserter(data));
 			total_bytes += bytes;
+			std::cout << "Read bytes " << bytes << " from " << endpoint << std::endl;
 		} while (bytes != 0);
+		data.push_back('\0');
 		std::cout << "Reading done with total bytes of " << total_bytes << std::endl;
 		try {
 			auto j = json::parse(data.data());
@@ -112,6 +114,7 @@ std::string GW2Api::get_value(const std::string& endpoint, bool cached) {
 
 std::string GW2Api::get_cached(const std::string& endpoint) {
 	std::filesystem::path target_file = std::filesystem::path(this->m_cache_folder) / endpoint;
+	std::cout << "Trying to read cache from " << target_file << std::endl;
 	std::ifstream input(target_file);
 	if (input) {
 		std::string val((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
