@@ -22,7 +22,6 @@ void fill_poi(POI* poi, pugi::xml_node& node) {
 	poi->m_pos.y = node.attribute("ypos").as_float();
 	poi->m_pos.z = node.attribute("zpos").as_float();
 	poi->m_type = node.attribute("type").value();
-	// poi.m_icon_file = node.attribute("iconFile").value();
 	poi->m_guid = node.attribute("GUID").value();
 	poi->m_icon_size = node.attribute("iconSize").as_float(poi->m_icon_size);
 	poi->m_icon_file = node.attribute("iconFile").as_string(poi->m_icon_file.c_str());
@@ -37,8 +36,7 @@ void fill_poi(POI* poi, pugi::xml_node& node) {
 	poi->m_trigger_range = node.attribute("triggerRange").as_float(poi->m_trigger_range);
 	poi->m_has_countdown = node.attribute("hasCountdown").as_bool(poi->m_has_countdown);
 	poi->m_achievement_id = node.attribute("achievementId").as_int(poi->m_achievement_id);
-	// TODO
-	// poi.m_achievement_bits;
+	poi->m_achievement_bit = node.attribute("achievementBit").as_int(poi->m_achievement_bit);
 	poi->m_info = node.attribute("info").as_string(poi->m_info.c_str());
 	poi->m_info_range = node.attribute("infoRange").as_float(poi->m_info_range);
 }

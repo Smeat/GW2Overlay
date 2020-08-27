@@ -96,6 +96,7 @@ std::vector<std::shared_ptr<GW2Object>> objects;
 std::shared_ptr<Shader> my_shader;
 GW2Api api("./cache");
 GW2Map map;
+std::shared_ptr<GW2Achievements> achievements;
 std::vector<std::string> key_presses;
 mutex_type key_mutex;
 
@@ -126,6 +127,11 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 		if (curr_poi->m_is_poi) {
 			// leaf
 			if (curr_poi->m_map_id != mapid) continue;
+			// check for achievements
+			if (achievements->is_done(curr_poi->m_achievement_id) ||
+				achievements->has_bit(curr_poi->m_achievement_id, curr_poi->m_achievement_bit))
+				continue;
+
 			std::string icon_file = curr_poi->m_icon_file;
 			if (icon_file.empty()) {
 				// use the default icon file
@@ -339,6 +345,9 @@ int main(int argc, char** argv) {
 	bool running = true;
 	printf("Starting main loop\n");
 	uint64_t last_call = 0;
+
+	auto d = api.get_value("v2/account/achievements");
+	achievements.reset(new GW2Achievements(d));
 
 	int last_id = 0;
 	{

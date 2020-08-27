@@ -67,7 +67,7 @@ struct POI {
 	float m_trigger_range = 5;
 	// TODO: max/min size
 	int m_achievement_id = 0;
-	std::vector<int> m_achievement_bits;
+	int m_achievement_bit = -1;
 	std::string m_info;
 	float m_info_range = 0;
 	bool m_is_poi = false;
