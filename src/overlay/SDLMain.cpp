@@ -67,6 +67,7 @@
 #include "Shader.h"
 
 #include "../utils/CategoryManager.h"
+#include "../utils/GW2/GW2Achievements.h"
 #include "../utils/GW2/GW2Api.h"
 #include "../utils/GW2/GW2Link.h"
 #include "../utils/GW2/GW2Map.h"
