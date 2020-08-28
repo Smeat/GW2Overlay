@@ -31,7 +31,7 @@
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>Tab 1</string>
+        <string>POI List</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
@@ -65,8 +65,53 @@
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>Tab 2</string>
+        <string>System Settings</string>
        </attribute>
+       <widget class="QWidget" name="formLayoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>10</y>
+          <width>241</width>
+          <height>461</height>
+         </rect>
+        </property>
+        <layout class="QFormLayout" name="formLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="api_label">
+           <property name="text">
+            <string>API Key</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="api_text"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="use_text">
+           <property name="text">
+            <string>Use Key</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="lineEdit"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QPushButton" name="save_button">
+        <property name="geometry">
+         <rect>
+          <x>320</x>
+          <y>450</y>
+          <width>80</width>
+          <height>18</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Save</string>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>
