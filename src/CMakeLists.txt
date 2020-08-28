@@ -69,6 +69,7 @@ SET(SOURCES
 	utils/GW2/GW2Achievements.cpp
 	utils/CategoryManager.cpp
 	utils/POI.cpp
+	utils/Config.cpp
 	overlay/QtMain.cpp
 	overlay/qt/OptionsIcon.cpp
 	overlay/qt/OptionsWindow.ui

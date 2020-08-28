@@ -67,6 +67,7 @@
 #include "Shader.h"
 
 #include "../utils/CategoryManager.h"
+#include "../utils/Config.h"
 #include "../utils/GW2/GW2Achievements.h"
 #include "../utils/GW2/GW2Api.h"
 #include "../utils/GW2/GW2Link.h"
@@ -281,6 +282,8 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	ConfigManager::getInstance().get_current_config()->load_config("./config.json");
+
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();
 
@@ -403,5 +406,6 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	ConfigManager::getInstance().get_current_config()->save_config();
 	return 0;
 }

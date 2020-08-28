@@ -27,7 +27,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -85,17 +85,28 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QLineEdit" name="api_text"/>
+          <widget class="QLineEdit" name="api_text">
+           <property name="statusTip">
+            <string/>
+           </property>
+           <property name="placeholderText">
+            <string>Your GW2 API-Key</string>
+           </property>
+          </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="use_text">
+          <widget class="QLabel" name="use_label">
            <property name="text">
             <string>Use Key</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEdit"/>
+          <widget class="QLineEdit" name="use_text">
+           <property name="placeholderText">
+            <string>Your &quot;Use&quot; key ingame</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>

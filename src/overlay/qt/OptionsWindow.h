@@ -1,6 +1,7 @@
 #ifndef __OPTIONSWINDOW_H__
 #define __OPTIONSWINDOW_H__
 
+#include <QLineEdit>
 #include <QMainWindow>
 #include <QTreeWidgetItem>
 
@@ -40,7 +41,10 @@ class OptionsWindow : public QMainWindow {
 	void set_all(bool state);
 
  private:
+	void save_settings();
+	void load_settings();
 	Ui::OptionsWindow* m_ui;
+	std::map<std::string, QLineEdit*> m_options_map;
 };
 
 #endif	// __OPTIONSWINDOW_H__

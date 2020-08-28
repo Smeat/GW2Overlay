@@ -3,6 +3,7 @@
 #include "ui_OptionsWindow.h"
 
 #include "../../utils/CategoryManager.h"
+#include "../../utils/Config.h"
 #include "../../utils/POI.h"
 
 OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::OptionsWindow) {
@@ -18,9 +19,29 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 			SLOT(on_tree_click(QTreeWidgetItem*, int)));
 	connect(this->m_ui->select_all_button, &QPushButton::clicked, this, [this] { this->set_all(true); });
 	connect(this->m_ui->select_none_button, &QPushButton::clicked, this, [this] { this->set_all(false); });
+	connect(this->m_ui->save_button, &QPushButton::clicked, this, [this] { this->save_settings(); });
+
+	this->m_options_map.insert({std::string("API_KEY"), this->m_ui->api_text});
+	this->m_options_map.insert({std::string("USE_KEY"), this->m_ui->use_text});
+	this->load_settings();
 }
 
 OptionsWindow::~OptionsWindow() { delete this->m_ui; }
+
+void OptionsWindow::load_settings() {
+	auto conf = ConfigManager::getInstance().get_current_config();
+	for (auto iter = this->m_options_map.begin(); iter != this->m_options_map.end(); ++iter) {
+		auto val = conf->get_item(iter->first);
+		iter->second->setText(val.c_str());
+	}
+}
+
+void OptionsWindow::save_settings() {
+	for (auto iter = this->m_options_map.begin(); iter != this->m_options_map.end(); ++iter) {
+		ConfigManager::getInstance().get_current_config()->set_item(iter->first,
+																	iter->second->displayText().toStdString());
+	}
+}
 
 void set_all_children(QTreeWidgetItem* item, bool state) {
 	for (int i = 0; i < item->childCount(); ++i) {

@@ -14,11 +14,12 @@ const std::unordered_map<std::string, std::string> DEFAULT_CONFIG = {
 class Config {
  public:
 	Config() = default;
-	void load_config(const std::string& file);
-	void save_config(const std::string& file);
+	Config(const std::string& file);
+	void load_config(std::string file = "");
+	void save_config(std::string file = "");
 
-	void set_config_item(const std::string& item, const std::string& value);
-	std::string get_config_item(const std::string& item);
+	void set_item(const std::string& item, const std::string& value);
+	std::string get_item(const std::string& item);
 
 	void add_callback(const std::string& item, config_changed_cb cb);
 	void remove_callback(const std::string& item, config_changed_cb cb);
@@ -29,6 +30,25 @@ class Config {
 
 	void notify_all();
 	void notify(const std::string& item);
+
+	std::string m_config_file;
+};
+
+class ConfigManager {
+ public:
+	static ConfigManager& getInstance() {
+		static ConfigManager instance;
+		return instance;
+	}
+
+	Config* get_current_config() { return &this->m_current_config; }
+
+ private:
+	ConfigManager() = default;
+	ConfigManager(ConfigManager const&);
+	void operator=(ConfigManager const&);
+
+	Config m_current_config;
 };
 
 #endif
