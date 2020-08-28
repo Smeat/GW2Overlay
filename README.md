@@ -36,8 +36,11 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
 
 ### TODO
  * Some kind of GUI for settings etc. (Very basic one is implemented)
-   * Boss timer
-   * API key (daily)
+   * Boss timer/reminder
+   * daily, killed bosses
+   * Make the GUI GW2 themed
+   * Overlay manager to create Overlays with boss timers and other stuff
+ * Icons on Map and Minimap (a basic implementation is working, but only works in a few areas)
  * Vulkan specific
    * Depth buffer
    * Draw everything in a single cmd (might also fix the bug after creating the queue)
