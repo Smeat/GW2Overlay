@@ -163,6 +163,14 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	std::cout << "Finished loading objects" << std::endl;
 }
 
+void look_away() {
+	auto cameraPos = glm::vec3(0, 10000, 0);
+	auto cameraFront = glm::vec3(0.0f, -1.0f, 0.0f);
+	auto cameraUp = glm::vec3(0.0f, 1.0f, 1.0f);
+	auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
+	my_shader->set_view(view);
+}
+
 void update_camera(const LinkedMem* gw2_data) {
 	auto ctx = gw2_data->get_context();
 	//	TODO: draw POIs on the map, if it is open
@@ -395,6 +403,7 @@ int main(int argc, char** argv) {
 			CategoryManager::getInstance().set_state_changed(false);
 		}
 
+		// TODO: use a proper system for events like this
 		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS) || vm.count("f")) {
 			update_camera(gw2_data);
 			update_objects(gw2_data);
@@ -402,7 +411,9 @@ int main(int argc, char** argv) {
 			write_lock lock(key_mutex);
 			key_presses.clear();
 		} else {
-			renderer->clear();
+			// TODO: imeplement a proper clear function in vulkan
+			look_away();
+			renderer->update();
 		}
 	}
 
