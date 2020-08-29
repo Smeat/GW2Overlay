@@ -73,6 +73,7 @@ SET(SOURCES
 	overlay/QtMain.cpp
 	overlay/qt/OptionsIcon.cpp
 	overlay/qt/OptionsWindow.ui
+	overlay/qt/NewBuildDialog.ui
 	overlay/qt/OptionsWindow.cpp
 	overlay/Window.cpp
 	overlay/GW2Object.cpp

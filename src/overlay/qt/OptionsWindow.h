@@ -1,6 +1,7 @@
 #ifndef __OPTIONSWINDOW_H__
 #define __OPTIONSWINDOW_H__
 
+#include <QDialog>
 #include <QLineEdit>
 #include <QMainWindow>
 #include <QTreeWidgetItem>
@@ -13,7 +14,8 @@
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class OptionsWindow;
-}
+class NewBuildDialog;
+}  // namespace Ui
 QT_END_NAMESPACE
 
 class CategoryTreeWidgetItem : public QTreeWidgetItem {
@@ -43,8 +45,17 @@ class OptionsWindow : public QMainWindow {
  private:
 	void save_settings();
 	void load_settings();
+	void add_build();
+	void copy_build();
 	Ui::OptionsWindow* m_ui;
 	std::map<std::string, QLineEdit*> m_options_map;
+};
+
+class NewBuildDialog : public QDialog {
+ public:
+	NewBuildDialog(QDialog* p = nullptr);
+
+	Ui::NewBuildDialog* m_ui;
 };
 
 #endif	// __OPTIONSWINDOW_H__

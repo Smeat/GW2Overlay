@@ -1,10 +1,19 @@
 #include "OptionsWindow.h"
 #include <cstdlib>
+#include "ui_NewBuildDialog.h"
 #include "ui_OptionsWindow.h"
+
+#include <QTableWidgetItem>
 
 #include "../../utils/CategoryManager.h"
 #include "../../utils/Config.h"
 #include "../../utils/POI.h"
+
+NewBuildDialog::NewBuildDialog(QDialog* p) : QDialog(p, Qt::Popup), m_ui(new Ui::NewBuildDialog) {
+	this->m_ui->setupUi(this);
+	connect(this->m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+	connect(this->m_ui->buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+}
 
 OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::OptionsWindow) {
 	this->m_ui->setupUi(this);
@@ -19,7 +28,9 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 			SLOT(on_tree_click(QTreeWidgetItem*, int)));
 	connect(this->m_ui->select_all_button, &QPushButton::clicked, this, [this] { this->set_all(true); });
 	connect(this->m_ui->select_none_button, &QPushButton::clicked, this, [this] { this->set_all(false); });
-	connect(this->m_ui->save_button, &QPushButton::clicked, this, [this] { this->save_settings(); });
+	connect(this->m_ui->save_settings_button, &QPushButton::clicked, this, [this] { this->save_settings(); });
+	connect(this->m_ui->add_build_button, &QPushButton::clicked, this, [this] { this->add_build(); });
+	connect(this->m_ui->copy_build_button, &QPushButton::clicked, this, [this] { this->copy_build(); });
 
 	this->m_options_map.insert({std::string("API_KEY"), this->m_ui->api_text});
 	this->m_options_map.insert({std::string("USE_KEY"), this->m_ui->use_text});
@@ -102,3 +113,25 @@ void OptionsWindow::set_categories(const poi_container* cats, QTreeWidgetItem* p
 }
 void CategoryTreeWidgetItem::setCategoryMarker(std::shared_ptr<POI> d) { this->m_cat = d; }
 std::shared_ptr<POI> CategoryTreeWidgetItem::getCategoryMarker() { return this->m_cat; }
+
+void OptionsWindow::add_build() {
+	NewBuildDialog d;
+	int res = d.exec();
+	std::cout << "Pressed button " << res << std::endl;
+	if (res == 1) {
+		auto name = d.m_ui->build_name_input->displayText();
+		auto description = d.m_ui->build_name_input->displayText();
+		auto value = d.m_ui->build_name_input->displayText();
+		auto build_list = this->m_ui->build_list;
+		QTableWidgetItem* name_item = new QTableWidgetItem(name);
+		QTableWidgetItem* description_item = new QTableWidgetItem(description);
+		QTableWidgetItem* value_item = new QTableWidgetItem(value);
+		build_list->insertRow(build_list->rowCount());
+		int row = build_list->rowCount() - 1;
+		build_list->setItem(row, 0, name_item);
+		build_list->setItem(row, 1, description_item);
+		build_list->setItem(row, 2, value_item);
+	}
+}
+
+void OptionsWindow::copy_build() {}
