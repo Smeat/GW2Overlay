@@ -50,5 +50,6 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
  * Vulkan specific
    * For the first seconds after creating the new command buffers (when switching the displayed POIs) the overlay lags behind. After that it works perfectly
    * POI objects behind transparency look weird
+   * If you encounter any visual related bugs/crashes when using vulkan, please start the program with `--validation` (for the very slim chance someone other than me is using this program)
   
  ![screenshot](https://user-images.githubusercontent.com/1054449/90751525-89bd8880-e2d6-11ea-9985-2ffa561d9049.png)
