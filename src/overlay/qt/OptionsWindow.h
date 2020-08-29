@@ -34,7 +34,7 @@ class OptionsWindow : public QMainWindow {
 
  public:
 	OptionsWindow(QWidget* parent = nullptr);
-	~OptionsWindow();
+	~OptionsWindow() = default;
 
 	void set_categories(const poi_container* cats, QTreeWidgetItem* parent = nullptr);
 	void update_categories();
@@ -47,7 +47,7 @@ class OptionsWindow : public QMainWindow {
 	void load_settings();
 	void add_build();
 	void copy_build();
-	Ui::OptionsWindow* m_ui;
+	std::shared_ptr<Ui::OptionsWindow> m_ui;
 	std::map<std::string, QLineEdit*> m_options_map;
 };
 
@@ -55,7 +55,7 @@ class NewBuildDialog : public QDialog {
  public:
 	NewBuildDialog(QDialog* p = nullptr);
 
-	Ui::NewBuildDialog* m_ui;
+	std::shared_ptr<Ui::NewBuildDialog> m_ui;
 };
 
 #endif	// __OPTIONSWINDOW_H__

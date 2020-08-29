@@ -37,8 +37,6 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 	this->load_settings();
 }
 
-OptionsWindow::~OptionsWindow() { delete this->m_ui; }
-
 void OptionsWindow::load_settings() {
 	auto conf = ConfigManager::getInstance().get_current_config();
 	for (auto iter = this->m_options_map.begin(); iter != this->m_options_map.end(); ++iter) {
