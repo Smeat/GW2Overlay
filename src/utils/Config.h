@@ -2,19 +2,24 @@
 #define __CONFIG_H__
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 typedef std::function<void(const std::string&)> config_changed_cb;
 
-const std::unordered_map<std::string, std::string> DEFAULT_CONFIG = {
+const std::unordered_map<std::string, std::string> DEFAULT_CONFIG_SETTINGS = {
 	{"USE_KEY", "f"}, {"ICON_POS_X", "1580"}, {"ICON_POS_Y", "0"}, {"ICON_SCALE", "1.0"}};
+
+const std::unordered_map<std::string, std::string> DEFAULT_CONFIGS = {{"SETTINGS", "./settings.json"},
+																	  {"BUILDS", "./builds.json"}};
 
 class Config {
  public:
 	Config() = default;
 	Config(const std::string& file);
+	~Config();
 	void load_config(std::string file = "");
 	void save_config(std::string file = "");
 
@@ -25,7 +30,7 @@ class Config {
 	void remove_callback(const std::string& item, config_changed_cb cb);
 
  private:
-	std::unordered_map<std::string, std::string> m_config_items = DEFAULT_CONFIG;
+	std::unordered_map<std::string, std::string> m_config_items = DEFAULT_CONFIG_SETTINGS;
 	std::unordered_map<std::string, std::vector<config_changed_cb>> m_notify_callbacks;
 
 	void notify_all();
@@ -41,14 +46,14 @@ class ConfigManager {
 		return instance;
 	}
 
-	Config* get_current_config() { return &this->m_current_config; }
+	std::shared_ptr<Config> get_config(const std::string& name);
 
  private:
-	ConfigManager() = default;
+	ConfigManager();
 	ConfigManager(ConfigManager const&);
 	void operator=(ConfigManager const&);
 
-	Config m_current_config;
+	std::unordered_map<std::string, std::shared_ptr<Config>> m_configs;
 };
 
 #endif

@@ -3,6 +3,7 @@
 #include "ui_NewBuildDialog.h"
 #include "ui_OptionsWindow.h"
 
+#include <QClipboard>
 #include <QTableWidgetItem>
 
 #include "../../utils/CategoryManager.h"
@@ -38,7 +39,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 }
 
 void OptionsWindow::load_settings() {
-	auto conf = ConfigManager::getInstance().get_current_config();
+	auto conf = ConfigManager::getInstance().get_config("SETTINGS");
 	for (auto iter = this->m_options_map.begin(); iter != this->m_options_map.end(); ++iter) {
 		auto val = conf->get_item(iter->first);
 		iter->second->setText(val.c_str());
@@ -47,8 +48,9 @@ void OptionsWindow::load_settings() {
 
 void OptionsWindow::save_settings() {
 	for (auto iter = this->m_options_map.begin(); iter != this->m_options_map.end(); ++iter) {
-		ConfigManager::getInstance().get_current_config()->set_item(iter->first,
-																	iter->second->displayText().toStdString());
+		ConfigManager::getInstance()
+			.get_config("SETTINGS")
+			->set_item(iter->first, iter->second->displayText().toStdString());
 	}
 }
 
@@ -114,12 +116,13 @@ std::shared_ptr<POI> CategoryTreeWidgetItem::getCategoryMarker() { return this->
 
 void OptionsWindow::add_build() {
 	NewBuildDialog d;
+	QClipboard* clipboard = QGuiApplication::clipboard();
+	d.m_ui->build_string_input->setText(clipboard->text());
 	int res = d.exec();
-	std::cout << "Pressed button " << res << std::endl;
 	if (res == 1) {
 		auto name = d.m_ui->build_name_input->displayText();
-		auto description = d.m_ui->build_name_input->displayText();
-		auto value = d.m_ui->build_name_input->displayText();
+		auto description = d.m_ui->build_description_input->displayText();
+		auto value = d.m_ui->build_string_input->displayText();
 		auto build_list = this->m_ui->build_list;
 		QTableWidgetItem* name_item = new QTableWidgetItem(name);
 		QTableWidgetItem* description_item = new QTableWidgetItem(description);
@@ -132,4 +135,11 @@ void OptionsWindow::add_build() {
 	}
 }
 
-void OptionsWindow::copy_build() {}
+void OptionsWindow::copy_build() {
+	auto items = this->m_ui->build_list->selectedItems();
+	if (items.size() == 1) {
+		auto item = items[0];
+		QClipboard* clipboard = QGuiApplication::clipboard();
+		clipboard->setText(item->text());
+	}
+}

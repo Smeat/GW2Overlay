@@ -4,10 +4,13 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 using json = nlohmann::json;
 
 Config::Config(const std::string& file) { this->m_config_file = file; }
+
+Config::~Config() { this->save_config(); }
 
 void Config::save_config(std::string filename) {
 	if (filename.empty()) filename = this->m_config_file;
@@ -72,5 +75,23 @@ void Config::notify(const std::string& item) {
 void Config::notify_all() {
 	for (const auto& item : this->m_notify_callbacks) {
 		this->notify(item.first);
+	}
+}
+
+ConfigManager::ConfigManager() {
+	for (auto iter = DEFAULT_CONFIGS.begin(); iter != DEFAULT_CONFIGS.end(); ++iter) {
+		auto conf = this->m_configs.insert({iter->first, std::shared_ptr<Config>(new Config)});
+		conf.first->second->load_config(iter->second);
+	}
+}
+
+std::shared_ptr<Config> ConfigManager::get_config(const std::string& conf) {
+	auto res = this->m_configs.find(conf);
+	if (res != this->m_configs.end()) {
+		return res->second;
+	} else {
+		std::shared_ptr<Config> new_conf(new Config);
+		this->m_configs.insert({conf, new_conf});
+		return new_conf;
 	}
 }

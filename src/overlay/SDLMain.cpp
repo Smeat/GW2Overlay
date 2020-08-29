@@ -290,7 +290,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	ConfigManager::getInstance().get_current_config()->load_config("./config.json");
+	ConfigManager::getInstance();
 
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();
@@ -417,6 +417,5 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	ConfigManager::getInstance().get_current_config()->save_config();
 	return 0;
 }
