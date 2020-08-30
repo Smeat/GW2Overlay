@@ -124,6 +124,7 @@ class VKRenderer : public Renderer {
 			this->initWindow();
 		}
 		this->initVulkan();
+		this->set_objects({});
 	}
 	virtual std::shared_ptr<Object> load_object(std::shared_ptr<Shader> s,
 												std::vector<std::shared_ptr<TexturedMesh>> m) override {
