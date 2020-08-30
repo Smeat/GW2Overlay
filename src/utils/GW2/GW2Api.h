@@ -18,6 +18,11 @@ class GW2Api {
 	std::string get_cached(const std::string& endpoint);
 	void save_to_cache(const std::string& endpoint, const std::string& value);
 
+	void set_api_key(const std::string& key) {
+		this->m_api_key = key;
+		std::cout << "GW2 API key " << m_api_key << std::endl;
+	}
+
  private:
 	std::string m_cache_folder;
 	std::string m_api_key;

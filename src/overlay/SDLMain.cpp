@@ -291,6 +291,9 @@ int main(int argc, char** argv) {
 	}
 
 	ConfigManager::getInstance();
+	auto& conf = ConfigManager::getInstance().get_config("SETTINGS");
+	api.set_api_key(conf["API_KEY"].get_item());
+	api.get_value("v2/account/achievements", false);
 
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();

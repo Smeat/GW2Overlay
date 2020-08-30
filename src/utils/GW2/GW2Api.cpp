@@ -17,6 +17,8 @@
 
 #include <utils/json/json.hpp>
 
+#include "../Config.h"
+
 using json = nlohmann::json;
 
 std::shared_ptr<addrinfo> getaddrinfo(const char* __name, const char* __service, const struct addrinfo* __req) {
