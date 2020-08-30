@@ -65,6 +65,9 @@ void Config::from_json(const json& j, bool clear) {
 		} else if (iter->is_string()) {
 			std::cout << "string key " << iter.key() << " val " << iter.value() << std::endl;
 			this->set_item(iter.key(), iter.value());
+		} else if (iter->is_array()) {
+			std::cout << "Array!" << std::endl;
+			this->set_items(iter.key(), iter.value());
 		}
 	}
 }
@@ -89,6 +92,11 @@ void Config::set_item(const std::string& item, const std::string& value) {
 	child.m_values.clear();
 	child.m_values.push_back(value);
 	// TODO: notify root to save new config
+}
+void Config::set_items(const std::string& item, const std::vector<std::string>& values) {
+	bool changed = false;
+	auto& child = this->get_entry(item);
+	child.m_values = values;
 }
 
 std::string Config::get_item() {

@@ -45,12 +45,16 @@ class OptionsWindow : public QMainWindow {
  private:
 	void save_settings();
 	void load_settings();
-	void add_build();
+	void add_build_dialog();
+	void add_build(const std::string& name, const std::string& desc, const std::string& val);
+	void add_build(const QString& name, const QString& desc, const QString& val);
 	void copy_build();
 	void save_builds();
 	void load_builds();
 	std::shared_ptr<Ui::OptionsWindow> m_ui;
 	std::map<std::string, QLineEdit*> m_options_map;
+
+	bool m_disable_build_save = false;
 };
 
 class NewBuildDialog : public QDialog {

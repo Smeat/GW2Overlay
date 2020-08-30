@@ -30,12 +30,15 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 	connect(this->m_ui->select_all_button, &QPushButton::clicked, this, [this] { this->set_all(true); });
 	connect(this->m_ui->select_none_button, &QPushButton::clicked, this, [this] { this->set_all(false); });
 	connect(this->m_ui->save_settings_button, &QPushButton::clicked, this, [this] { this->save_settings(); });
-	connect(this->m_ui->add_build_button, &QPushButton::clicked, this, [this] { this->add_build(); });
+	connect(this->m_ui->add_build_button, &QPushButton::clicked, this, [this] { this->add_build_dialog(); });
 	connect(this->m_ui->copy_build_button, &QPushButton::clicked, this, [this] { this->copy_build(); });
+	connect(this->m_ui->build_list, &QTableWidget::itemChanged, this,
+			[this](QTableWidgetItem* item) { this->save_builds(); });
 
 	this->m_options_map.insert({std::string("API_KEY"), this->m_ui->api_text});
 	this->m_options_map.insert({std::string("USE_KEY"), this->m_ui->use_text});
 	this->load_settings();
+	this->load_builds();
 }
 
 void OptionsWindow::load_settings() {
@@ -119,7 +122,7 @@ void OptionsWindow::set_categories(const poi_container* cats, QTreeWidgetItem* p
 void CategoryTreeWidgetItem::setCategoryMarker(std::shared_ptr<POI> d) { this->m_cat = d; }
 std::shared_ptr<POI> CategoryTreeWidgetItem::getCategoryMarker() { return this->m_cat; }
 
-void OptionsWindow::add_build() {
+void OptionsWindow::add_build_dialog() {
 	NewBuildDialog d;
 	QClipboard* clipboard = QGuiApplication::clipboard();
 	d.m_ui->build_string_input->setText(clipboard->text());
@@ -128,16 +131,23 @@ void OptionsWindow::add_build() {
 		auto name = d.m_ui->build_name_input->displayText();
 		auto description = d.m_ui->build_description_input->displayText();
 		auto value = d.m_ui->build_string_input->displayText();
-		auto build_list = this->m_ui->build_list;
-		QTableWidgetItem* name_item = new QTableWidgetItem(name);
-		QTableWidgetItem* description_item = new QTableWidgetItem(description);
-		QTableWidgetItem* value_item = new QTableWidgetItem(value);
-		build_list->insertRow(build_list->rowCount());
-		int row = build_list->rowCount() - 1;
-		build_list->setItem(row, 0, name_item);
-		build_list->setItem(row, 1, description_item);
-		build_list->setItem(row, 2, value_item);
+		this->add_build(name, description, value);
 	}
+}
+
+void OptionsWindow::add_build(const std::string& name, const std::string& desc, const std::string& val) {
+	this->add_build(QString::fromStdString(name), QString::fromStdString(desc), QString::fromStdString(val));
+}
+void OptionsWindow::add_build(const QString& name, const QString& desc, const QString& val) {
+	auto build_list = this->m_ui->build_list;
+	QTableWidgetItem* name_item = new QTableWidgetItem(name);
+	QTableWidgetItem* description_item = new QTableWidgetItem(desc);
+	QTableWidgetItem* value_item = new QTableWidgetItem(val);
+	build_list->insertRow(build_list->rowCount());
+	int row = build_list->rowCount() - 1;
+	build_list->setItem(row, 0, name_item);
+	build_list->setItem(row, 1, description_item);
+	build_list->setItem(row, 2, value_item);
 }
 
 void OptionsWindow::copy_build() {
@@ -149,13 +159,36 @@ void OptionsWindow::copy_build() {
 	}
 }
 void OptionsWindow::save_builds() {
-	for (int row = 0; row < this->m_ui->build_list->rowCount(); ++row) {
-		auto name_item = this->m_ui->build_list->item(row, 0);
-		auto desc_item = this->m_ui->build_list->item(row, 1);
-		auto val_item = this->m_ui->build_list->item(row, 2);
+	if (!this->m_disable_build_save) {
+		auto& config = ConfigManager::getInstance().get_config("BUILDS");
+		for (int row = 0; row < this->m_ui->build_list->rowCount(); ++row) {
+			auto name_item = this->m_ui->build_list->item(row, 0);
+			auto desc_item = this->m_ui->build_list->item(row, 1);
+			auto val_item = this->m_ui->build_list->item(row, 2);
+			if (name_item && desc_item && val_item) {
+				std::string name = name_item->text().toStdString();
+				std::string val = val_item->text().toStdString();
+
+				std::string desc = desc_item->text().toStdString();
+				std::cout << "Saving build with name " << name << " desc " << desc << " and val " << val << std::endl;
+				config.set_items(val, {name, desc});
+			}
+		}
+		// TODO: file name stuff?
+		config.save_config("./builds.json");
 	}
 }
 void OptionsWindow::load_builds() {
+	this->m_disable_build_save = true;
 	// this->m_ui->build_list.clear();
-	auto config = ConfigManager::getInstance().get_config("BUILDS");
+	auto& config = ConfigManager::getInstance().get_config("BUILDS");
+	for (auto build = config.get_children()->begin(); build != config.get_children()->end(); ++build) {
+		std::string val = build->second->get_name();
+		auto data = build->second->get_items();
+		if (data.size() == 2) {
+			this->add_build(data[0], data[1], val);
+		}
+	}
+
+	this->m_disable_build_save = false;
 }

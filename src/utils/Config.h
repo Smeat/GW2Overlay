@@ -32,7 +32,8 @@ class Config {
 
 	void set_item(const std::string& item, const std::string& value);
 	void add_item(const std::string& item, const std::string& value);
-	std::vector<std::string> get_items();
+	void set_items(const std::string& item, const std::vector<std::string>& values);
+	const std::vector<std::string>& get_items() const { return this->m_values; };
 
 	void add_callback(const std::string& item, config_changed_cb cb);
 	void remove_callback(const std::string& item, config_changed_cb cb);
@@ -57,6 +58,7 @@ class Config {
 	}
 	std::string get_item();
 	const std::unordered_map<std::string, std::shared_ptr<Config>>* get_children() const { return &this->m_children; }
+	std::string get_name() { return this->m_name; }
 
  private:
 	std::unordered_map<std::string, std::vector<config_changed_cb>> m_notify_callbacks;
