@@ -47,6 +47,8 @@ class OptionsWindow : public QMainWindow {
 	void load_settings();
 	void add_build();
 	void copy_build();
+	void save_builds();
+	void load_builds();
 	std::shared_ptr<Ui::OptionsWindow> m_ui;
 	std::map<std::string, QLineEdit*> m_options_map;
 };

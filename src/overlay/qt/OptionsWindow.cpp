@@ -39,19 +39,24 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 }
 
 void OptionsWindow::load_settings() {
-	auto conf = ConfigManager::getInstance().get_config("SETTINGS");
+	auto& conf = ConfigManager::getInstance().get_config("SETTINGS");
 	for (auto iter = this->m_options_map.begin(); iter != this->m_options_map.end(); ++iter) {
-		auto val = conf->get_item(iter->first);
+		std::cout << "Getting entry " << iter->first << std::endl;
+		auto val = conf.get_entry(iter->first).get_item();
 		iter->second->setText(val.c_str());
 	}
+	std::cout << "Done loading settings" << std::endl;
 }
 
 void OptionsWindow::save_settings() {
 	for (auto iter = this->m_options_map.begin(); iter != this->m_options_map.end(); ++iter) {
 		ConfigManager::getInstance()
 			.get_config("SETTINGS")
-			->set_item(iter->first, iter->second->displayText().toStdString());
+			.set_item(iter->first, iter->second->displayText().toStdString());
+		std::cout << "loop" << std::endl;
 	}
+	ConfigManager::getInstance().get_config("SETTINGS").save_config();
+	std::cout << "Done saving settings" << std::endl;
 }
 
 void set_all_children(QTreeWidgetItem* item, bool state) {
@@ -137,9 +142,20 @@ void OptionsWindow::add_build() {
 
 void OptionsWindow::copy_build() {
 	auto items = this->m_ui->build_list->selectedItems();
-	if (items.size() == 1) {
-		auto item = items[0];
+	if (items.size() == 3) {
+		auto item = items[2];
 		QClipboard* clipboard = QGuiApplication::clipboard();
 		clipboard->setText(item->text());
 	}
+}
+void OptionsWindow::save_builds() {
+	for (int row = 0; row < this->m_ui->build_list->rowCount(); ++row) {
+		auto name_item = this->m_ui->build_list->item(row, 0);
+		auto desc_item = this->m_ui->build_list->item(row, 1);
+		auto val_item = this->m_ui->build_list->item(row, 2);
+	}
+}
+void OptionsWindow::load_builds() {
+	// this->m_ui->build_list.clear();
+	auto config = ConfigManager::getInstance().get_config("BUILDS");
 }
