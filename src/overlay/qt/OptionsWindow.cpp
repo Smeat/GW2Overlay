@@ -4,11 +4,15 @@
 #include "ui_OptionsWindow.h"
 
 #include <QClipboard>
+#include <QFileDialog>
+#include <QShowEvent>
 #include <QTableWidgetItem>
 
 #include "../../utils/CategoryManager.h"
 #include "../../utils/Config.h"
+#include "../../utils/GW2/GW2Manager.h"
 #include "../../utils/POI.h"
+#include "../../utils/ProcessUtils.h"
 
 NewBuildDialog::NewBuildDialog(QDialog* p) : QDialog(p, Qt::Popup), m_ui(new Ui::NewBuildDialog) {
 	this->m_ui->setupUi(this);
@@ -34,9 +38,11 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 	connect(this->m_ui->copy_build_button, &QPushButton::clicked, this, [this] { this->copy_build(); });
 	connect(this->m_ui->build_list, &QTableWidget::itemChanged, this,
 			[this](QTableWidgetItem* item) { this->save_builds(); });
+	connect(this->m_ui->select_helper_button, &QPushButton::clicked, this, [this] { this->select_helper_path(); });
 
 	this->m_options_map.insert({std::string("API_KEY"), this->m_ui->api_text});
 	this->m_options_map.insert({std::string("USE_KEY"), this->m_ui->use_text});
+	this->m_options_map.insert({std::string("HELPER_SCRIPT"), this->m_ui->use_text});
 	this->load_settings();
 	this->load_builds();
 }
@@ -191,4 +197,36 @@ void OptionsWindow::load_builds() {
 	}
 
 	this->m_disable_build_save = false;
+}
+
+void OptionsWindow::showEvent(QShowEvent* ev) {
+	QMainWindow::showEvent(ev);
+	// update process stuff
+	bool gw2_running = GW2Manager::getInstance().is_gw2_running();
+	if (gw2_running) {
+		this->m_ui->gw2_running_label->setStyleSheet(STYLE_VALID);
+	} else {
+		this->m_ui->gw2_running_label->setStyleSheet(STYLE_INVALID);
+	}
+	bool helper_running = GW2Manager::getInstance().is_helper_running();
+	if (helper_running) {
+		this->m_ui->helper_running_label->setStyleSheet(STYLE_VALID);
+	} else {
+		this->m_ui->helper_running_label->setStyleSheet(STYLE_INVALID);
+	}
+}
+void OptionsWindow::select_helper_path() {
+	QFileDialog dialog(this, Qt::Popup);
+	std::string fileName;
+	if (dialog.exec() == QDialog::Accepted) {
+		fileName = dialog.selectedFiles().value(0).toStdString();
+	}
+	std::cout << "Selected " << fileName << std::endl;
+	//	QFileDialog::getSaveFileName(this, "Select Helper script", "", "Python script (*.py);;All Files (*)")
+	//		.toStdString();
+	if (!fileName.empty()) {
+		ConfigManager::getInstance().get_config("SETTINGS").set_item("HELPER_SCRIPT", fileName);
+		this->m_ui->helper_path_lineedit->setText(QString::fromStdString(fileName));
+		GW2Manager::getInstance().start_helper();
+	}
 }

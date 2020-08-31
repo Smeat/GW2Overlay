@@ -22,7 +22,8 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
 
 ## Usage
  * Start GW2
- * Launch the `launch.sh` script with the path to the `GW2Overlay` binary followed by any of the valid command line options for the overlay
+ * Start the overlay with `./GW2Overlay --xml-folder <path to your poi folder> --vulkan`
+   * Open the options menu and select the location of the `mumble.py` helper script (one time)
    * All the required resources are expected to be in the current working directory
 
 ### Status

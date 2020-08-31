@@ -66,6 +66,7 @@ SET(SOURCES
 	utils/GW2/GW2Link.cpp
 	utils/GW2/GW2Api.cpp
 	utils/GW2/GW2Map.cpp
+	utils/GW2/GW2Manager.cpp
 	utils/GW2/GW2Achievements.cpp
 	utils/CategoryManager.cpp
 	utils/POI.cpp

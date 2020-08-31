@@ -11,6 +11,9 @@
 
 #include "../../utils/POI.h"
 
+#define STYLE_VALID "color: rgb(0, 255, 0);"
+#define STYLE_INVALID "color: rgb(255, 0, 0);"
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class OptionsWindow;
@@ -51,8 +54,10 @@ class OptionsWindow : public QMainWindow {
 	void copy_build();
 	void save_builds();
 	void load_builds();
+	void select_helper_path();
 	std::shared_ptr<Ui::OptionsWindow> m_ui;
 	std::map<std::string, QLineEdit*> m_options_map;
+	void showEvent(QShowEvent* ev) override;
 
 	bool m_disable_build_save = false;
 };

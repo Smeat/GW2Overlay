@@ -71,8 +71,10 @@
 #include "../utils/GW2/GW2Achievements.h"
 #include "../utils/GW2/GW2Api.h"
 #include "../utils/GW2/GW2Link.h"
+#include "../utils/GW2/GW2Manager.h"
 #include "../utils/GW2/GW2Map.h"
 #include "../utils/POI.h"
+#include "../utils/ProcessUtils.h"
 #include "../utils/json/json.hpp"
 #include "../utils/xml/pugixml.hpp"
 
@@ -376,6 +378,8 @@ int main(int argc, char** argv) {
 		}
 		my_shader->set_projection(fov, screenWidth, screenHeight);
 	}
+
+	GW2Manager::getInstance().start_helper();
 
 	std::thread qt_thread([&]() { qt_main(argc, argv); });
 	std::thread input_thread([&] {
