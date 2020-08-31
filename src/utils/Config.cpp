@@ -92,6 +92,7 @@ void Config::set_item(const std::string& item, const std::string& value) {
 	child.m_values.clear();
 	child.m_values.push_back(value);
 	// TODO: notify root to save new config
+	this->save_config();
 }
 void Config::set_items(const std::string& item, const std::vector<std::string>& values) {
 	bool changed = false;
