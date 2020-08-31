@@ -42,7 +42,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 
 	this->m_options_map.insert({std::string("API_KEY"), this->m_ui->api_text});
 	this->m_options_map.insert({std::string("USE_KEY"), this->m_ui->use_text});
-	this->m_options_map.insert({std::string("HELPER_SCRIPT"), this->m_ui->use_text});
+	this->m_options_map.insert({std::string("HELPER_SCRIPT"), this->m_ui->helper_path_lineedit});
 	this->load_settings();
 	this->load_builds();
 }
