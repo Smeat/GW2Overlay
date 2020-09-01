@@ -1,6 +1,6 @@
 # GW2Overlay
 
-This is aimed to be a (very basic) GW2 overlay which runs natively on Linux as an alternative to GW2TaCo.
+This is aimed to be a (very basic) GW2 overlay which runs natively on Linux as an alternative to GW2Taco.
 The GW2 data is sent via UDP from a python script inside the wine environment, since using mmap with wine is not straightforward.
 
 ## Requirements
@@ -28,7 +28,7 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
 
 ### Status
  * Current status: It is usable, but the UI is still lacking (Just a simple window to activate/deactivate POIs)
- * Can load and display GW2TaCo XML POIs
+ * Can load and display GW2Taco XML POIs
  * Tested on Arch with i3wm and picom
  * Position is currently hardcoded for my setup
  * OpenGL and Vulkan renderers both working
