@@ -22,7 +22,7 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
 
 ## Usage
  * Start GW2
- * Start the overlay with `./GW2Overlay --xml-folder <path to your poi folder> --vulkan`
+ * Start the overlay with `./GW2Overlay --xml-folder <path to your poi folder>`
    * Open the options menu and select the location of the `mumble.py` helper script (one time)
    * All the required resources are expected to be in the current working directory
 
@@ -41,10 +41,13 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
    * daily, killed bosses
    * Make the GUI GW2 themed
    * Overlay manager to create Overlays with boss timers and other stuff
+ * WvW markers with timer
+ * Change scale for specific categories
  * Icons on Map and Minimap (a basic implementation is working, but only works in a few areas)
  * Vulkan specific
    * Depth buffer
    * Draw everything in a single cmd (might also fix the bug after creating the queue)
+   * Reduce the number of allocated buffers
    * Proper color blending
  
 ### BUGS

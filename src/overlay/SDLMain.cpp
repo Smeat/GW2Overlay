@@ -258,7 +258,7 @@ int main(int argc, char** argv) {
 			"Display width")
 		("height", po::value<float>()->default_value(1050.0f),
 			"Display height")
-		("vulkan", "Enable vulkan renderer")
+		("opengl", "Us the OpenGL renderer (deprecated)")
 		("validation", "Enable validation layers for vulkan")
 		("f", "Force output")
 		;
@@ -300,15 +300,15 @@ int main(int argc, char** argv) {
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();
 
-	bool use_vulkan = vm.count("vulkan");
+	bool use_opengl = vm.count("opengl");
 
-	WindowData window = createTransparentWindow("GAME", 1280, 0, screenWidth, screenHeight, !use_vulkan);
+	WindowData window = createTransparentWindow("GAME", 1280, 0, screenWidth, screenHeight, use_opengl);
 	std::shared_ptr<Renderer> renderer;
 
-	if (use_vulkan) {
-		renderer.reset(new VKRenderer(window, vm.count("validation")));
-	} else {
+	if (use_opengl) {
 		renderer.reset(new GLRenderer(window));
+	} else {
+		renderer.reset(new VKRenderer(window, vm.count("validation")));
 	}
 
 	int imgFlags = IMG_INIT_PNG;
