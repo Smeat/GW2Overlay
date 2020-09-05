@@ -2,6 +2,7 @@
 #define __OPTIONSWINDOW_H__
 
 #include <QDialog>
+#include <QLabel>
 #include <QLineEdit>
 #include <QMainWindow>
 #include <QTreeWidgetItem>
@@ -9,6 +10,7 @@
 #include <memory>
 #include <vector>
 
+#include "../../utils/GW2/GW2Api.h"
 #include "../../utils/POI.h"
 
 #define STYLE_VALID "color: rgb(0, 255, 0);"
@@ -57,6 +59,7 @@ class OptionsWindow : public QMainWindow {
 	void select_helper_path();
 	std::shared_ptr<Ui::OptionsWindow> m_ui;
 	std::map<std::string, QLineEdit*> m_options_map;
+	std::map<GW2Permission, QLabel*> m_permission_map;
 	void showEvent(QShowEvent* ev) override;
 
 	bool m_disable_build_save = false;

@@ -15,7 +15,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include <utils/json/json.hpp>
+#include "../json/json.hpp"
 
 #include "../Config.h"
 
@@ -134,3 +134,17 @@ void GW2Api::save_to_cache(const std::string& endpoint, const std::string& value
 		of << value.c_str();
 	}
 }
+void GW2Api::check_permissions() {
+	auto val = this->get_value("v2/tokeninfo", false);
+	json j = json::parse(val);
+	if (j.contains("permissions") && j["permissions"].is_array()) {
+		this->m_permissions = 0;
+		for (auto iter = j["permissions"].begin(); iter != j["permissions"].end(); ++iter) {
+			auto find = PERMISSION_MAP.find(*iter);
+			if (find != PERMISSION_MAP.end()) {
+				this->m_permissions |= find->second;
+			}
+		}
+	}
+}
+bool GW2Api::has_permission(uint32_t perm) { return this->m_permissions & (perm); }

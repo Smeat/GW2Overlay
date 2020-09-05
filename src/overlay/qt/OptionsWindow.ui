@@ -183,13 +183,6 @@
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QPushButton" name="check_api_key_button">
-             <property name="text">
-              <string>Check Key</string>
-             </property>
-            </widget>
-           </item>
           </layout>
          </item>
          <item row="2" column="1">

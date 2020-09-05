@@ -97,7 +97,6 @@ namespace po = boost::program_options;
 // TODO: remove this global mess and create more files
 std::vector<std::shared_ptr<GW2Object>> objects;
 std::shared_ptr<Shader> my_shader;
-GW2Api api("./cache");
 GW2Map map;
 std::shared_ptr<GW2Achievements> achievements;
 std::vector<std::string> key_presses;
@@ -227,7 +226,7 @@ void update_camera(const LinkedMem* gw2_data) {
 }
 
 void update_map(int id) {
-	auto d = api.get_value(std::string("v2/maps/") + std::to_string(id));
+	auto d = GW2ApiManager::getInstance().get_api()->get_value(std::string("v2/maps/") + std::to_string(id));
 	map.load_map(d);
 }
 
@@ -294,8 +293,8 @@ int main(int argc, char** argv) {
 
 	ConfigManager::getInstance();
 	auto& conf = ConfigManager::getInstance().get_config("SETTINGS");
-	api.set_api_key(conf["API_KEY"].get_item());
-	api.get_value("v2/account/achievements", false);
+	GW2ApiManager::getInstance().get_api()->set_api_key(conf["API_KEY"].get_item());
+	GW2ApiManager::getInstance().get_api()->get_value("v2/account/achievements", false);
 
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();
@@ -362,7 +361,7 @@ int main(int argc, char** argv) {
 	printf("Starting main loop\n");
 	uint64_t last_call = 0;
 
-	auto d = api.get_value("v2/account/achievements");
+	auto d = GW2ApiManager::getInstance().get_api()->get_value("v2/account/achievements");
 	achievements.reset(new GW2Achievements(d));
 
 	int last_id = 0;

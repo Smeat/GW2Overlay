@@ -1,4 +1,5 @@
 #include "OptionsWindow.h"
+#include <cstdio>
 #include <cstdlib>
 #include "ui_NewBuildDialog.h"
 #include "ui_OptionsWindow.h"
@@ -43,6 +44,15 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 	this->m_options_map.insert({std::string("API_KEY"), this->m_ui->api_text});
 	this->m_options_map.insert({std::string("USE_KEY"), this->m_ui->use_text});
 	this->m_options_map.insert({std::string("HELPER_SCRIPT"), this->m_ui->helper_path_lineedit});
+	this->m_permission_map = {{GW2Permission::BUILDS, this->m_ui->builds_label},
+							  {GW2Permission::CHARACTERS, this->m_ui->characters_label},
+							  {GW2Permission::GUILDS, this->m_ui->guilds_label},
+							  {GW2Permission::INVENTORIES, this->m_ui->inventories_label},
+							  {GW2Permission::PROGRESSION, this->m_ui->progression_label},
+							  {GW2Permission::PVP, this->m_ui->pvp_label},
+							  {GW2Permission::TRADINGPOST, this->m_ui->tradingpost_label},
+							  {GW2Permission::UNLOCKS, this->m_ui->unlocks_label},
+							  {GW2Permission::WALLET, this->m_ui->wallet_label}};
 	this->load_settings();
 	this->load_builds();
 }
@@ -213,6 +223,14 @@ void OptionsWindow::showEvent(QShowEvent* ev) {
 		this->m_ui->helper_running_label->setStyleSheet(STYLE_VALID);
 	} else {
 		this->m_ui->helper_running_label->setStyleSheet(STYLE_INVALID);
+	}
+	auto& api_instance = GW2ApiManager::getInstance();
+	for (auto iter = this->m_permission_map.begin(); iter != this->m_permission_map.end(); ++iter) {
+		if (api_instance.get_api()->has_permission(iter->first)) {
+			iter->second->setStyleSheet(STYLE_VALID);
+		} else {
+			iter->second->setStyleSheet(STYLE_INVALID);
+		}
 	}
 }
 void OptionsWindow::select_helper_path() {
