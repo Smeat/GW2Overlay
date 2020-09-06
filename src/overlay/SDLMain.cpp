@@ -157,7 +157,7 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 			pos.y += curr_poi->m_height_offset;
 			obj->translate(pos);
 			obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
-			std::shared_ptr<GW2Object> gw2obj(new GW2Object(obj, curr_poi));
+			std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(obj, curr_poi));
 			objects.push_back(gw2obj);
 		}
 	}
@@ -239,8 +239,8 @@ void update_objects(const LinkedMem* gw2_data) {
 	pressed_f = iter != key_presses.end();
 	lock.unlock();
 	for (const auto& obj : objects) {
-		obj->check_trigger({gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[1], gw2_data->fAvatarPosition[2]},
-						   pressed_f);
+		obj->update({gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[1], gw2_data->fAvatarPosition[2]},
+					pressed_f);
 	}
 }
 
@@ -403,7 +403,8 @@ int main(int argc, char** argv) {
 			load_objects(last_id, renderer);
 			std::vector<std::shared_ptr<Object>> render_objects;
 			for (const auto& obj : objects) {
-				render_objects.push_back(obj->get_object());
+				auto list = obj->get_objects();
+				render_objects.insert(render_objects.end(), list.begin(), list.end());
 			}
 			renderer->set_objects(render_objects);
 			CategoryManager::getInstance().set_state_changed(false);
