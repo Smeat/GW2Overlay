@@ -20,11 +20,24 @@
 #ifndef __TEXTURE_H__
 #define __TEXTURE_H__
 
+#include <iostream>
 #include <string>
+
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_surface.h>
 
 class Texture {
  public:
 	virtual void set_active() = 0;
+	SDL_Surface* load_image(const std::string& filename) {
+		SDL_Surface* surf = IMG_Load(filename.c_str());
+		// TODO: use SDL_DisplayFormat?
+		if (!surf) {
+			std::cerr << "Failed to load texture " << filename << std::endl;
+			throw std::runtime_error("failed to load image file!");
+		}
+		return surf;
+	}
 };
 
 #endif

@@ -38,7 +38,21 @@ VKTexture::VKTexture(const std::string& path, VkDevice device, VkPhysicalDevice 
 	this->m_command_pool = command_pool;
 	this->m_graphics_queue = graphics_queue;
 
-	this->createTextureImage(path);
+	SDL_Surface* surf = this->load_image(path);
+	this->createTextureImage(surf);
+	SDL_FreeSurface(surf);
+	this->createTextureImageView();
+	this->createTextureSampler();
+}
+
+VKTexture::VKTexture(SDL_Surface* surf, VkDevice device, VkPhysicalDevice physical_device, VkCommandPool command_pool,
+					 VkQueue graphics_queue) {
+	this->m_device = device;
+	this->m_physical_device = physical_device;
+	this->m_command_pool = command_pool;
+	this->m_graphics_queue = graphics_queue;
+
+	this->createTextureImage(surf);
 	this->createTextureImageView();
 	this->createTextureSampler();
 }
@@ -80,14 +94,7 @@ void VKTexture::createTextureImageView() {
 	this->m_texture_image_view = createImageView(this->m_device, this->m_texture_image, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
-void VKTexture::createTextureImage(const std::string& filename) {
-	SDL_Surface* surf = IMG_Load(filename.c_str());
-	if (!surf) {
-		std::cerr << "Failed to load texture " << filename << std::endl;
-		SDL_FreeSurface(surf);
-		throw std::runtime_error("failed to load image file!");
-	}
-
+void VKTexture::createTextureImage(SDL_Surface* surf) {
 	int texWidth = surf->w;
 	int texHeight = surf->h;
 	VkDeviceSize imageSize = texWidth * texHeight * 4;
@@ -103,7 +110,6 @@ void VKTexture::createTextureImage(const std::string& filename) {
 	vkMapMemory(this->m_device, stagingBufferMemory, 0, imageSize, 0, &data);
 	memcpy(data, pixels, static_cast<size_t>(imageSize));
 	vkUnmapMemory(this->m_device, stagingBufferMemory);
-	SDL_FreeSurface(surf);
 
 	createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
 				VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,

@@ -30,6 +30,8 @@ class VKTexture : public Texture {
  public:
 	VKTexture(const std::string& path, VkDevice device, VkPhysicalDevice physical_device, VkCommandPool command_pool,
 			  VkQueue graphics_queue);
+	VKTexture(SDL_Surface* surf, VkDevice device, VkPhysicalDevice physical_device, VkCommandPool command_pool,
+			  VkQueue graphics_queue);
 	virtual ~VKTexture();
 
 	virtual void set_active() override;
@@ -43,7 +45,7 @@ class VKTexture : public Texture {
 	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
 					 VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-	void createTextureImage(const std::string& filename);
+	void createTextureImage(SDL_Surface* surf);
 	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
 	VkDevice m_device;
