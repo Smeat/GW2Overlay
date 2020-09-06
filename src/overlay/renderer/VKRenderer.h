@@ -199,8 +199,8 @@ class VKRenderer : public Renderer {
 	};
 	virtual void clear() override {}
 	virtual void update() override { this->drawFrame(); }
-	virtual std::shared_ptr<Texture> load_texture(const std::string& path) override {
-		return std::shared_ptr<Texture>(new VKTexture(path, device, physicalDevice, commandPool, graphicsQueue));
+	virtual std::shared_ptr<Texture> load_texture(SDL_Surface* surf) override {
+		return std::shared_ptr<Texture>(new VKTexture(surf, device, physicalDevice, commandPool, graphicsQueue));
 	}
 	virtual std::shared_ptr<Mesh> load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) override {
 		return std::shared_ptr<Mesh>(new VKMesh(vertices, indices));

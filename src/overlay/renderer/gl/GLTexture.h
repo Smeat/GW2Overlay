@@ -26,7 +26,7 @@
 
 class GLTexture : public Texture {
  public:
-	GLTexture(const std::string& path);
+	GLTexture(SDL_Surface* surf);
 	virtual ~GLTexture();
 
 	virtual void set_active() override;

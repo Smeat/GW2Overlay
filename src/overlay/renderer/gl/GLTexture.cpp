@@ -28,13 +28,7 @@
 #include <SDL2/SDL_surface.h>
 #include <iostream>
 
-GLTexture::GLTexture(const std::string& path) {
-	SDL_Surface* surf = IMG_Load(path.c_str());
-	if (!surf) {
-		std::cerr << "Failed to load texture " << path << std::endl;
-		SDL_FreeSurface(surf);
-		return;
-	}
+GLTexture::GLTexture(SDL_Surface* surf) {
 	glGenTextures(1, &this->m_id);
 	glBindTexture(GL_TEXTURE_2D, this->m_id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
@@ -48,7 +42,6 @@ GLTexture::GLTexture(const std::string& path) {
 
 	glTexImage2D(GL_TEXTURE_2D, 0, mode, surf->w, surf->h, 0, mode, GL_UNSIGNED_BYTE, surf->pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
-	SDL_FreeSurface(surf);
 }
 
 GLTexture::~GLTexture() {

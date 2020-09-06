@@ -29,7 +29,7 @@
 class Texture {
  public:
 	virtual void set_active() = 0;
-	SDL_Surface* load_image(const std::string& filename) {
+	static SDL_Surface* load_image(const std::string& filename) {
 		SDL_Surface* surf = IMG_Load(filename.c_str());
 		// TODO: use SDL_DisplayFormat?
 		if (!surf) {

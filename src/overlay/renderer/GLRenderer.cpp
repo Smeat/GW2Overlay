@@ -4,6 +4,7 @@
 
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include <SDL2/SDL_surface.h>
 
 #include <cstdio>
 #include <memory>
@@ -34,8 +35,8 @@ void GLRenderer::clear() {
 	glXSwapBuffers(this->m_window.display, this->m_window.window);
 }
 
-std::shared_ptr<Texture> GLRenderer::load_texture(const std::string& path) {
-	return std::shared_ptr<Texture>(new GLTexture(path));
+std::shared_ptr<Texture> GLRenderer::load_texture(SDL_Surface* surf) {
+	return std::shared_ptr<Texture>(new GLTexture(surf));
 }
 
 std::shared_ptr<Mesh> GLRenderer::load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
