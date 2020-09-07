@@ -6,7 +6,10 @@
 #include <unordered_map>
 #include <vector>
 
-const std::string GW2_HOST = "api.guildwars2.com";
+const std::string GW2_HOST_API = "api.guildwars2.com";
+const std::string GW2_URL_API = "https://" + GW2_HOST_API + "/";
+const std::string GW2_HOST_RENDER = "render.guildwars2.com";
+const std::string GW2_URL_RENDER = "https://" + GW2_HOST_RENDER + "/file/";
 
 const std::vector<std::string> AUTHENTICATED_ENDPOINTS = {"v2/account", "v2/tokeninfo"};
 
@@ -33,10 +36,13 @@ class GW2Api {
  public:
 	GW2Api(const std::string& cache_folder = "./cache");
 
+	std::vector<char> get_data(const std::string& url, const std::string& msg);
+	std::vector<char> get_render(const std::string& signature, const std::string& file_id, const std::string& format,
+								 bool cached = true);
 	std::string get_value(const std::string& endpoint, bool cached = true);
 	/// Returns "" if no cached value is found
-	std::string get_cached(const std::string& endpoint);
-	void save_to_cache(const std::string& endpoint, const std::string& value);
+	std::vector<char> get_cached(const std::string& endpoint);
+	void save_to_cache(const std::string& endpoint, const std::vector<char>& value);
 
 	void set_api_key(const std::string& key) {
 		this->m_api_key = key;
