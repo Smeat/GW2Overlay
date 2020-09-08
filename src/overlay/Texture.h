@@ -20,10 +20,12 @@
 #ifndef __TEXTURE_H__
 #define __TEXTURE_H__
 
+#include <cstddef>
 #include <iostream>
 #include <string>
 
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_surface.h>
 
 class Texture {
@@ -35,6 +37,14 @@ class Texture {
 		if (!surf) {
 			std::cerr << "Failed to load texture " << filename << std::endl;
 			throw std::runtime_error("failed to load image file!");
+		}
+		return surf;
+	}
+	static SDL_Surface* load_image(void* buf, size_t size) {
+		SDL_RWops* rw = SDL_RWFromConstMem(buf, size);
+		SDL_Surface* surf = IMG_Load_RW(rw, 1);
+		if (!surf) {
+			printf("IMG_Load_RW: %s\n", IMG_GetError());
 		}
 		return surf;
 	}
