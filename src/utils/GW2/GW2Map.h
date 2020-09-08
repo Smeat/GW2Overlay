@@ -11,8 +11,11 @@ class GW2Map {
 	void load_map(const std::string& json_data);
 	float continentToMapX(float x);
 	float continentToMapY(float x);
+	float mapToContinentX(float x);
+	float mapToContinentY(float y);
 	float get_map_rect(int a, int b) { return this->m_map_rect[a][b]; }
 	float get_continent_rect(int a, int b) { return this->m_continent_rect[a][b]; }
+	float get_max_level() const { return this->m_max_level; }
 
  private:
 	int m_id;
@@ -25,8 +28,8 @@ class GW2Map {
 	std::string m_region_name;
 	int m_continent_id;
 	std::string m_continent_name;
-	int m_map_rect[2][2];
-	int m_continent_rect[2][2];
+	float m_map_rect[2][2];
+	float m_continent_rect[2][2];
 };
 
 #endif

@@ -48,15 +48,24 @@ T map_value(T a1, T a2, T b1, T b2, T value) {
 constexpr double toProperUnitFactor = 39.3700787;
 
 float GW2Map::continentToMapX(float x) {
-	return (this->m_map_rect[0][0] +
-			(1 * (x - this->m_continent_rect[0][0]) / (this->m_continent_rect[1][0] - this->m_continent_rect[0][0]) *
-			 (this->m_map_rect[1][0] - this->m_map_rect[0][0]))) /
+	return map_value(this->m_continent_rect[0][0], this->m_continent_rect[1][0], this->m_map_rect[0][0],
+					 this->m_map_rect[1][0], x) /
 		   toProperUnitFactor;
 }
 float GW2Map::continentToMapY(float x) {
-	return (this->m_map_rect[0][1] +
-			(-1 * (x - this->m_continent_rect[1][1]) / (this->m_continent_rect[1][1] - this->m_continent_rect[0][1]) *
-			 (this->m_map_rect[1][1] - this->m_map_rect[0][1]))) /
+	return (-1 * map_value(this->m_continent_rect[0][1], this->m_continent_rect[1][1], this->m_map_rect[0][1],
+						   this->m_map_rect[1][1], x)) /
 		   toProperUnitFactor;
 }
 
+float GW2Map::mapToContinentX(float x) {
+	return map_value(this->m_map_rect[0][0], this->m_map_rect[1][0], this->m_continent_rect[0][0],
+					 this->m_continent_rect[1][0], x) *
+		   toProperUnitFactor;
+}
+
+float GW2Map::mapToContinentY(float y) {
+	return map_value(this->m_map_rect[0][1], this->m_map_rect[1][1], this->m_continent_rect[0][1],
+					 this->m_continent_rect[1][1], y) *
+		   toProperUnitFactor;
+}
