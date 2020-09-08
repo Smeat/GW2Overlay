@@ -32,27 +32,23 @@
 
 // TODO: move this to the shader
 struct UniformBufferObject {
-	glm::mat4 model;
-	glm::mat4 view;
-	glm::mat4 proj;
+	alignas(16) glm::mat4 model;
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
 };
 
 class VKObject : public Object {
  public:
-	VKObject(std::shared_ptr<Shader> s, std::vector<std::shared_ptr<TexturedMesh>> vertex_data, VkDevice& device,
-			 VkPhysicalDevice& pd, VkDescriptorSetLayout& layout, uint32_t images);
+	VKObject(std::shared_ptr<Shader> s, std::vector<std::shared_ptr<TexturedMesh>> vertex_data);
 	virtual ~VKObject();
 	const std::shared_ptr<std::vector<std::shared_ptr<TexturedMesh>>> get_textured_meshes() const;
 	const std::shared_ptr<Shader> get_shader() const { return this->m_shader; }
 	std::vector<VkDescriptorSet>* get_descriptor_sets();
-	std::vector<VkDeviceMemory>* get_uniform_buffers_memory() { return &this->m_uniform_buffers_memory; }
+	void set_descriptor_sets(int pos, const VkDescriptorSet& set);
 
  private:
 	VkDevice m_device;
 	std::vector<VkDescriptorSet> m_descriptor_sets;
-	std::vector<VkBuffer> m_uniform_buffers;
-	std::vector<VkDeviceMemory> m_uniform_buffers_memory;
-	VkDescriptorPool m_descriptor_pool;
 };
 
 #endif	// __VKOBJECT__H__

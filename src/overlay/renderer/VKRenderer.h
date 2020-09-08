@@ -1,3 +1,5 @@
+#include <cstddef>
+#include <ctime>
 #include <memory>
 #define VK_USE_PLATFORM_XLIB_KHR
 #include <bits/stdint-uintn.h>
@@ -128,8 +130,20 @@ class VKRenderer : public Renderer {
 	}
 	virtual std::shared_ptr<Object> load_object(std::shared_ptr<Shader> s,
 												std::vector<std::shared_ptr<TexturedMesh>> m) override {
-		return std::shared_ptr<VKObject>(
-			new VKObject(s, m, device, physicalDevice, descriptorSetLayout, swapChainImages.size()));
+		return std::shared_ptr<VKObject>(new VKObject(s, m));
+	}
+
+	size_t get_dynamic_offset(size_t base_offset) {
+		VkPhysicalDeviceProperties properties;
+		vkGetPhysicalDeviceProperties(this->physicalDevice, &properties);
+
+		size_t offset = base_offset;
+		size_t min_ubo_align = properties.limits.minUniformBufferOffsetAlignment;
+		if (min_ubo_align > 0) {
+			int remainder = base_offset / (min_ubo_align + 1) + 1;
+			offset = min_ubo_align * remainder;
+		}
+		return offset;
 	}
 
 	// TODO: set the descriptors here?
@@ -141,6 +155,87 @@ class VKRenderer : public Renderer {
 		std::cout << "Loading " << objs.size() << " objects!!!" << std::endl;
 		// FIXME: There is currently only support for a single shader/pipeline, so we get the shader of the first object
 		this->m_objects = objs;
+		int images = swapChainImages.size();
+
+		// Create objects
+		VkDeviceSize bufferSize = get_dynamic_offset(sizeof(UniformBufferObject)) * objs.size();
+		this->uniformBuffers.resize(images);
+		this->uniformBuffersMemory.resize(images);
+		if (objs.size() > 0) {
+			vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+			std::array<VkDescriptorPoolSize, 2> poolSizes{};
+			poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			poolSizes[0].descriptorCount = static_cast<uint32_t>(images);
+			poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			poolSizes[1].descriptorCount = static_cast<uint32_t>(images);
+
+			VkDescriptorPoolCreateInfo poolInfo{};
+			poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+			poolInfo.pPoolSizes = poolSizes.data();
+			poolInfo.maxSets = static_cast<uint32_t>(images) * objs.size();
+
+			if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+				throw std::runtime_error("failed to create descriptor pool!");
+			}
+
+			for (size_t i = 0; i < images; ++i) {
+				std::cout << "Creating buffer for image " << i << std::endl;
+				createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+							 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+							 this->uniformBuffers[i], this->uniformBuffersMemory[i]);
+
+				for (int k = 0; k < objs.size(); ++k) {
+					VkDescriptorBufferInfo bufferInfo{};
+					bufferInfo.buffer = this->uniformBuffers[i];
+					bufferInfo.offset = k * get_dynamic_offset(sizeof(UniformBufferObject));
+					bufferInfo.range = sizeof(UniformBufferObject);
+
+					VkDescriptorImageInfo imageInfo{};
+					imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+					// TODO: move texture to object?
+					auto tex =
+						std::dynamic_pointer_cast<VKTexture>(objs[k]->get_textured_meshes()->at(0)->get_texture());
+					imageInfo.imageView = tex->get_image_view();
+					imageInfo.sampler = tex->get_sampler();
+
+					std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+					VkDescriptorSet set;
+					std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
+					VkDescriptorSetAllocateInfo allocInfo{};
+					allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+					allocInfo.descriptorPool = descriptorPool;
+					allocInfo.descriptorSetCount = 1;
+					allocInfo.pSetLayouts = layouts.data();
+					int res;
+					if ((res = vkAllocateDescriptorSets(device, &allocInfo, &set)) != VK_SUCCESS) {
+						throw std::runtime_error("failed to allocate descriptor sets! res " + std::to_string(res));
+					}
+
+					// TODO: save the descriptor set in the object
+					descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWrites[0].dstSet = set;
+					descriptorWrites[0].dstBinding = 0;
+					descriptorWrites[0].dstArrayElement = 0;
+					descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+					descriptorWrites[0].descriptorCount = 1;
+					descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+					descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWrites[1].dstSet = set;
+					descriptorWrites[1].dstBinding = 1;
+					descriptorWrites[1].dstArrayElement = 0;
+					descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					descriptorWrites[1].descriptorCount = 1;
+					descriptorWrites[1].pImageInfo = &imageInfo;
+
+					std::dynamic_pointer_cast<VKObject>(objs[k])->set_descriptor_sets(i, set);
+
+					vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()),
+										   descriptorWrites.data(), 0, nullptr);
+				}
+			}
+		}
 
 		vkDeviceWaitIdle(device);
 		vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
@@ -196,7 +291,9 @@ class VKRenderer : public Renderer {
 				throw std::runtime_error("failed to record command buffer!");
 			}
 		}
-	};
+		std::cout << "end of set_objects" << std::endl;
+	}
+
 	virtual void clear() override {}
 	virtual void update() override { this->drawFrame(); }
 	virtual std::shared_ptr<Texture> load_texture(SDL_Surface* surf) override {
@@ -282,15 +379,19 @@ class VKRenderer : public Renderer {
 	}
 
 	void createDescriptorPool() {
-		VkDescriptorPoolSize poolSize{};
-		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSize.descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+		int images = swapChainImages.size();
+		// Create objects
+		std::array<VkDescriptorPoolSize, 2> poolSizes{};
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(images);
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(images);
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = 1;
-		poolInfo.pPoolSizes = &poolSize;
-		poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
+		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		poolInfo.pPoolSizes = poolSizes.data();
+		poolInfo.maxSets = static_cast<uint32_t>(images);
 
 		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create descriptor pool!");
@@ -1029,19 +1130,15 @@ class VKRenderer : public Renderer {
 		ubo.proj = this->m_shader->get_projection();
 		ubo.proj[1][1] *= -1;
 
-		void* data;
-		vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
-		memcpy(data, &ubo, sizeof(ubo));
-		vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
-
-		for (const auto& obj : this->m_objects) {
-			obj->update();
-			auto vkobj = std::dynamic_pointer_cast<VKObject>(obj);
-			auto buffers = vkobj->get_uniform_buffers_memory();
+		for (int i = 0; i < this->m_objects.size(); ++i) {
+			this->m_objects[i]->update();
+			void* data;
+			auto vkobj = std::dynamic_pointer_cast<VKObject>(this->m_objects[i]);
 			ubo.model = this->m_shader->get_model();
-			vkMapMemory(device, buffers->at(currentImage), 0, sizeof(ubo), 0, &data);
+			vkMapMemory(device, uniformBuffersMemory[currentImage], i * get_dynamic_offset(sizeof(ubo)),
+						get_dynamic_offset(sizeof(ubo)), 0, &data);
 			memcpy(data, &ubo, sizeof(ubo));
-			vkUnmapMemory(device, buffers->at(currentImage));
+			vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 		}
 	}
 

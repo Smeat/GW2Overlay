@@ -1,10 +1,13 @@
 #include "VKCommon.h"
 
 #include <vulkan/vulkan_core.h>
+#include <iostream>
 #include <stdexcept>
+#include <string>
 
 void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage,
 				  VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+	std::cout << "Trying to allocate " << size << std::endl;
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.size = size;
@@ -23,9 +26,10 @@ void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize
 	allocInfo.allocationSize = memRequirements.size;
 	allocInfo.memoryTypeIndex = findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
 
+	int ret;
 	// TODO: this can be very limited (4096) use a custom allocator
-	if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate buffer memory!");
+	if ((ret = vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory)) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate buffer memory! Error: " + std::to_string(ret));
 	}
 
 	vkBindBufferMemory(device, buffer, bufferMemory, 0);
