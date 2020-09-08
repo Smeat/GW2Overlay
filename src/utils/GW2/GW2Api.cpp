@@ -118,26 +118,31 @@ std::vector<char> GW2Api::get_render(const std::string& signature, const std::st
 	std::string cached_path = "render/" + filename;
 	std::vector<char> value;
 	if (cached) {
-		value = this->get_cached(filename);
+		value = this->get_cached(cached_path);
 		if (!value.empty()) return value;
 	}
-	value = this->get_data(GW2_HOST_RENDER, filename);
-	this->save_to_cache(filename, value);
+	value = this->get_data(GW2_HOST_RENDER, "file/" + filename);
+	this->save_to_cache(cached_path, value);
 	return value;
 }
 
 std::string GW2Api::get_value(const std::string& endpoint, bool cached) {
 	std::string value;
 	if (cached) {
-		value = this->get_cached(endpoint).data();
+		auto cached_data = this->get_cached(endpoint);
+		if (cached_data.size()) {
+			value = std::string(cached_data.data(), cached_data.size());
+		}
 		if (!value.empty()) return value;
 	}
+	std::cout << "Not found in cache...downloading" << std::endl;
 	std::string msg = endpoint;
 	if (std::find_if(AUTHENTICATED_ENDPOINTS.begin(), AUTHENTICATED_ENDPOINTS.end(), [&](const std::string& s) {
 			return endpoint.find(s) != std::string::npos;
 		}) != AUTHENTICATED_ENDPOINTS.end()) {
 		msg += "?access_token=" + this->m_api_key;
 	}
+	std::cout << "Getting data with msg " << msg << std::endl;
 	std::vector<char> data = this->get_data(GW2_HOST_API, msg);
 	data.push_back('\0');
 	try {
