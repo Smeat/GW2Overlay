@@ -15,6 +15,7 @@ INCLUDE(FindPkgConfig)
 
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
 PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image)
+PKG_SEARCH_MODULE(SDL2TTF REQUIRED SDL2_ttf)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -68,6 +69,7 @@ SET(SOURCES
 	utils/GW2/GW2Map.cpp
 	utils/GW2/GW2Manager.cpp
 	utils/GW2/GW2Achievements.cpp
+	utils/GW2/GW2WvW.cpp
 	utils/CategoryManager.cpp
 	utils/POI.cpp
 	utils/Config.cpp
@@ -90,6 +92,7 @@ add_executable(GW2Overlay
 TARGET_LINK_LIBRARIES(GW2Overlay 
 	${SDL2_LIBRARIES}
 	${SDL2IMAGE_LIBRARIES}
+	${SDL2TTF_LIBRARIES}
 	${X11_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}

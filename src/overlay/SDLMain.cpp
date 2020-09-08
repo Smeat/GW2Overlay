@@ -73,6 +73,7 @@
 #include "../utils/GW2/GW2Link.h"
 #include "../utils/GW2/GW2Manager.h"
 #include "../utils/GW2/GW2Map.h"
+#include "../utils/GW2/GW2WvW.h"
 #include "../utils/POI.h"
 #include "../utils/ProcessUtils.h"
 #include "../utils/json/json.hpp"
@@ -379,6 +380,7 @@ int main(int argc, char** argv) {
 	}
 
 	GW2Manager::getInstance().start_helper();
+	GW2WvW gw2_wvw(renderer, my_shader);
 
 	std::thread qt_thread([&]() { qt_main(argc, argv); });
 	std::thread input_thread([&] {
@@ -406,8 +408,14 @@ int main(int argc, char** argv) {
 				auto list = obj->get_objects();
 				render_objects.insert(render_objects.end(), list.begin(), list.end());
 			}
+			auto wvw_objects = gw2_wvw.set_map_id(last_id);
+			for (const auto& obj : wvw_objects) {
+				auto list = obj->get_objects();
+				render_objects.insert(render_objects.end(), list.begin(), list.end());
+			}
 			renderer->set_objects(render_objects);
 			CategoryManager::getInstance().set_state_changed(false);
+			std::cout << "Loaded all objects from map " << last_id << std::endl;
 		}
 
 		// TODO: use a proper system for events like this
