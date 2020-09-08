@@ -49,6 +49,8 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
    * Draw everything in a single cmd (might also fix the bug after creating the queue)
    * Reduce the number of allocated buffers
    * Proper color blending
+ * Move from a PoC to a "real" program
+   * Restructure almost everything and remove those awful singletons
  
 ### BUGS
  * Vulkan specific
