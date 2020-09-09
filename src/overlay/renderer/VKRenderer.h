@@ -310,7 +310,6 @@ class VKRenderer : public Renderer {
 
 			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-			// TODO: allow different meshes
 			for (const auto& buf : m_buf_list) {
 				VkBuffer vertexBuffers[] = {buf.vertexBuffer};
 				VkDeviceSize offsets[] = {0};

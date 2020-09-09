@@ -4,6 +4,7 @@
 #include <array>
 #include <glm/ext/vector_float3.hpp>
 #include <memory>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -16,6 +17,8 @@ using json = nlohmann::json;
 
 #include "../../overlay/Object.h"
 #include "../../overlay/Texture.h"
+
+#include "../Lock.h"
 
 class CharacterObject {
  public:
@@ -31,6 +34,8 @@ class CharacterObject {
 	char m_last_char = 0;
 };
 
+enum teamColor { GREY = 0, RED, GREEN, BLUE };
+
 class GW2WvWObject : public GW2Object {
  public:
 	GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<Shader> shader,
@@ -41,9 +46,7 @@ class GW2WvWObject : public GW2Object {
 	void set_time(int minute, int second_10, int second_1);
 	void translate(const glm::vec3& pos);
 
-	enum teamColor { GREY = 0, RED, GREEN, BLUE };
-
-	void update(const glm::vec3& pos, uint64_t button_mask) override{};
+	virtual void update(const glm::vec3& pos, uint64_t button_mask) override;
 	std::vector<std::shared_ptr<Object>> get_objects() override;
 
  private:
@@ -53,7 +56,11 @@ class GW2WvWObject : public GW2Object {
 	std::array<std::shared_ptr<Object>, 4> m_object_symbols;
 	// m:ss
 	std::array<std::shared_ptr<CharacterObject>, 4> m_characters;
+
+	int m_current_team = 0;
 };
+const std::unordered_map<std::string, int> TEAM_NAME_MAP = {
+	{"Red", RED}, {"Green", GREEN}, {"Blue", BLUE}, {"Grey", GREY}};
 
 class GW2WvW {
  public:
@@ -65,10 +72,18 @@ class GW2WvW {
 
  private:
 	int m_world_id = 0;
+	int m_current_map_id = 0;
 	std::unordered_map<std::string, std::shared_ptr<GW2WvWObject>> m_objects;
 	json m_last_data;
+	mutex_type m_last_data_mutex;
 	std::shared_ptr<Renderer> m_renderer;
 	std::shared_ptr<Shader> m_shader;
+	std::thread m_update_thread;
+	int m_update_rate_ms = 10000;
+
+	bool m_run_update = false;
+
+	void start_update_thread();
 };
 
 #endif

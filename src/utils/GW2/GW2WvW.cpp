@@ -1,12 +1,14 @@
 #include "GW2WvW.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <cstdlib>
 #include <glm/ext/vector_float3.hpp>
 #include <iterator>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_surface.h>
@@ -76,16 +78,17 @@ GW2WvWObject::GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<S
 		std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(mesh, tex));
 		std::cout << "[WvW-Object] Creating object" << std::endl;
 		this->m_object_symbols[i] = renderer->load_object(shader, {my_mesh});
-		this->m_object_symbols[i]->scale({10, 10, 10});
 	}
 	this->set_team(GREY);
 }
 
-void GW2WvWObject::set_team(int team) {
+void GW2WvWObject::set_team(int team) { this->m_current_team = team; }
+
+void GW2WvWObject::update(const glm::vec3& pos, uint64_t button_mask) {
 	for (const auto& o : this->m_object_symbols) {
 		o->scale({0, 0, 0});
 	}
-	this->m_object_symbols[team]->scale({10, 10, 10});
+	this->m_object_symbols[this->m_current_team]->scale({10, 10, 10});
 }
 
 void GW2WvWObject::translate(const glm::vec3& pos) {
@@ -97,6 +100,7 @@ void GW2WvWObject::translate(const glm::vec3& pos) {
 GW2WvW::GW2WvW(std::shared_ptr<Renderer> renderer, std::shared_ptr<Shader> shader) {
 	// Caching is okay, since we are only interested in the map ids for now
 	auto data = GW2ApiManager::getInstance().get_api()->get_value(WVW_ENDPOINT);
+	write_lock lock(this->m_last_data_mutex);
 	this->m_last_data = json::parse(data);
 	// std::cout << "got data: " << this->m_last_data << std::endl;
 	this->m_renderer = renderer;
@@ -106,7 +110,9 @@ GW2WvW::GW2WvW(std::shared_ptr<Renderer> renderer, std::shared_ptr<Shader> shade
 void GW2WvW::set_world_id(int id) { this->m_world_id = id; }
 
 std::vector<std::shared_ptr<GW2Object>> GW2WvW::set_map_id(int id) {
+	this->m_current_map_id = id;
 	std::cout << "[WvW] Setting map id" << std::endl;
+	read_lock lock(this->m_last_data_mutex);
 	for (auto iter = this->m_last_data["maps"].begin(); iter != this->m_last_data["maps"].end(); ++iter) {
 		std::cout << "[WvW] iter: " << *iter << std::endl;
 		int val = iter->operator[]("id");
@@ -151,9 +157,12 @@ std::vector<std::shared_ptr<GW2Object>> GW2WvW::set_map_id(int id) {
 				this->m_objects.insert({obj_id, wvw_obj});
 				std::cout << "[WvW] insert done" << std::endl;
 			}
+			this->start_update_thread();
 			break;
 		} else {
+			std::cout << "Not a WvW map. Stopping thread and clearing objects" << std::endl;
 			this->m_objects.clear();
+			this->m_run_update = false;
 		}
 	}
 	std::vector<std::shared_ptr<GW2Object>> ret;
@@ -171,4 +180,48 @@ std::vector<std::shared_ptr<Object>> GW2WvWObject::get_objects() {
 	// TODO: return character objects
 
 	return ret;
+}
+
+void GW2WvW::start_update_thread() {
+	auto thread_func = [this]() {
+		std::cout << "[THREAD] Starting WvW Thread" << std::endl;
+		while (this->m_run_update) {
+			try {
+				auto data = GW2ApiManager::getInstance().get_api()->get_value(WVW_ENDPOINT, false);
+				write_lock lock(this->m_last_data_mutex);
+				this->m_last_data = json::parse(data);
+
+				for (auto iter = this->m_last_data["maps"].begin(); iter != this->m_last_data["maps"].end(); ++iter) {
+					int val = iter->operator[]("id");
+					if (val == this->m_current_map_id)
+						for (auto obj = iter->operator[]("objectives").begin();
+							 obj != iter->operator[]("objectives").end(); ++obj) {
+							// get all the textures for the given object
+							std::string obj_id = obj->operator[]("id");
+							std::string owner = obj->operator[]("owner");
+							auto objective = this->m_objects.find(obj_id);
+							if (objective != this->m_objects.end()) {
+								auto team = TEAM_NAME_MAP.find(owner);
+								if (team != TEAM_NAME_MAP.end()) {
+									objective->second->set_team(team->second);
+								}
+							}
+						}
+				}
+			} catch (...) {
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(this->m_update_rate_ms));
+		}
+		std::cout << "[THREAD] Stopping WvW Thread" << std::endl;
+	};
+	this->m_run_update = false;
+	std::cout << "Checking if we need to join an old thread" << std::endl;
+	if (this->m_update_thread.joinable()) {
+		std::cout << "Joining old thread..." << std::endl;
+		this->m_update_thread.join();
+	}
+	this->m_run_update = true;
+	std::cout << "Starting thread!" << std::endl;
+	this->m_update_thread = std::thread(thread_func);
+	std::cout << "Start thread end!" << std::endl;
 }

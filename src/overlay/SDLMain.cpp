@@ -96,21 +96,20 @@ using json = nlohmann::json;
 namespace po = boost::program_options;
 
 // TODO: remove this global mess and create more files
-std::vector<std::shared_ptr<GW2Object>> objects;
+std::vector<std::shared_ptr<GW2Object>> gw2_objects;
 std::shared_ptr<Shader> my_shader;
 GW2Map map;
 std::shared_ptr<GW2Achievements> achievements;
 std::vector<std::string> key_presses;
 mutex_type key_mutex;
 
-void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
+void load_objects(int mapid, std::shared_ptr<Renderer> rend, std::vector<std::shared_ptr<GW2Object>>* objects) {
 	std::cout << "Loading objects" << std::endl;
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)));
 	vertices.push_back(Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)));
 	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)));
 	vertices.push_back(Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)));
-	objects.clear();
 	std::unordered_map<std::string, std::shared_ptr<Texture>> texture_file_map;
 
 	auto pois = CategoryManager::getInstance().get_pois();
@@ -159,7 +158,7 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 			obj->translate(pos);
 			obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
 			std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(obj, curr_poi));
-			objects.push_back(gw2obj);
+			objects->push_back(gw2obj);
 		}
 	}
 	std::cout << "Finished loading objects" << std::endl;
@@ -239,7 +238,7 @@ void update_objects(const LinkedMem* gw2_data) {
 	auto iter = std::find(key_presses.begin(), key_presses.end(), "f");
 	pressed_f = iter != key_presses.end();
 	lock.unlock();
-	for (const auto& obj : objects) {
+	for (const auto& obj : gw2_objects) {
 		obj->update({gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[1], gw2_data->fAvatarPosition[2]},
 					pressed_f);
 	}
@@ -402,9 +401,10 @@ int main(int argc, char** argv) {
 			update_map(last_id);
 		}
 		if (CategoryManager::getInstance().state_changed()) {
-			load_objects(last_id, renderer);
+			gw2_objects.clear();
+			load_objects(last_id, renderer, &gw2_objects);
 			std::vector<std::shared_ptr<Object>> render_objects;
-			for (const auto& obj : objects) {
+			for (const auto& obj : gw2_objects) {
 				auto list = obj->get_objects();
 				render_objects.insert(render_objects.end(), list.begin(), list.end());
 			}
@@ -412,6 +412,7 @@ int main(int argc, char** argv) {
 			for (const auto& obj : wvw_objects) {
 				auto list = obj->get_objects();
 				render_objects.insert(render_objects.end(), list.begin(), list.end());
+				gw2_objects.push_back(obj);
 			}
 			renderer->set_objects(render_objects);
 			CategoryManager::getInstance().set_state_changed(false);
