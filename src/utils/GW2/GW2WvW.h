@@ -51,7 +51,7 @@ class GW2WvWObject : public GW2Object {
 
  private:
 	const std::vector<glm::vec3> OBJECTIVE_COLORS = {
-		{1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
+		{1.0f, 1.0f, 1.0f}, {3.0f, 0.3f, 0.3f}, {0.15f, 1.8f, 0.5f}, {0.2f, 2.0f, 7.0f}};
 	// r, g, b, grey
 	std::array<std::shared_ptr<Object>, 4> m_object_symbols;
 	// m:ss
