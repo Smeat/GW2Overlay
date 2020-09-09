@@ -97,7 +97,7 @@ void VKTexture::createTextureImageView() {
 void VKTexture::createTextureImage(SDL_Surface* surf) {
 	int texWidth = surf->w;
 	int texHeight = surf->h;
-	VkDeviceSize imageSize = texWidth * texHeight * 4;
+	VkDeviceSize imageSize = texWidth * texHeight * (int)surf->format->BytesPerPixel;
 
 	auto pixels = surf->pixels;
 	VkBuffer stagingBuffer;
