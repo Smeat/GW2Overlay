@@ -31,7 +31,7 @@
 
 class GLMesh : public Mesh {
  public:
-	GLMesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
+	GLMesh(VertexList vertices, IndexList indices);
 	virtual ~GLMesh();
 	virtual void draw() override;
 

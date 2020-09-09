@@ -23,6 +23,7 @@
 #include "Texture.h"
 
 #include <vulkan/vulkan.h>
+#include <functional>
 #include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
@@ -39,6 +40,7 @@ struct Vertex {
 		this->color = c;
 		this->tex_coord = t;
 	}
+	Vertex() = default;
 	static VkVertexInputBindingDescription getBindingDescription() {
 		VkVertexInputBindingDescription bindingDescription{};
 		bindingDescription.binding = 0;
@@ -69,17 +71,22 @@ struct Vertex {
 	}
 };
 
+typedef std::vector<Vertex> VertexList;
+typedef std::vector<uint16_t> IndexList;
+
 class Mesh {
  public:
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
+	Mesh(VertexList vertices, IndexList indices);
 	virtual ~Mesh() = default;
-	virtual void draw() = 0;
-	const std::shared_ptr<std::vector<Vertex>> get_vertices() const { return this->m_vertices; }
-	const std::shared_ptr<std::vector<unsigned int>> get_indices() const { return this->m_indices; }
+	virtual void draw(){};
+	const std::shared_ptr<VertexList> get_vertices() const { return this->m_vertices; }
+	const std::shared_ptr<IndexList> get_indices() const { return this->m_indices; }
+
+	static Mesh create_default_mesh(glm::vec3 color = {1, 1, 1});
 
  protected:
-	std::shared_ptr<std::vector<Vertex>> m_vertices;
-	std::shared_ptr<std::vector<unsigned int>> m_indices;
+	std::shared_ptr<VertexList> m_vertices;
+	std::shared_ptr<IndexList> m_indices;
 };
 
 class TexturedMesh {
@@ -94,4 +101,90 @@ class TexturedMesh {
 	std::shared_ptr<Texture> m_texture;
 };
 
+template <>
+struct std::hash<VertexList> {
+	std::size_t operator()(const VertexList& m) const noexcept {
+		// TODO: improve this hash function or leave it as a quick and dirty way?
+		return m.size();
+	}
+};
+template <>
+struct std::hash<IndexList> {
+	std::size_t operator()(const IndexList& m) const noexcept {
+		// TODO: improve this hash function or leave it as a quick and dirty way?
+		return m.size();
+	}
+};
+
+template <>
+struct std::hash<Mesh> {
+	std::size_t operator()(const Mesh& m) const noexcept {
+		auto h1 = std::hash<VertexList>{}(*m.get_vertices());
+		auto h2 = std::hash<IndexList>{}(*m.get_indices());
+		return h1 ^ (h2 << 1);
+	}
+};
+
+template <>
+struct std::hash<std::shared_ptr<Mesh>> {
+	std::size_t operator()(const std::shared_ptr<Mesh> m) const noexcept {
+		// use size as a quick "hash" to avoid comparisons
+		return std::hash<Mesh>{}(*m);
+	}
+};
+
+template <>
+struct std::equal_to<VertexList> {
+	bool operator()(const VertexList& a, const VertexList& b) const noexcept {
+		if (a.size() != b.size()) return false;
+		for (int i = 0; i < a.size(); ++i) {
+			if (a[i].pos != b[i].pos || a[i].color != b[i].color || a[i].tex_coord != b[i].tex_coord) {
+				return false;
+			}
+		}
+		return true;
+	}
+};
+
+template <>
+struct std::equal_to<IndexList> {
+	bool operator()(const IndexList& a, const IndexList& b) const noexcept {
+		if (a.size() != b.size()) return false;
+		for (int i = 0; i < a.size(); ++i) {
+			if (a[i] != b[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+};
+
+template <>
+struct std::equal_to<std::shared_ptr<IndexList>> {
+	bool operator()(const std::shared_ptr<IndexList> a, const std::shared_ptr<IndexList> b) const noexcept {
+		return std::equal_to<IndexList>{}(*a, *b);
+	}
+};
+
+template <>
+struct std::equal_to<std::shared_ptr<VertexList>> {
+	bool operator()(const std::shared_ptr<VertexList> a, const std::shared_ptr<VertexList> b) const noexcept {
+		return std::equal_to<VertexList>{}(*a, *b);
+	}
+};
+
+template <>
+struct std::equal_to<Mesh> {
+	bool operator()(const Mesh& a, const Mesh& b) const noexcept {
+		return std::equal_to<std::shared_ptr<VertexList>>{}(a.get_vertices(), b.get_vertices()) &&
+			   std::equal_to<std::shared_ptr<IndexList>>{}(a.get_indices(), b.get_indices());
+	}
+};
+
+template <>
+struct std::equal_to<std::shared_ptr<Mesh>> {
+	bool operator()(const std::shared_ptr<Mesh> a, const std::shared_ptr<Mesh> b) const noexcept {
+		return std::equal_to<Mesh>{}(*a, *b);
+	}
+};
 #endif

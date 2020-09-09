@@ -71,14 +71,28 @@ GW2WvWObject::GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<S
 	SDL_FreeSurface(surf);
 	std::cout << "[WvW-Object] Creating mesh" << std::endl;
 	// FIXME: empty for now, since we only support one mesh anyway
-	auto cube_mesh = renderer->load_mesh({}, {});
-	std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex));
-	std::cout << "[WvW-Object] Creating object" << std::endl;
-	this->m_object_symbol = renderer->load_object(shader, {my_mesh});
-	this->m_object_symbol->scale({10, 10, 10});
+	for (int i = 0; i < this->OBJECTIVE_COLORS.size(); ++i) {
+		auto mesh = std::make_shared<Mesh>(Mesh::create_default_mesh(OBJECTIVE_COLORS[i]));
+		std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(mesh, tex));
+		std::cout << "[WvW-Object] Creating object" << std::endl;
+		this->m_object_symbols[i] = renderer->load_object(shader, {my_mesh});
+		this->m_object_symbols[i]->scale({10, 10, 10});
+	}
+	this->set_team(GREY);
 }
 
-void GW2WvWObject::translate(const glm::vec3& pos) { this->m_object_symbol->translate(pos); }
+void GW2WvWObject::set_team(int team) {
+	for (const auto& o : this->m_object_symbols) {
+		o->scale({0, 0, 0});
+	}
+	this->m_object_symbols[team]->scale({10, 10, 10});
+}
+
+void GW2WvWObject::translate(const glm::vec3& pos) {
+	for (const auto& o : this->m_object_symbols) {
+		o->translate(pos);
+	}
+}
 
 GW2WvW::GW2WvW(std::shared_ptr<Renderer> renderer, std::shared_ptr<Shader> shader) {
 	// Caching is okay, since we are only interested in the map ids for now
@@ -151,7 +165,9 @@ std::vector<std::shared_ptr<GW2Object>> GW2WvW::set_map_id(int id) {
 
 std::vector<std::shared_ptr<Object>> GW2WvWObject::get_objects() {
 	std::vector<std::shared_ptr<Object>> ret;
-	ret.push_back(this->m_object_symbol);
+	for (const auto& o : this->m_object_symbols) {
+		ret.push_back(o);
+	}
 	// TODO: return character objects
 
 	return ret;

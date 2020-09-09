@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <ctime>
 #include <memory>
+#include <tuple>
 #define VK_USE_PLATFORM_XLIB_KHR
 #include <bits/stdint-uintn.h>
 
@@ -17,10 +18,12 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <X11/X.h>
@@ -65,7 +68,16 @@ const std::vector<Vertex> vertices_static = {
 	Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
 	Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f))};
 
-const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+const std::vector<uint16_t> indices_static = {0, 1, 2, 2, 3, 0};
+
+struct IndexBufferObjectList {
+	VkBuffer vertexBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory vertexMemory = VK_NULL_HANDLE;
+	VkBuffer indexBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory indexMemory = VK_NULL_HANDLE;
+	size_t indexSize = 0;
+	std::vector<std::shared_ptr<Object>> objects;
+};
 
 class VKRenderer : public Renderer {
  private:
@@ -93,21 +105,17 @@ class VKRenderer : public Renderer {
 	std::vector<VkFence> inFlightFences;
 	std::vector<VkFence> imagesInFlight;
 	size_t currentFrame = 0;
-	VkBuffer vertexBuffer;
-	VkDeviceMemory vertexBufferMemory;
-	VkBuffer indexBuffer;
-	VkDeviceMemory indexBufferMemory;
 	std::vector<VkBuffer> uniformBuffers;
 	std::vector<VkDeviceMemory> uniformBuffersMemory;
-	VkDescriptorPool descriptorPool;
+	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
 	std::vector<VkDescriptorSet> descriptorSets;
 
 	WindowData windowHandle = {0, 0};
-	std::vector<Vertex> vertices;
 	std::shared_ptr<VKShader> m_shader;
 	std::vector<std::shared_ptr<Object>> m_objects;
 
 	bool m_enable_validation_layers = false;
+	std::vector<IndexBufferObjectList> m_buf_list;
 
  public:
 	VKRenderer(WindowData win, bool enable_validation_layers = false) {
@@ -121,7 +129,7 @@ class VKRenderer : public Renderer {
 	VKRenderer() = default;
 
 	virtual void init() override {
-		this->vertices = vertices_static;
+		// this->vertices = vertices_static;
 		if (this->windowHandle.display == nullptr) {
 			this->initWindow();
 		}
@@ -159,8 +167,13 @@ class VKRenderer : public Renderer {
 
 		// Create objects
 		VkDeviceSize bufferSize = get_dynamic_offset(sizeof(UniformBufferObject)) * objs.size();
-		this->uniformBuffers.resize(images);
-		this->uniformBuffersMemory.resize(images);
+		for (size_t i = 0; i < uniformBuffers.size(); i++) {
+			// TODO: is it okay to just free it even if it was never allocated?
+			vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+			vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+		}
+		this->uniformBuffers = std::vector<VkBuffer>(images, VK_NULL_HANDLE);
+		this->uniformBuffersMemory = std::vector<VkDeviceMemory>(images, VK_NULL_HANDLE);
 		if (objs.size() > 0) {
 			vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 			std::array<VkDescriptorPoolSize, 2> poolSizes{};
@@ -236,8 +249,31 @@ class VKRenderer : public Renderer {
 				}
 			}
 		}
-
 		vkDeviceWaitIdle(device);
+		// TODO: construct vertex -> object map
+		// TODO: map vertex and indices separately or not? I think rather not.
+		std::unordered_map<std::shared_ptr<Mesh>, std::vector<std::shared_ptr<Object>>> mesh_obj_map;
+		for (const auto& obj : objs) {
+			mesh_obj_map[obj->get_textured_meshes()->at(0)->get_mesh()].push_back(obj);
+		}
+		std::cout << "Done assigning meshes. Got " << mesh_obj_map.size() << " different meshes" << std::endl;
+		for (const auto& buf : this->m_buf_list) {
+			vkDestroyBuffer(device, buf.indexBuffer, nullptr);
+			vkFreeMemory(device, buf.indexMemory, nullptr);
+			vkDestroyBuffer(device, buf.vertexBuffer, nullptr);
+			vkFreeMemory(device, buf.vertexMemory, nullptr);
+		}
+		m_buf_list.clear();
+		// create vertex and index buffer
+		for (const auto& obj_map : mesh_obj_map) {
+			IndexBufferObjectList l;
+			createVertexBuffer(*obj_map.first->get_vertices(), &l.vertexBuffer, &l.vertexMemory);
+			createIndexBuffer(*obj_map.first->get_indices(), &l.indexBuffer, &l.indexMemory);
+			l.objects = obj_map.second;
+			l.indexSize = obj_map.first->get_indices()->size();
+			m_buf_list.push_back(l);
+		}
+		std::cout << "And " << m_buf_list.size() << " buffers" << std::endl;
 		vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 		// create the command buffers
 		commandBuffers.resize(swapChainFramebuffers.size());
@@ -275,16 +311,18 @@ class VKRenderer : public Renderer {
 			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 			// TODO: allow different meshes
-			VkBuffer vertexBuffers[] = {vertexBuffer};
-			VkDeviceSize offsets[] = {0};
-			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-			// TODO: shrink this to a single call
-			for (const auto& obj : objs) {
-				vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-										&std::dynamic_pointer_cast<VKObject>(obj)->get_descriptor_sets()->at(i), 0,
-										nullptr);
-				vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+			for (const auto& buf : m_buf_list) {
+				VkBuffer vertexBuffers[] = {buf.vertexBuffer};
+				VkDeviceSize offsets[] = {0};
+				vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
+				vkCmdBindIndexBuffer(commandBuffers[i], buf.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+				// TODO: shrink this to a single call
+				for (const auto& obj : buf.objects) {
+					vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
+											&std::dynamic_pointer_cast<VKObject>(obj)->get_descriptor_sets()->at(i), 0,
+											nullptr);
+					vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(buf.indexSize), 1, 0, 0, 0);
+				}
 			}
 			vkCmdEndRenderPass(commandBuffers[i]);
 			if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
@@ -299,7 +337,7 @@ class VKRenderer : public Renderer {
 	virtual std::shared_ptr<Texture> load_texture(SDL_Surface* surf) override {
 		return std::shared_ptr<Texture>(new VKTexture(surf, device, physicalDevice, commandPool, graphicsQueue));
 	}
-	virtual std::shared_ptr<Mesh> load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) override {
+	virtual std::shared_ptr<Mesh> load_mesh(VertexList vertices, IndexList indices) override {
 		return std::shared_ptr<Mesh>(new VKMesh(vertices, indices));
 	}
 	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override {
@@ -323,9 +361,6 @@ class VKRenderer : public Renderer {
 		createGraphicsPipeline();
 		createFramebuffers();
 		createCommandPool();
-		createVertexBuffer();
-		createIndexBuffer();
-		createUniformBuffers();
 		createSemaphores();
 	};
 
@@ -342,20 +377,6 @@ class VKRenderer : public Renderer {
 
 	void endSingleTimeCommands(VkCommandBuffer buf) {
 		::endSingleTimeCommands(device, commandPool, buf, graphicsQueue);
-	}
-
-	// TODO: move this to the shader class
-	void createUniformBuffers() {
-		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-		uniformBuffers.resize(swapChainImages.size());
-		uniformBuffersMemory.resize(swapChainImages.size());
-
-		for (size_t i = 0; i < swapChainImages.size(); i++) {
-			createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-						 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i],
-						 uniformBuffersMemory[i]);
-		}
 	}
 
 	void createDescriptorSetLayout() {
@@ -385,7 +406,7 @@ class VKRenderer : public Renderer {
 		}
 	}
 
-	void createIndexBuffer() {
+	void createIndexBuffer(const IndexList& indices, VkBuffer* out_buf, VkDeviceMemory* out_memory) {
 		VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
 		VkBuffer stagingBuffer;
@@ -400,9 +421,9 @@ class VKRenderer : public Renderer {
 		vkUnmapMemory(device, stagingBufferMemory);
 
 		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-					 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+					 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *out_buf, *out_memory);
 
-		copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+		copyBuffer(stagingBuffer, *out_buf, bufferSize);
 
 		vkDestroyBuffer(device, stagingBuffer, nullptr);
 		vkFreeMemory(device, stagingBufferMemory, nullptr);
@@ -418,8 +439,8 @@ class VKRenderer : public Renderer {
 		endSingleTimeCommands(commandBuffer);
 	}
 
-	void createVertexBuffer() {
-		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+	void createVertexBuffer(const VertexList& verts, VkBuffer* out_buf, VkDeviceMemory* out_memory) {
+		VkDeviceSize bufferSize = sizeof(verts[0]) * verts.size();
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
@@ -430,12 +451,12 @@ class VKRenderer : public Renderer {
 
 		void* data;
 		vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, vertices.data(), (size_t)bufferSize);
+		memcpy(data, verts.data(), (size_t)bufferSize);
 		vkUnmapMemory(device, stagingBufferMemory);
 
 		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-					 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-		copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+					 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *out_buf, *out_memory);
+		copyBuffer(stagingBuffer, *out_buf, bufferSize);
 
 		vkDestroyBuffer(device, stagingBuffer, nullptr);
 		vkFreeMemory(device, stagingBufferMemory, nullptr);
@@ -451,7 +472,6 @@ class VKRenderer : public Renderer {
 		createRenderPass();
 		createGraphicsPipeline();
 		createFramebuffers();
-		createUniformBuffers();
 	}
 	void createSemaphores() {
 		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1171,11 +1191,6 @@ class VKRenderer : public Renderer {
 			vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 		}
 
-		for (size_t i = 0; i < swapChainImages.size(); i++) {
-			vkDestroyBuffer(device, uniformBuffers[i], nullptr);
-			vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
-		}
-
 		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 	}
 
@@ -1183,11 +1198,13 @@ class VKRenderer : public Renderer {
 		cleanupSwapChain();
 
 		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-
-		vkDestroyBuffer(device, indexBuffer, nullptr);
-		vkFreeMemory(device, indexBufferMemory, nullptr);
-		vkDestroyBuffer(device, vertexBuffer, nullptr);
-		vkFreeMemory(device, vertexBufferMemory, nullptr);
+		for (const auto& buf : this->m_buf_list) {
+			vkDestroyBuffer(device, buf.indexBuffer, nullptr);
+			vkFreeMemory(device, buf.indexMemory, nullptr);
+			vkDestroyBuffer(device, buf.vertexBuffer, nullptr);
+			vkFreeMemory(device, buf.vertexMemory, nullptr);
+		}
+		m_buf_list.clear();
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);

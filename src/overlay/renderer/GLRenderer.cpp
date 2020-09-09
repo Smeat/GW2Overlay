@@ -39,7 +39,7 @@ std::shared_ptr<Texture> GLRenderer::load_texture(SDL_Surface* surf) {
 	return std::shared_ptr<Texture>(new GLTexture(surf));
 }
 
-std::shared_ptr<Mesh> GLRenderer::load_mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
+std::shared_ptr<Mesh> GLRenderer::load_mesh(VertexList vertices, IndexList indices) {
 	return std::shared_ptr<Mesh>(new GLMesh(vertices, indices));
 }
 

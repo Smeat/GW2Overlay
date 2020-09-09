@@ -41,15 +41,16 @@ class GW2WvWObject : public GW2Object {
 	void set_time(int minute, int second_10, int second_1);
 	void translate(const glm::vec3& pos);
 
-	enum teamColor { RED = 0, GREEN, BLUE, GREY };
+	enum teamColor { GREY = 0, RED, GREEN, BLUE };
 
 	void update(const glm::vec3& pos, uint64_t button_mask) override{};
 	std::vector<std::shared_ptr<Object>> get_objects() override;
 
  private:
+	const std::vector<glm::vec3> OBJECTIVE_COLORS = {
+		{1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
 	// r, g, b, grey
-	// std::array<std::shared_ptr<Object>, 4> m_object_symbols;
-	std::shared_ptr<Object> m_object_symbol;
+	std::array<std::shared_ptr<Object>, 4> m_object_symbols;
 	// m:ss
 	std::array<std::shared_ptr<CharacterObject>, 4> m_characters;
 };

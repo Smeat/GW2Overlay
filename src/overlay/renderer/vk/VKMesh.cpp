@@ -24,7 +24,7 @@
 #include <memory>
 #include <vector>
 
-VKMesh::VKMesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) : Mesh(vertices, indices) {}
+VKMesh::VKMesh(VertexList vertices, IndexList indices) : Mesh(vertices, indices) {}
 
 VKMesh::~VKMesh() {}
 

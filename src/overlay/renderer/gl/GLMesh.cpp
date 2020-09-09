@@ -27,7 +27,7 @@
 #include <memory>
 #include <vector>
 
-GLMesh::GLMesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) : Mesh(vertices, indices) {
+GLMesh::GLMesh(VertexList vertices, IndexList indices) : Mesh(vertices, indices) {
 	glGenVertexArrays(1, &this->m_vao);
 	glGenBuffers(1, &this->m_vbo);
 	glGenBuffers(1, &this->m_ebo);

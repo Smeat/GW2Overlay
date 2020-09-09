@@ -106,16 +106,16 @@ mutex_type key_mutex;
 void load_objects(int mapid, std::shared_ptr<Renderer> rend) {
 	std::cout << "Loading objects" << std::endl;
 	std::vector<Vertex> vertices;
-	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)));
-	vertices.push_back(Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)));
-	vertices.push_back(Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)));
-	vertices.push_back(Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 1.0f)));
+	vertices.push_back(Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)));
+	vertices.push_back(Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)));
+	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)));
+	vertices.push_back(Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)));
 	objects.clear();
 	std::unordered_map<std::string, std::shared_ptr<Texture>> texture_file_map;
 
 	auto pois = CategoryManager::getInstance().get_pois();
 
-	auto cube_mesh = rend->load_mesh(vertices, {0, 1, 3, 1, 2, 3});
+	auto cube_mesh = rend->load_mesh(vertices, {0, 1, 2, 2, 3, 0});
 	std::vector<std::shared_ptr<POI>> poi_to_search;
 	std::copy(pois->begin(), pois->end(), std::back_inserter(poi_to_search));
 

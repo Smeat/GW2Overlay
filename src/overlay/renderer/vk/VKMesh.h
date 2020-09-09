@@ -31,7 +31,7 @@
 
 class VKMesh : public Mesh {
  public:
-	VKMesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
+	VKMesh(VertexList vertices, IndexList indices);
 	virtual ~VKMesh();
 	virtual void draw() override;
 

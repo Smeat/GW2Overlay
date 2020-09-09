@@ -29,9 +29,19 @@
 #include <memory>
 #include <vector>
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
-	this->m_vertices = std::make_shared<std::vector<Vertex>>(vertices);
-	this->m_indices = std::make_shared<std::vector<unsigned int>>(indices);
+Mesh::Mesh(VertexList vertices, IndexList indices) {
+	this->m_vertices = std::make_shared<VertexList>(vertices);
+	this->m_indices = std::make_shared<IndexList>(indices);
+}
+
+Mesh Mesh::create_default_mesh(glm::vec3 color) {
+	std::vector<Vertex> vertices;
+	vertices.push_back(Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), color, glm::vec2(0.0f, 0.0f)));
+	vertices.push_back(Vertex(glm::vec3(0.5f, -0.5f, 0.0f), color, glm::vec2(1.0f, 0.0f)));
+	vertices.push_back(Vertex(glm::vec3(0.5f, 0.5f, 0.0f), color, glm::vec2(1.0f, 1.0f)));
+	vertices.push_back(Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), color, glm::vec2(0.0f, 1.0f)));
+
+	return Mesh(vertices, {0, 1, 2, 2, 3, 0});
 }
 
 TexturedMesh::TexturedMesh(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex) : m_mesh(mesh), m_texture(tex) {}
