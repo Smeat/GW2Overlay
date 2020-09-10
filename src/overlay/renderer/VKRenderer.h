@@ -250,8 +250,6 @@ class VKRenderer : public Renderer {
 			}
 		}
 		vkDeviceWaitIdle(device);
-		// TODO: construct vertex -> object map
-		// TODO: map vertex and indices separately or not? I think rather not.
 		std::unordered_map<std::shared_ptr<Mesh>, std::vector<std::shared_ptr<Object>>> mesh_obj_map;
 		for (const auto& obj : objs) {
 			mesh_obj_map[obj->get_textured_meshes()->at(0)->get_mesh()].push_back(obj);

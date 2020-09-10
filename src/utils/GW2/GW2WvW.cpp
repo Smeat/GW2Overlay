@@ -70,7 +70,7 @@ void CharacterObject::set_character(char character) {
 }
 
 void CharacterObject::translate(glm::vec3 pos) {
-	pos.y += 50;
+	pos.y += 20;
 	for (auto iter = this->m_characters.begin(); iter != this->m_characters.end(); ++iter) {
 		iter->second->translate(pos);
 	}
@@ -164,6 +164,7 @@ std::vector<std::shared_ptr<GW2Object>> GW2WvW::set_map_id(int id) {
 	this->m_current_map_id = id;
 	std::cout << "[WvW] Setting map id" << std::endl;
 	read_lock lock(this->m_last_data_mutex);
+	this->m_objects.clear();
 	for (auto iter = this->m_last_data["maps"].begin(); iter != this->m_last_data["maps"].end(); ++iter) {
 		std::cout << "[WvW] iter: " << *iter << std::endl;
 		int val = iter->operator[]("id");
@@ -212,7 +213,6 @@ std::vector<std::shared_ptr<GW2Object>> GW2WvW::set_map_id(int id) {
 			break;
 		} else {
 			std::cout << "Not a WvW map. Stopping thread and clearing objects" << std::endl;
-			this->m_objects.clear();
 			this->m_run_update = false;
 		}
 	}
@@ -280,6 +280,7 @@ void GW2WvW::start_update_thread() {
 				}
 			} catch (...) {
 			}
+			// TODO: use a condition variable instead
 			std::this_thread::sleep_for(std::chrono::milliseconds(this->m_update_rate_ms));
 		}
 		std::cout << "[THREAD] Stopping WvW Thread" << std::endl;
