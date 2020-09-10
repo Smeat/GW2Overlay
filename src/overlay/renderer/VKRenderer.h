@@ -96,7 +96,7 @@ class VKRenderer : public Renderer {
 	VkRenderPass renderPass;
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout;
-	VkPipeline graphicsPipeline;
+	VkPipeline m_graphics_pipeline;
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkCommandPool commandPool;
 	std::vector<VkCommandBuffer> commandBuffers;
@@ -249,6 +249,7 @@ class VKRenderer : public Renderer {
 				}
 			}
 		}
+		// All objects created in a single buffer (per image)
 		vkDeviceWaitIdle(device);
 		std::unordered_map<std::shared_ptr<Mesh>, std::vector<std::shared_ptr<Object>>> mesh_obj_map;
 		for (const auto& obj : objs) {
@@ -307,7 +308,7 @@ class VKRenderer : public Renderer {
 			renderPassInfo.pClearValues = &clearColor;
 
 			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_graphics_pipeline);
 			for (const auto& buf : m_buf_list) {
 				VkBuffer vertexBuffers[] = {buf.vertexBuffer};
 				VkDeviceSize offsets[] = {0};
@@ -355,7 +356,14 @@ class VKRenderer : public Renderer {
 		createImageViews();
 		createRenderPass();
 		createDescriptorSetLayout();
-		createGraphicsPipeline();
+		auto vertShaderCode = readFile("vert.spv");
+		auto fragShaderCode = readFile("frag.spv");
+
+		VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+		VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+		this->m_graphics_pipeline = createGraphicsPipeline(vertShaderModule, fragShaderModule);
+		vkDestroyShaderModule(device, fragShaderModule, nullptr);
+		vkDestroyShaderModule(device, vertShaderModule, nullptr);
 		createFramebuffers();
 		createCommandPool();
 		createSemaphores();
@@ -467,7 +475,14 @@ class VKRenderer : public Renderer {
 		createSwapChain();
 		createImageViews();
 		createRenderPass();
-		createGraphicsPipeline();
+		auto vertShaderCode = readFile("vert.spv");
+		auto fragShaderCode = readFile("frag.spv");
+
+		VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+		VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+		this->m_graphics_pipeline = createGraphicsPipeline(vertShaderModule, fragShaderModule);
+		vkDestroyShaderModule(device, fragShaderModule, nullptr);
+		vkDestroyShaderModule(device, vertShaderModule, nullptr);
 		createFramebuffers();
 	}
 	void createSemaphores() {
@@ -569,12 +584,9 @@ class VKRenderer : public Renderer {
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 	}
-	void createGraphicsPipeline() {
-		auto vertShaderCode = readFile("vert.spv");
-		auto fragShaderCode = readFile("frag.spv");
 
-		VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
-		VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+	VkPipeline createGraphicsPipeline(VkShaderModule vertShaderModule, VkShaderModule fragShaderModule) {
+		VkPipeline graphicsPipeline = VK_NULL_HANDLE;
 
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -705,8 +717,7 @@ class VKRenderer : public Renderer {
 			throw std::runtime_error("failed to create graphics pipeline!");
 		}
 
-		vkDestroyShaderModule(device, fragShaderModule, nullptr);
-		vkDestroyShaderModule(device, vertShaderModule, nullptr);
+		return graphicsPipeline;
 	}
 
 	VkShaderModule createShaderModule(const std::vector<char>& code) {
@@ -1173,7 +1184,7 @@ class VKRenderer : public Renderer {
 
 		vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-		vkDestroyPipeline(device, graphicsPipeline, nullptr);
+		vkDestroyPipeline(device, this->m_graphics_pipeline, nullptr);
 		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 		vkDestroyRenderPass(device, renderPass, nullptr);
 
