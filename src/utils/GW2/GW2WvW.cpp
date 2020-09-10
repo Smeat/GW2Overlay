@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdlib>
+#include <ctime>
 #include <glm/ext/vector_float3.hpp>
 #include <iterator>
 #include <memory>
@@ -22,7 +23,8 @@
 
 std::unordered_map<char, std::shared_ptr<Texture>> CharacterObject::m_textures;
 
-CharacterObject::CharacterObject(const std::string& chars, std::shared_ptr<Renderer> renderer) {
+CharacterObject::CharacterObject(const std::string& chars, std::shared_ptr<Renderer> renderer,
+								 std::shared_ptr<Shader> shader) {
 	for (const auto& c : chars) {
 		this->m_last_char = c;
 		std::shared_ptr<Texture> tex;
@@ -30,40 +32,65 @@ CharacterObject::CharacterObject(const std::string& chars, std::shared_ptr<Rende
 		if (f != CharacterObject::m_textures.end()) {
 			tex = f->second;
 		} else {
-			TTF_Font* font = TTF_OpenFont("Sans.ttf", 24);
+			TTF_Font* font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", 24);
+			if (!font) {
+				printf("TTF_OpenFont: %s\n", TTF_GetError());
+			}
 			SDL_Color textColor = {255, 255, 255};
 			char buf[2];
 			buf[0] = c;
 			buf[1] = '\0';
-			SDL_Surface* surfaceMessage = TTF_RenderText_Solid(font, buf, textColor);
+			SDL_Surface* surfaceMessage = TTF_RenderText_Blended(font, buf, textColor);
+			SDL_SaveBMP(surfaceMessage, "/tmp/out.bmp");
 			tex = renderer->load_texture(surfaceMessage);
+			std::cout << "[FONT] Created " << buf << std::endl;
 			SDL_FreeSurface(surfaceMessage);
-			this->m_textures.insert({c, tex});
 		}
+		this->m_textures.insert({c, tex});
+		auto mesh = std::make_shared<Mesh>(Mesh::create_default_mesh());
+		std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(mesh, tex));
+		std::cout << "[WvW-Character] Creating character" << std::endl;
+		this->m_characters[c] = renderer->load_object(shader, {my_mesh});
+		this->m_characters[c]->scale({0, 0, 0});
+		this->set_character(c);
+		std::cout << "[WvW-Character] end" << std::endl;
 	}
 }
 
+void CharacterObject::disable() { this->m_characters[this->m_last_char]->scale({0, 0, 0}); }
+
 void CharacterObject::set_character(char character) {
 	if (this->m_characters.find(character) == this->m_characters.end()) return;
+	for (const auto& c : this->m_characters) {
+		c.second->scale({0, 0, 0});
+	}
 	this->m_characters[this->m_last_char]->scale({0, 0, 0});
-	this->m_characters[character]->scale({1, 1, 1});
+	this->m_characters[character]->scale({10, 10, 10});
 	this->m_last_char = character;
 }
 
 void CharacterObject::translate(glm::vec3 pos) {
+	pos.y += 50;
 	for (auto iter = this->m_characters.begin(); iter != this->m_characters.end(); ++iter) {
 		iter->second->translate(pos);
 	}
 }
 
+std::vector<std::shared_ptr<Object>> CharacterObject::get_objects() {
+	std::vector<std::shared_ptr<Object>> ret;
+	for (const auto& o : this->m_characters) {
+		ret.push_back(o.second);
+	}
+	return ret;
+}
+
 GW2WvWObject::GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<Shader> shader,
 						   const std::vector<char>& icon_data) {
 	std::cout << "[WvW-Object] Constructor" << std::endl;
-	/*this->m_characters[0] = std::shared_ptr<CharacterObject>(new CharacterObject("0123456789", renderer));
-	this->m_characters[1] = std::shared_ptr<CharacterObject>(new CharacterObject("0123456", renderer));
-	this->m_characters[2] = std::shared_ptr<CharacterObject>(new CharacterObject(":", renderer));
-	this->m_characters[3] = std::shared_ptr<CharacterObject>(new CharacterObject("012345", renderer));
-	*/
+	this->m_characters[0] = std::shared_ptr<CharacterObject>(new CharacterObject("0123456789", renderer, shader));
+	this->m_characters[1] = std::shared_ptr<CharacterObject>(new CharacterObject("0123456", renderer, shader));
+	this->m_characters[2] = std::shared_ptr<CharacterObject>(new CharacterObject(":", renderer, shader));
+	this->m_characters[3] = std::shared_ptr<CharacterObject>(new CharacterObject("012345", renderer, shader));
 
 	std::cout << "[WvW-Object] Creating surface with size " << icon_data.size() << std::endl;
 	// TODO: use a map in GW2WvW or create a texture manager to avoid duplication
@@ -94,6 +121,30 @@ void GW2WvWObject::update(const glm::vec3& pos, uint64_t button_mask) {
 void GW2WvWObject::translate(const glm::vec3& pos) {
 	for (const auto& o : this->m_object_symbols) {
 		o->translate(pos);
+	}
+	int spacing = 10;
+	auto pos_copy = pos;
+	for (const auto& c : this->m_characters) {
+		pos_copy.x += spacing;
+		c->translate(pos_copy);
+	}
+}
+
+void GW2WvWObject::set_time(int seconds) {
+	std::cout << "[WvW Object] Setting time to " << seconds << std::endl;
+	int minute = seconds / 60;
+	int seconds_remain = seconds % 60;
+	int second_10 = seconds_remain / 10;
+	int second_1 = seconds_remain % 10;
+	this->m_characters[3]->set_character('0' + minute);
+	this->m_characters[2]->set_character(':');
+	this->m_characters[1]->set_character('0' + second_10);
+	this->m_characters[0]->set_character('0' + second_1);
+}
+
+void GW2WvWObject::disable_timer() {
+	for (const auto& c : this->m_characters) {
+		c->disable();
 	}
 }
 
@@ -178,6 +229,10 @@ std::vector<std::shared_ptr<Object>> GW2WvWObject::get_objects() {
 		ret.push_back(o);
 	}
 	// TODO: return character objects
+	for (const auto& c : this->m_characters) {
+		auto char_objs = c->get_objects();
+		std::copy(char_objs.begin(), char_objs.end(), std::back_inserter(ret));
+	}
 
 	return ret;
 }
@@ -204,6 +259,21 @@ void GW2WvW::start_update_thread() {
 								auto team = TEAM_NAME_MAP.find(owner);
 								if (team != TEAM_NAME_MAP.end()) {
 									objective->second->set_team(team->second);
+								}
+								std::string flip_str = obj->operator[]("last_flipped");
+								tm flip_tm;
+								strptime(flip_str.c_str(), "%Y-%m-%dT%H:%M:%SZ", &flip_tm);
+								time_t flip_time = mktime(&flip_tm);
+								time_t now_local = ::time(NULL);
+								tm now_tm = *gmtime(&now_local);
+								now_tm.tm_isdst = -1;
+								time_t now_utc = mktime(&now_tm);
+								double time_diff = ::difftime(now_utc, flip_time);
+								if (time_diff < (300)) {
+									int time_till_cap = 300 - time_diff;
+									objective->second->set_time(time_till_cap);
+								} else {
+									objective->second->disable_timer();
 								}
 							}
 						}

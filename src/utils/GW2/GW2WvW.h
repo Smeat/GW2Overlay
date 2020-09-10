@@ -22,10 +22,12 @@ using json = nlohmann::json;
 
 class CharacterObject {
  public:
-	CharacterObject(const std::string& characters, std::shared_ptr<Renderer> rend);
+	CharacterObject(const std::string& characters, std::shared_ptr<Renderer> rend, std::shared_ptr<Shader> shader);
 
 	void set_character(char character);
 	void translate(glm::vec3 pos);
+	void disable();
+	std::vector<std::shared_ptr<Object>> get_objects();
 
  private:
 	// just have n objects for every digit. avoids having to create dynamic textures
@@ -41,9 +43,9 @@ class GW2WvWObject : public GW2Object {
 	GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<Shader> shader,
 				 const std::vector<char>& icon_data);
 	virtual ~GW2WvWObject() = default;
-	void set_timer_enabled(bool enable);
+	void disable_timer();
 	void set_team(int team);
-	void set_time(int minute, int second_10, int second_1);
+	void set_time(int seconds);
 	void translate(const glm::vec3& pos);
 
 	virtual void update(const glm::vec3& pos, uint64_t button_mask) override;

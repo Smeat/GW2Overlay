@@ -61,6 +61,8 @@
 
 #include <boost/program_options.hpp>
 
+#include <SDL2/SDL_ttf.h>
+
 #include "GW2Object.h"
 #include "Mesh.h"
 #include "Object.h"
@@ -313,6 +315,10 @@ int main(int argc, char** argv) {
 	int imgFlags = IMG_INIT_PNG;
 	if (!(IMG_Init(imgFlags) & imgFlags)) {
 		std::cerr << "Failed to init SDL_Image!" << std::endl;
+		return 1;
+	}
+	if (TTF_Init() == -1) {
+		std::cerr << "Failed to init SDL_ttf!" << std::endl;
 		return 1;
 	}
 
