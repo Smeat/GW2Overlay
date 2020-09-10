@@ -41,14 +41,11 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
    * daily, killed bosses
    * Make the GUI GW2 themed
    * Overlay manager to create Overlays with boss timers and other stuff
- * WvW markers with timer
  * Change scale for specific categories
  * Icons on Map and Minimap (a basic implementation is working, but only works in a few areas)
  * Vulkan specific
    * Depth buffer
    * Draw everything in a single cmd (might also fix the bug after creating the queue)
-   * Reduce the number of allocated buffers
-   * Proper color blending
    * Multiple rendering pipelines to support multiple shaders
  * Move from a PoC to a "real" program
    * Restructure almost everything and remove those awful singletons
@@ -56,7 +53,6 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
 ### BUGS
  * Vulkan specific
    * For the first seconds after creating the new command buffers (when switching the displayed POIs) the overlay lags behind. After that it works perfectly
-   * POI objects behind transparency look weird
    * If you encounter any visual related bugs/crashes when using vulkan, please start the program with `--validation` (for the very slim chance someone other than me is using this program)
   
  ![screenshot](https://user-images.githubusercontent.com/1054449/90751525-89bd8880-e2d6-11ea-9985-2ffa561d9049.png)
