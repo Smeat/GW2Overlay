@@ -8,10 +8,21 @@
 #include "../utils/POI.h"
 #include "Object.h"
 
+// TODO: add parent and local/world space functions
 class GW2Object {
  public:
 	virtual void update(const glm::vec3& player_pos, uint64_t button_mask) = 0;
 	virtual std::vector<std::shared_ptr<Object>> get_objects() = 0;
+	virtual void translate(const glm::vec3& pos) {
+		for (const auto& o : this->get_objects()) {
+			o->translate(pos);
+		}
+	}
+	virtual void set_offset(const glm::vec3& pos) {
+		for (const auto& o : this->get_objects()) {
+			o->set_offset(pos);
+		}
+	}
 };
 
 class GW2POIObject : public GW2Object {

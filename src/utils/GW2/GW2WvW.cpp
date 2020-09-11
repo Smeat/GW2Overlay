@@ -70,13 +70,6 @@ void CharacterObject::set_character(char character) {
 	this->m_last_char = character;
 }
 
-void CharacterObject::translate(glm::vec3 pos) {
-	pos.y += 20;
-	for (auto iter = this->m_characters.begin(); iter != this->m_characters.end(); ++iter) {
-		iter->second->translate(pos);
-	}
-}
-
 std::vector<std::shared_ptr<Object>> CharacterObject::get_objects() {
 	std::vector<std::shared_ptr<Object>> ret;
 	for (const auto& o : this->m_characters) {
@@ -119,19 +112,12 @@ void GW2WvWObject::update(const glm::vec3& pos, uint64_t button_mask) {
 		o->scale({0, 0, 0});
 		o->set_offset({0, offset, 0});
 	}
-	this->m_object_symbols[this->m_current_team]->scale({10, 10, 10});
-}
-
-void GW2WvWObject::translate(const glm::vec3& pos) {
-	for (const auto& o : this->m_object_symbols) {
-		o->translate(pos);
-	}
-	int spacing = 10;
-	auto pos_copy = pos;
+	int spacing = 0;
 	for (const auto& c : this->m_characters) {
-		pos_copy.x += spacing;
-		c->translate(pos_copy);
+		c->set_offset({spacing, offset + 10, 0});
+		spacing += 10;
 	}
+	this->m_object_symbols[this->m_current_team]->scale({10, 10, 10});
 }
 
 void GW2WvWObject::set_time(int seconds) {

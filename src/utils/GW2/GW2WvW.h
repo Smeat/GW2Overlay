@@ -20,14 +20,14 @@ using json = nlohmann::json;
 
 #include "../Lock.h"
 
-class CharacterObject {
+class CharacterObject : public GW2Object {
  public:
 	CharacterObject(const std::string& characters, std::shared_ptr<Renderer> rend, std::shared_ptr<Shader> shader);
 
 	void set_character(char character);
-	void translate(glm::vec3 pos);
 	void disable();
-	std::vector<std::shared_ptr<Object>> get_objects();
+	virtual std::vector<std::shared_ptr<Object>> get_objects() override;
+	virtual void update(const glm::vec3& player_pos, uint64_t button_mask) override{};
 
  private:
 	// just have n objects for every digit. avoids having to create dynamic textures
@@ -46,7 +46,6 @@ class GW2WvWObject : public GW2Object {
 	void disable_timer();
 	void set_team(int team);
 	void set_time(int seconds);
-	void translate(const glm::vec3& pos);
 
 	virtual void update(const glm::vec3& pos, uint64_t button_mask) override;
 	std::vector<std::shared_ptr<Object>> get_objects() override;
