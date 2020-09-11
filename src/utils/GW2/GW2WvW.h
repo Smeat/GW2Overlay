@@ -62,7 +62,7 @@ class GW2WvWObject : public GW2Object {
 	int m_current_team = 0;
 };
 const std::unordered_map<std::string, int> TEAM_NAME_MAP = {
-	{"Red", RED}, {"Green", GREEN}, {"Blue", BLUE}, {"Grey", GREY}};
+	{"Red", RED}, {"Green", GREEN}, {"Blue", BLUE}, {"Neutral", GREY}};
 
 class GW2WvW {
  public:
