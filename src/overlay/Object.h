@@ -52,7 +52,7 @@ class Object {
 	glm::vec3 m_offset = glm::vec3(0);
 	glm::vec3 m_scale = glm::vec3(1);
 	glm::vec3 m_rotation_vec = glm::vec3(0.0f, 0.0f, 1.0f);
-	float m_rotation = glm::radians(180.0f);
+	float m_rotation = glm::radians(0.0f);
 };
 
 #endif	// __OBJECT__H__
