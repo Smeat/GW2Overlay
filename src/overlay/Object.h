@@ -33,6 +33,7 @@ class Object {
 	Object(std::shared_ptr<Shader> s, std::vector<std::shared_ptr<TexturedMesh>> vertex_data);
 	virtual ~Object() = default;
 	void translate(glm::vec3 pos);
+	void set_offset(glm::vec3 offset);
 	void scale(glm::vec3 scale);
 	void rotate(float deg, glm::vec3 v);
 	virtual void update();
@@ -48,6 +49,7 @@ class Object {
 
 	// position etc
 	glm::vec3 m_pos = glm::vec3(0, 0, 0);
+	glm::vec3 m_offset = glm::vec3(0);
 	glm::vec3 m_scale = glm::vec3(1);
 	glm::vec3 m_rotation_vec = glm::vec3(0.0f, 0.0f, 1.0f);
 	float m_rotation = glm::radians(180.0f);

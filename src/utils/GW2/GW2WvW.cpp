@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <glm/ext/vector_float3.hpp>
+#include <glm/geometric.hpp>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -112,8 +113,11 @@ GW2WvWObject::GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<S
 void GW2WvWObject::set_team(int team) { this->m_current_team = team; }
 
 void GW2WvWObject::update(const glm::vec3& pos, uint64_t button_mask) {
+	float offset =
+		std::max(50 - glm::distance(pos, *this->m_object_symbols[this->m_current_team]->get_position()), 0.0f);
 	for (const auto& o : this->m_object_symbols) {
 		o->scale({0, 0, 0});
+		o->set_offset({0, offset, 0});
 	}
 	this->m_object_symbols[this->m_current_team]->scale({10, 10, 10});
 }

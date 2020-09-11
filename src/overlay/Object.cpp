@@ -36,6 +36,10 @@ void Object::translate(glm::vec3 pos) {
 	this->m_pos = pos;
 	this->update_model_matrix();
 }
+void Object::set_offset(glm::vec3 offset) {
+	this->m_offset = offset;
+	this->update_model_matrix();
+}
 
 void Object::scale(glm::vec3 scale) {
 	this->m_scale = scale;
@@ -51,7 +55,7 @@ void Object::rotate(float deg, glm::vec3 v) {
 void Object::update_model_matrix() {
 	// update model pos
 	this->m_model = glm::mat4(1.0f);
-	this->m_model = glm::translate(this->m_model, this->m_pos);
+	this->m_model = glm::translate(this->m_model, this->m_pos + this->m_offset);
 	this->m_model = glm::rotate(this->m_model, this->m_rotation, this->m_rotation_vec);
 	this->m_model = glm::scale(this->m_model, this->m_scale);
 }
