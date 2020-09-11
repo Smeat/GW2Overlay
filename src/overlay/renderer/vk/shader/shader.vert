@@ -33,6 +33,5 @@ void main() {
 	gl_Position = ubo.proj * modelView * vec4(inPosition, 1);
 
     fragColor = inColor;
-	// TODO: Should I flip y here or on the host?
-	fragTexCoord = vec2(inTexCoord.x, inTexCoord.y * -1);
+	fragTexCoord = vec2(inTexCoord.x, 1 - inTexCoord.y);
 }

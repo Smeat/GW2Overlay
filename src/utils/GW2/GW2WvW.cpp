@@ -166,7 +166,6 @@ std::vector<std::shared_ptr<GW2Object>> GW2WvW::set_map_id(int id) {
 	read_lock lock(this->m_last_data_mutex);
 	this->m_objects.clear();
 	for (auto iter = this->m_last_data["maps"].begin(); iter != this->m_last_data["maps"].end(); ++iter) {
-		std::cout << "[WvW] iter: " << *iter << std::endl;
 		int val = iter->operator[]("id");
 		if (val == id) {
 			std::cout << "On WvW map!" << std::endl;
