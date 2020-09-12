@@ -49,6 +49,11 @@ void Object::scale(glm::vec3 scale) {
 	this->update_model_matrix();
 }
 
+void Object::set_scale_factor(glm::vec3 fac) {
+	this->m_scale_factor = fac;
+	this->update_model_matrix();
+}
+
 void Object::rotate(float deg, glm::vec3 v) {
 	this->m_rotation = glm::radians(deg);
 	this->m_rotation_vec = v;
@@ -60,7 +65,7 @@ void Object::update_model_matrix() {
 	this->m_model = glm::mat4(1.0f);
 	this->m_model = glm::translate(this->m_model, this->get_world_position());
 	this->m_model = glm::rotate(this->m_model, this->m_rotation, this->m_rotation_vec);
-	this->m_model = glm::scale(this->m_model, this->m_scale);
+	this->m_model = glm::scale(this->m_model, this->m_scale * this->m_scale_factor);
 	for (const auto c : this->m_children) {
 		c->update_model_matrix();
 	}

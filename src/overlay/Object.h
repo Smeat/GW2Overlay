@@ -53,6 +53,7 @@ class Object {
 	void translate(glm::vec3 pos);
 	void set_offset(glm::vec3 offset);
 	void scale(glm::vec3 scale);
+	void set_scale_factor(glm::vec3 fac);
 	void rotate(float deg, glm::vec3 v);
 	virtual void update();
 	const std::shared_ptr<std::vector<std::shared_ptr<TexturedMesh>>> get_textured_meshes() const;
@@ -73,6 +74,7 @@ class Object {
 	glm::vec3 m_pos = glm::vec3(0, 0, 0);
 	glm::vec3 m_offset = glm::vec3(0);
 	glm::vec3 m_scale = glm::vec3(1);
+	glm::vec3 m_scale_factor = glm::vec3(1);
 	glm::vec3 m_rotation_vec = glm::vec3(0.0f, 0.0f, 1.0f);
 	float m_rotation = glm::radians(0.0f);
 };
