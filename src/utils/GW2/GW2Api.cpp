@@ -26,7 +26,10 @@ using json = nlohmann::json;
 
 std::shared_ptr<addrinfo> getaddrinfo(const char* __name, const char* __service, const struct addrinfo* __req) {
 	addrinfo* info = nullptr;
-	::getaddrinfo(__name, __service, __req, &info);
+	int ret = ::getaddrinfo(__name, __service, __req, &info);
+	if (ret) {
+		std::cout << "[Error] getaddrinfo returned " << ret << std::endl;
+	}
 	auto deleter = [](addrinfo* info) {
 		if (info) ::freeaddrinfo(info);
 	};
@@ -49,6 +52,7 @@ std::vector<char> GW2Api::get_data(const std::string& host, const std::string& f
 
 	auto addr = getaddrinfo(host.c_str(), "443", &hints);
 
+	if (!addr) return {};
 	sock = ::socket(addr->ai_family, SOCK_STREAM, 0);
 	int result = ::connect(sock, addr->ai_addr, addr->ai_addrlen);
 
