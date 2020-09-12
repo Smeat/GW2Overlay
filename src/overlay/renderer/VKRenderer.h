@@ -151,6 +151,8 @@ class VKRenderer : public Renderer {
 		return offset;
 	}
 
+	virtual std::vector<Object*> get_objects() override { return this->m_objects; }
+
 	// TODO: set the descriptors here?
 	virtual void set_objects(std::vector<Object*> objs) override {
 		vkQueueWaitIdle(this->graphicsQueue);

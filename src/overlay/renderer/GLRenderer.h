@@ -18,6 +18,7 @@ class GLRenderer : public Renderer {
 	virtual std::shared_ptr<Texture> load_texture(SDL_Surface* surf) override;
 	virtual std::shared_ptr<Mesh> load_mesh(VertexList vertices, IndexList indices) override;
 	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override;
+	virtual std::vector<Object*> get_objects() override { return {}; };
 
  private:
 	std::vector<Object*> m_objects;
