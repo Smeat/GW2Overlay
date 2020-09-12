@@ -15,7 +15,7 @@ class Renderer {
 
 	virtual void update() = 0;
 	// TODO: add a notify method and use a pointer
-	virtual void set_objects(std::vector<std::shared_ptr<Object>> objs) = 0;
+	virtual void set_objects(std::vector<Object*> objs) = 0;
 	virtual std::shared_ptr<Texture> load_texture(SDL_Surface* surf) = 0;
 	virtual std::shared_ptr<Texture> load_texture(const std::string& path) {
 		SDL_Surface* surf = Texture::load_image(path);
@@ -25,10 +25,6 @@ class Renderer {
 	}
 	virtual std::shared_ptr<Mesh> load_mesh(VertexList vertices, IndexList indices) = 0;
 	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) = 0;
-	virtual std::shared_ptr<Object> load_object(std::shared_ptr<Shader> s,
-												std::vector<std::shared_ptr<TexturedMesh>> m) {
-		return std::shared_ptr<Object>(new Object(s, m));
-	}
 };
 
 #endif	// __RENDERER_H__

@@ -20,10 +20,12 @@
 #include "Object.h"
 #include "Mesh.h"
 
+#include <algorithm>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iterator>
 #include <memory>
 
 #include <GL/gl.h>
@@ -32,6 +34,7 @@ Object::Object(std::shared_ptr<Shader> s, std::vector<std::shared_ptr<TexturedMe
 	this->m_shader = s;
 	this->m_meshes = std::make_shared<std::vector<std::shared_ptr<TexturedMesh>>>(vertex_data);
 }
+
 void Object::translate(glm::vec3 pos) {
 	this->m_pos = pos;
 	this->update_model_matrix();
@@ -55,19 +58,44 @@ void Object::rotate(float deg, glm::vec3 v) {
 void Object::update_model_matrix() {
 	// update model pos
 	this->m_model = glm::mat4(1.0f);
-	this->m_model = glm::translate(this->m_model, this->m_pos + this->m_offset);
+	this->m_model = glm::translate(this->m_model, this->get_world_position());
 	this->m_model = glm::rotate(this->m_model, this->m_rotation, this->m_rotation_vec);
 	this->m_model = glm::scale(this->m_model, this->m_scale);
+	for (const auto c : this->m_children) {
+		c->update_model_matrix();
+	}
 }
 
 void Object::update() {
-	this->m_shader->set_active();
-	this->m_shader->set_model(this->m_model);
-	for (auto iter = this->m_meshes->begin(); iter != this->m_meshes->end(); ++iter) {
-		(*iter)->draw();
+	if (this->m_shader) {
+		this->m_shader->set_active();
+		this->m_shader->set_model(this->m_model);
+	}
+	if (this->m_meshes) {
+		for (auto iter = this->m_meshes->begin(); iter != this->m_meshes->end(); ++iter) {
+			(*iter)->draw();
+		}
 	}
 }
 
 const std::shared_ptr<std::vector<std::shared_ptr<TexturedMesh>>> Object::get_textured_meshes() const {
 	return this->m_meshes;
+}
+
+glm::vec3 Object::get_world_position() const {
+	glm::vec3 pos = this->m_pos + this->m_offset;
+	if (this->m_parent) {
+		pos += this->m_parent->get_world_position();
+	}
+	return pos;
+}
+
+std::vector<Object*> Object::get_all_children() {
+	std::vector<Object*> ret;
+	std::copy(this->m_children.begin(), this->m_children.end(), std::back_inserter(ret));
+	for (const auto c : this->m_children) {
+		auto children_vec = c->get_all_children();
+		std::copy(children_vec.begin(), children_vec.end(), std::back_inserter(ret));
+	}
+	return ret;
 }

@@ -26,7 +26,6 @@ class CharacterObject : public GW2Object {
 
 	void set_character(char character);
 	void disable();
-	virtual std::vector<std::shared_ptr<Object>> get_objects() override;
 	virtual void update(const glm::vec3& player_pos, uint64_t button_mask) override{};
 
  private:
@@ -48,7 +47,6 @@ class GW2WvWObject : public GW2Object {
 	void set_time(int seconds);
 
 	virtual void update(const glm::vec3& pos, uint64_t button_mask) override;
-	std::vector<std::shared_ptr<Object>> get_objects() override;
 
  private:
 	const std::vector<glm::vec3> OBJECTIVE_COLORS = {

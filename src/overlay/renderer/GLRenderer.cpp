@@ -47,4 +47,4 @@ std::shared_ptr<Shader> GLRenderer::load_shader(const std::string& vert, const s
 	return std::shared_ptr<Shader>(new GLShader(vert, frag));
 }
 
-void GLRenderer::set_objects(std::vector<std::shared_ptr<Object>> objs) { this->m_objects = objs; }
+void GLRenderer::set_objects(std::vector<Object*> objs) { this->m_objects = objs; }

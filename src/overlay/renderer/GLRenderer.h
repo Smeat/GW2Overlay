@@ -12,7 +12,7 @@ class GLRenderer : public Renderer {
 		this->init();
 	}
 	virtual void init() override;
-	virtual void set_objects(std::vector<std::shared_ptr<Object>> objs) override;
+	virtual void set_objects(std::vector<Object*> objs) override;
 	virtual void update() override;
 	virtual void clear() override;
 	virtual std::shared_ptr<Texture> load_texture(SDL_Surface* surf) override;
@@ -20,7 +20,7 @@ class GLRenderer : public Renderer {
 	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override;
 
  private:
-	std::vector<std::shared_ptr<Object>> m_objects;
+	std::vector<Object*> m_objects;
 	WindowData m_window;
 };
 

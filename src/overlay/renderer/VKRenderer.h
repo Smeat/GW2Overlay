@@ -76,7 +76,7 @@ struct IndexBufferObjectList {
 	VkBuffer indexBuffer = VK_NULL_HANDLE;
 	VkDeviceMemory indexMemory = VK_NULL_HANDLE;
 	size_t indexSize = 0;
-	std::vector<std::shared_ptr<Object>> objects;
+	std::vector<Object*> objects;
 };
 
 class VKRenderer : public Renderer {
@@ -112,7 +112,8 @@ class VKRenderer : public Renderer {
 
 	WindowData windowHandle = {0, 0};
 	std::shared_ptr<VKShader> m_shader;
-	std::vector<std::shared_ptr<Object>> m_objects;
+	std::vector<Object*> m_objects;
+	std::unordered_map<Object*, std::vector<VkDescriptorSet>> m_descriptor_sets;
 
 	bool m_enable_validation_layers = false;
 	std::vector<IndexBufferObjectList> m_buf_list;
@@ -136,10 +137,6 @@ class VKRenderer : public Renderer {
 		this->initVulkan();
 		this->set_objects({});
 	}
-	virtual std::shared_ptr<Object> load_object(std::shared_ptr<Shader> s,
-												std::vector<std::shared_ptr<TexturedMesh>> m) override {
-		return std::shared_ptr<VKObject>(new VKObject(s, m));
-	}
 
 	size_t get_dynamic_offset(size_t base_offset) {
 		VkPhysicalDeviceProperties properties;
@@ -155,7 +152,7 @@ class VKRenderer : public Renderer {
 	}
 
 	// TODO: set the descriptors here?
-	virtual void set_objects(std::vector<std::shared_ptr<Object>> objs) override {
+	virtual void set_objects(std::vector<Object*> objs) override {
 		vkQueueWaitIdle(this->graphicsQueue);
 		vkDeviceWaitIdle(this->device);
 		//	this->vertices = *(objs[0]->get_textured_meshes()->at(0)->get_mesh()->get_vertices());
@@ -163,6 +160,7 @@ class VKRenderer : public Renderer {
 		std::cout << "Loading " << objs.size() << " objects!!!" << std::endl;
 		// FIXME: There is currently only support for a single shader/pipeline, so we get the shader of the first object
 		this->m_objects = objs;
+		this->m_descriptor_sets.clear();
 		int images = swapChainImages.size();
 
 		// Create objects
@@ -207,8 +205,9 @@ class VKRenderer : public Renderer {
 					VkDescriptorImageInfo imageInfo{};
 					imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 					// TODO: move texture to object?
-					auto tex =
-						std::dynamic_pointer_cast<VKTexture>(objs[k]->get_textured_meshes()->at(0)->get_texture());
+					auto meshes = objs[k]->get_textured_meshes();
+					if (!meshes || meshes->size() == 0) continue;
+					auto tex = std::dynamic_pointer_cast<VKTexture>(meshes->at(0)->get_texture());
 					imageInfo.imageView = tex->get_image_view();
 					imageInfo.sampler = tex->get_sampler();
 
@@ -242,18 +241,21 @@ class VKRenderer : public Renderer {
 					descriptorWrites[1].descriptorCount = 1;
 					descriptorWrites[1].pImageInfo = &imageInfo;
 
-					std::dynamic_pointer_cast<VKObject>(objs[k])->set_descriptor_sets(i, set);
+					this->m_descriptor_sets[objs[k]].push_back(set);
 
 					vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()),
 										   descriptorWrites.data(), 0, nullptr);
 				}
+				std::cout << "Done creating buffer" << std::endl;
 			}
 		}
 		// All objects created in a single buffer (per image)
 		vkDeviceWaitIdle(device);
-		std::unordered_map<std::shared_ptr<Mesh>, std::vector<std::shared_ptr<Object>>> mesh_obj_map;
-		for (const auto& obj : objs) {
-			mesh_obj_map[obj->get_textured_meshes()->at(0)->get_mesh()].push_back(obj);
+		std::unordered_map<std::shared_ptr<Mesh>, std::vector<Object*>> mesh_obj_map;
+		for (const auto obj : objs) {
+			auto meshes = obj->get_textured_meshes();
+			if (!meshes || meshes->size() == 0) continue;
+			mesh_obj_map[meshes->at(0)->get_mesh()].push_back(obj);
 		}
 		std::cout << "Done assigning meshes. Got " << mesh_obj_map.size() << " different meshes" << std::endl;
 		for (const auto& buf : this->m_buf_list) {
@@ -317,8 +319,7 @@ class VKRenderer : public Renderer {
 				// TODO: shrink this to a single call
 				for (const auto& obj : buf.objects) {
 					vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-											&std::dynamic_pointer_cast<VKObject>(obj)->get_descriptor_sets()->at(i), 0,
-											nullptr);
+											&this->m_descriptor_sets[obj][i], 0, nullptr);
 					vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(buf.indexSize), 1, 0, 0, 0);
 				}
 			}
@@ -1105,7 +1106,6 @@ class VKRenderer : public Renderer {
 		for (int i = 0; i < this->m_objects.size(); ++i) {
 			this->m_objects[i]->update();
 			void* data;
-			auto vkobj = std::dynamic_pointer_cast<VKObject>(this->m_objects[i]);
 			ubo.model = this->m_shader->get_model();
 			vkMapMemory(device, uniformBuffersMemory[currentImage], i * get_dynamic_offset(sizeof(ubo)),
 						get_dynamic_offset(sizeof(ubo)), 0, &data);

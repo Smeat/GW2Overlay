@@ -43,6 +43,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -154,12 +155,13 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend, std::vector<std::sh
 			auto tex_iter = texture_file_map.find(icon_file);
 			// TODO: this creates a new mesh, while they are all the same...
 			std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex_iter->second));
-			std::shared_ptr<Object> obj = rend->load_object(my_shader, {my_mesh});
 			auto pos = curr_poi->m_pos;
 			pos.y += curr_poi->m_height_offset;
-			obj->translate(pos);
-			obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
-			std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(obj, curr_poi));
+			std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(curr_poi));
+			gw2obj->set_shader(my_shader);
+			gw2obj->set_meshes({my_mesh});
+			gw2obj->translate(pos);
+			gw2obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
 			objects->push_back(gw2obj);
 		}
 	}
@@ -409,16 +411,15 @@ int main(int argc, char** argv) {
 		if (CategoryManager::getInstance().state_changed()) {
 			gw2_objects.clear();
 			load_objects(last_id, renderer, &gw2_objects);
-			std::vector<std::shared_ptr<Object>> render_objects;
-			for (const auto& obj : gw2_objects) {
-				auto list = obj->get_objects();
-				render_objects.insert(render_objects.end(), list.begin(), list.end());
-			}
+			std::vector<Object*> render_objects;
 			auto wvw_objects = gw2_wvw.set_map_id(last_id);
 			for (const auto& obj : wvw_objects) {
-				auto list = obj->get_objects();
-				render_objects.insert(render_objects.end(), list.begin(), list.end());
 				gw2_objects.push_back(obj);
+			}
+			for (const auto& obj : gw2_objects) {
+				render_objects.push_back(obj.get());
+				auto list = obj->get_all_children();
+				render_objects.insert(render_objects.end(), list.begin(), list.end());
 			}
 			renderer->set_objects(render_objects);
 			CategoryManager::getInstance().set_state_changed(false);

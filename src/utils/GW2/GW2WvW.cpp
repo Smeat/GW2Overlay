@@ -50,10 +50,11 @@ CharacterObject::CharacterObject(const std::string& chars, std::shared_ptr<Rende
 		this->m_textures.insert({c, tex});
 		auto mesh = std::make_shared<Mesh>(Mesh::create_default_mesh());
 		std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(mesh, tex));
-		std::cout << "[WvW-Character] Creating character" << std::endl;
-		this->m_characters[c] = renderer->load_object(shader, {my_mesh});
+		std::cout << "[WvW-Character] Creating character " << c << std::endl;
+		this->m_characters[c] = std::shared_ptr<Object>(new Object(shader, {my_mesh}));
 		this->m_characters[c]->scale({0, 0, 0});
-		this->set_character(c);
+		this->m_characters[c]->set_parent(this);
+		this->m_last_char = c;
 		std::cout << "[WvW-Character] end" << std::endl;
 	}
 }
@@ -70,14 +71,6 @@ void CharacterObject::set_character(char character) {
 	this->m_last_char = character;
 }
 
-std::vector<std::shared_ptr<Object>> CharacterObject::get_objects() {
-	std::vector<std::shared_ptr<Object>> ret;
-	for (const auto& o : this->m_characters) {
-		ret.push_back(o.second);
-	}
-	return ret;
-}
-
 GW2WvWObject::GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<Shader> shader,
 						   const std::vector<char>& icon_data) {
 	std::cout << "[WvW-Object] Constructor" << std::endl;
@@ -85,6 +78,13 @@ GW2WvWObject::GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<S
 	this->m_characters[1] = std::shared_ptr<CharacterObject>(new CharacterObject("0123456", renderer, shader));
 	this->m_characters[2] = std::shared_ptr<CharacterObject>(new CharacterObject(":", renderer, shader));
 	this->m_characters[3] = std::shared_ptr<CharacterObject>(new CharacterObject("012345", renderer, shader));
+
+	int spacing = 0;
+	for (const auto& c : this->m_characters) {
+		c->set_parent(this);
+		c->translate({spacing, 10, 0});
+		spacing += 10;
+	}
 
 	std::cout << "[WvW-Object] Creating surface with size " << icon_data.size() << std::endl;
 	// TODO: use a map in GW2WvW or create a texture manager to avoid duplication
@@ -98,7 +98,8 @@ GW2WvWObject::GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<S
 		auto mesh = std::make_shared<Mesh>(Mesh::create_default_mesh(OBJECTIVE_COLORS[i]));
 		std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(mesh, tex));
 		std::cout << "[WvW-Object] Creating object" << std::endl;
-		this->m_object_symbols[i] = renderer->load_object(shader, {my_mesh});
+		this->m_object_symbols[i] = std::shared_ptr<Object>(new Object(shader, {my_mesh}));
+		this->m_object_symbols[i]->set_parent(this);
 	}
 	this->set_team(GREY);
 }
@@ -107,16 +108,11 @@ void GW2WvWObject::set_team(int team) { this->m_current_team = team; }
 
 void GW2WvWObject::update(const glm::vec3& pos, uint64_t button_mask) {
 	float offset =
-		std::max(50 - glm::distance(pos, *this->m_object_symbols[this->m_current_team]->get_position()), 0.0f);
+		std::max(50 - glm::distance(pos, this->m_object_symbols[this->m_current_team]->get_world_position()), 0.0f);
 	for (const auto& o : this->m_object_symbols) {
 		o->scale({0, 0, 0});
-		o->set_offset({0, offset, 0});
 	}
-	int spacing = 0;
-	for (const auto& c : this->m_characters) {
-		c->set_offset({spacing, offset + 10, 0});
-		spacing += 10;
-	}
+	this->set_offset({0, offset, 0});
 	this->m_object_symbols[this->m_current_team]->scale({10, 10, 10});
 }
 
@@ -209,20 +205,6 @@ std::vector<std::shared_ptr<GW2Object>> GW2WvW::set_map_id(int id) {
 	std::transform(this->m_objects.begin(), this->m_objects.end(), std::back_inserter(ret),
 				   [](auto& val) { return std::dynamic_pointer_cast<GW2Object>(val.second); });
 	std::cout << "[WvW] Set id done with size " << ret.size() << std::endl;
-	return ret;
-}
-
-std::vector<std::shared_ptr<Object>> GW2WvWObject::get_objects() {
-	std::vector<std::shared_ptr<Object>> ret;
-	for (const auto& o : this->m_object_symbols) {
-		ret.push_back(o);
-	}
-	// TODO: return character objects
-	for (const auto& c : this->m_characters) {
-		auto char_objs = c->get_objects();
-		std::copy(char_objs.begin(), char_objs.end(), std::back_inserter(ret));
-	}
-
 	return ret;
 }
 
