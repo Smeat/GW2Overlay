@@ -177,6 +177,8 @@ void look_away() {
 }
 
 void update_camera(const LinkedMem* gw2_data) {
+	// TODO: I need a proper event system
+	static bool map_last_open = false;
 	auto ctx = gw2_data->get_context();
 	//	TODO: draw POIs on the map, if it is open
 	//	This requires to translate the position of all objects to map
@@ -189,7 +191,7 @@ void update_camera(const LinkedMem* gw2_data) {
 		// TODO: find correct scale!
 		// 500 is pretty close in LA, but differs from map to map
 		// TODO: scale objects up, when on map?
-		cameraPos.y = 500 * ctx->mapScale;
+		cameraPos.y = 455 * ctx->mapScale;
 		auto cameraFront = glm::vec3(0.0f, -1.0f, 0.0f);
 		auto cameraUp = glm::vec3(0.0f, 1.0f, 1.0f);
 
@@ -208,6 +210,15 @@ void update_camera(const LinkedMem* gw2_data) {
 		   map.get_continent_rect(1, 1));
 					   */
 
+		if (!map_last_open) {
+			std::cout << "Map state changed" << std::endl;
+			for (const auto o : gw2_objects) {
+				auto pos = o->get_world_position();
+				o->set_offset({0, -pos.y, 0});
+				o->set_scale_factor({10, 10, 10});
+			}
+		}
+		map_last_open = true;
 	} else {
 		glm::vec3 cameraPos =
 			glm::vec3(gw2_data->fCameraPosition[0], gw2_data->fCameraPosition[1], gw2_data->fCameraPosition[2]);
@@ -226,6 +237,16 @@ void update_camera(const LinkedMem* gw2_data) {
 
 		auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_view(view);
+
+		if (map_last_open) {
+			std::cout << "Map state closed" << std::endl;
+			for (const auto o : gw2_objects) {
+				o->set_offset({0, 0, 0});
+				o->set_scale_factor({1, 1, 1});
+			}
+		}
+
+		map_last_open = false;
 	}
 }
 

@@ -42,7 +42,7 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
    * Make the GUI GW2 themed
    * Overlay manager to create Overlays with boss timers and other stuff
  * Change scale for specific categories
- * Icons on Map and Minimap (a basic implementation is working, but only works in a few areas)
+ * Icons on Minimap (this probably needs a separate render target)
  * Vulkan specific
    * Depth buffer
    * Draw everything in a single cmd (might also fix the bug after creating the queue)
