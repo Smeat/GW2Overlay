@@ -169,7 +169,7 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend, std::vector<std::sh
 }
 
 void look_away() {
-	auto cameraPos = glm::vec3(0, 10000, 0);
+	auto cameraPos = glm::vec3(0, -10000, 0);
 	auto cameraFront = glm::vec3(0.0f, -1.0f, 0.0f);
 	auto cameraUp = glm::vec3(0.0f, 1.0f, 1.0f);
 	auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
