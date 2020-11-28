@@ -224,7 +224,7 @@ void OptionsWindow::showEvent(QShowEvent* ev) {
 	} else {
 		this->m_ui->helper_running_label->setStyleSheet(STYLE_INVALID);
 	}
-	auto& api_instance = GW2ApiManager::getInstance();
+	auto& api_instance = GW2Manager::getInstance();
 	for (auto iter = this->m_permission_map.begin(); iter != this->m_permission_map.end(); ++iter) {
 		if (api_instance.get_api()->has_permission(iter->first)) {
 			iter->second->setStyleSheet(STYLE_VALID);

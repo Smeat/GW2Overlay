@@ -17,6 +17,7 @@
 #include <SDL2/SDL_ttf.h>
 
 #include "GW2Api.h"
+#include "GW2Manager.h"
 #include "GW2Map.h"
 
 #define WVW_ENDPOINT "v2/wvw/matches?world=2204"
@@ -136,7 +137,7 @@ void GW2WvWObject::disable_timer() {
 
 GW2WvW::GW2WvW(std::shared_ptr<Renderer> renderer, std::shared_ptr<Shader> shader) {
 	// Caching is okay, since we are only interested in the map ids for now
-	auto data = GW2ApiManager::getInstance().get_api()->get_value(WVW_ENDPOINT);
+	auto data = GW2Manager::getInstance().get_api()->get_value(WVW_ENDPOINT);
 	write_lock lock(this->m_last_data_mutex);
 	this->m_last_data = json::parse(data);
 	// std::cout << "got data: " << this->m_last_data << std::endl;
@@ -163,7 +164,7 @@ std::vector<std::shared_ptr<GW2Object>> GW2WvW::set_map_id(int id) {
 				std::string obj_id = obj->operator[]("id");
 				// get the position
 				json objective_json =
-					json::parse(GW2ApiManager::getInstance().get_api()->get_value(WVW_OBJECTIVE_ENDPOINT + obj_id));
+					json::parse(GW2Manager::getInstance().get_api()->get_value(WVW_OBJECTIVE_ENDPOINT + obj_id));
 				std::cout << "[WvW] Objective data: " << objective_json << std::endl;
 				if (!objective_json.contains("coord") || !objective_json.contains("marker")) continue;
 				glm::vec3 pos = {objective_json["coord"][0], objective_json["coord"][2], objective_json["coord"][1]};
@@ -177,12 +178,11 @@ std::vector<std::shared_ptr<GW2Object>> GW2WvW::set_map_id(int id) {
 				std::string id = icon_link.substr(id_pos + 1, format_pos - id_pos - 1);
 				std::string sig = icon_link.substr(sig_pos + 1, id_pos - sig_pos - 1);
 				std::cout << "sig: " << sig << " id " << id << " format " << format << std::endl;
-				auto icon = GW2ApiManager::getInstance().get_api()->get_render(sig, id, format);
+				auto icon = GW2Manager::getInstance().get_api()->get_render(sig, id, format);
 				std::cout << "[WvW] Creating wvw object..." << std::endl;
 				std::shared_ptr<GW2WvWObject> wvw_obj(new GW2WvWObject(this->m_renderer, this->m_shader, icon));
 				std::cout << "[WvW] done" << std::endl;
-				auto d =
-					GW2ApiManager::getInstance().get_api()->get_value(std::string("v2/maps/") + std::to_string(val));
+				auto d = GW2Manager::getInstance().get_api()->get_value(std::string("v2/maps/") + std::to_string(val));
 				GW2Map map;
 				map.load_map(d);
 				std::cout << "[WvW] translate before " << pos.x << "," << pos.y << "," << pos.z << std::endl;
@@ -213,7 +213,7 @@ void GW2WvW::start_update_thread() {
 		std::cout << "[THREAD] Starting WvW Thread" << std::endl;
 		while (this->m_run_update) {
 			try {
-				auto data = GW2ApiManager::getInstance().get_api()->get_value(WVW_ENDPOINT, false);
+				auto data = GW2Manager::getInstance().get_api()->get_value(WVW_ENDPOINT, false);
 				write_lock lock(this->m_last_data_mutex);
 				this->m_last_data = json::parse(data);
 

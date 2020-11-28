@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "../json/json.hpp"
-
 using json = nlohmann::json;
 
 const std::string GW2_HOST_API = "api.guildwars2.com";
@@ -68,20 +67,6 @@ class GW2Api {
 	std::string m_cache_folder;
 	std::string m_api_key;
 	uint32_t m_permissions;
-};
-
-class GW2ApiManager {
- public:
-	static GW2ApiManager& getInstance() {
-		static GW2ApiManager instance;
-		return instance;
-	}
-
-	GW2Api* get_api() { return &this->m_api; }
-
- private:
-	GW2ApiManager(){};
-	GW2Api m_api;
 };
 
 #endif

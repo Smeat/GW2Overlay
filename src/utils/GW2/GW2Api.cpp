@@ -141,13 +141,14 @@ std::string GW2Api::get_value(const std::string& endpoint, std::vector<std::stri
 	if (std::find_if(AUTHENTICATED_ENDPOINTS.begin(), AUTHENTICATED_ENDPOINTS.end(), [&](const std::string& s) {
 			return endpoint.find(s) != std::string::npos;
 		}) != AUTHENTICATED_ENDPOINTS.end()) {
-		msg += "?access_token=" + this->m_api_key;
 		parameter.push_back("access_token=" + this->m_api_key);
 	}
 	msg += "?";
 	for (auto iter = parameter.begin(); iter != parameter.end(); ++iter) {
 		msg += *iter + "&";
 	}
+	// removes ? or & at the end
+	msg.pop_back();
 
 	std::cout << "Getting data with msg " << msg << std::endl;
 	std::vector<char> data = this->get_data(GW2_HOST_API, msg);

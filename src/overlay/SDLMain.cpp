@@ -251,7 +251,7 @@ void update_camera(const LinkedMem* gw2_data) {
 }
 
 void update_map(int id) {
-	auto d = GW2ApiManager::getInstance().get_api()->get_value(std::string("v2/maps/") + std::to_string(id));
+	auto d = GW2Manager::getInstance().get_api()->get_value(std::string("v2/maps/") + std::to_string(id));
 	map.load_map(d);
 }
 
@@ -318,8 +318,8 @@ int main(int argc, char** argv) {
 
 	ConfigManager::getInstance();
 	auto& conf = ConfigManager::getInstance().get_config("SETTINGS");
-	GW2ApiManager::getInstance().get_api()->set_api_key(conf["API_KEY"].get_item());
-	GW2ApiManager::getInstance().get_api()->get_value("v2/account/achievements", false);
+	GW2Manager::getInstance().get_api()->set_api_key(conf["API_KEY"].get_item());
+	GW2Manager::getInstance().get_api()->get_value("v2/account/achievements", false);
 
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();
@@ -383,19 +383,19 @@ int main(int argc, char** argv) {
 
 	CategoryManager::getInstance().load_taco_xmls(xml_files);
 
-	GW2Link gw_link;
-	auto gw2_data = gw_link.get_gw2_data();
+	GW2Link* gw_link = GW2Manager::getInstance().get_link();
+	auto gw2_data = gw_link->get_gw2_data();
 
 	bool running = true;
 	printf("Starting main loop\n");
 	uint64_t last_call = 0;
 
-	auto d = GW2ApiManager::getInstance().get_api()->get_value("v2/account/achievements");
+	auto d = GW2Manager::getInstance().get_api()->get_value("v2/account/achievements");
 	achievements.reset(new GW2Achievements(d));
 
 	int last_id = 0;
 	{
-		gw_link.update_gw2(true);
+		gw_link->update_gw2(true);
 		std::string identity = gw2_data->get_identity();
 		float fov = 1.222f;
 		try {
@@ -424,7 +424,7 @@ int main(int argc, char** argv) {
 	while (running) {
 		uint64_t delta = SDL_GetTicks() - last_call;
 		last_tick = gw2_data->uiTick;
-		gw_link.update_gw2(true);
+		gw_link->update_gw2(true);
 		auto ctx = gw2_data->get_context();
 		if (gw2_data->uiTick == last_tick) {
 			++ticks_missed;
