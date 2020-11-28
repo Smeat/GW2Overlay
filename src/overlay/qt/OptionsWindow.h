@@ -61,6 +61,7 @@ class OptionsWindow : public QMainWindow {
 	std::map<std::string, QLineEdit*> m_options_map;
 	std::map<GW2Permission, QLabel*> m_permission_map;
 	void showEvent(QShowEvent* ev) override;
+	void copy_from_api();
 
 	bool m_disable_build_save = false;
 };

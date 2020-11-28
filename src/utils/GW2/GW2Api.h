@@ -17,7 +17,7 @@ const std::string GW2_URL_API = "https://" + GW2_HOST_API + "/";
 const std::string GW2_HOST_RENDER = "render.guildwars2.com";
 const std::string GW2_URL_RENDER = "https://" + GW2_HOST_RENDER + "/file/";
 
-const std::vector<std::string> AUTHENTICATED_ENDPOINTS = {"v2/account", "v2/tokeninfo"};
+const std::vector<std::string> AUTHENTICATED_ENDPOINTS = {"v2/account", "v2/tokeninfo", "v2/characters"};
 
 enum GW2Permission {
 	ACCOUNT = (1 << 0),

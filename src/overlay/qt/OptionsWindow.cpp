@@ -8,12 +8,18 @@
 #include <QFileDialog>
 #include <QShowEvent>
 #include <QTableWidgetItem>
+#include <string>
 
 #include "../../utils/CategoryManager.h"
 #include "../../utils/Config.h"
+#include "../../utils/GW2/GW2Builds.h"
 #include "../../utils/GW2/GW2Manager.h"
 #include "../../utils/POI.h"
 #include "../../utils/ProcessUtils.h"
+
+#include "../../utils/json/json.hpp"
+
+using json = nlohmann::json;
 
 NewBuildDialog::NewBuildDialog(QDialog* p) : QDialog(p, Qt::Popup), m_ui(new Ui::NewBuildDialog) {
 	this->m_ui->setupUi(this);
@@ -40,6 +46,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 	connect(this->m_ui->build_list, &QTableWidget::itemChanged, this,
 			[this](QTableWidgetItem* item) { this->save_builds(); });
 	connect(this->m_ui->select_helper_button, &QPushButton::clicked, this, [this] { this->select_helper_path(); });
+	connect(this->m_ui->copy_api_button, &QPushButton::clicked, this, [this] { this->copy_from_api(); });
 
 	this->m_options_map.insert({std::string("API_KEY"), this->m_ui->api_text});
 	this->m_options_map.insert({std::string("USE_KEY"), this->m_ui->use_text});
@@ -194,9 +201,12 @@ void OptionsWindow::save_builds() {
 		config.save_config("./builds.json");
 	}
 }
+
 void OptionsWindow::load_builds() {
 	this->m_disable_build_save = true;
-	// this->m_ui->build_list.clear();
+	while (this->m_ui->build_list->rowCount() > 0) {
+		this->m_ui->build_list->removeRow(0);
+	}
 	auto& config = ConfigManager::getInstance().get_config("BUILDS");
 	for (auto build = config.get_children()->begin(); build != config.get_children()->end(); ++build) {
 		std::string val = build->second->get_name();
@@ -248,3 +258,47 @@ void OptionsWindow::select_helper_path() {
 		GW2Manager::getInstance().start_helper();
 	}
 }
+
+std::vector<GW2BuildChatLink> get_builds(const std::string& char_name) {
+	auto& api_instance = GW2Manager::getInstance();
+	auto res = json::parse(
+		api_instance.get_api()->get_value("v2/characters/" + char_name + "/buildtabs", {"tabs=all"}, false));
+	std::vector<GW2BuildChatLink> links;
+	for (auto iter = res.begin(); iter != res.end(); ++iter) {
+		std::cout << "## Build: " << (*iter).dump() << std::endl;
+		GW2BuildChatLink link((*iter)["build"].dump());
+		std::cout << link.get_chat_string() << std::endl;
+		links.push_back(link);
+	}
+	std::cout << "Got " << links.size() << " builds" << std::endl;
+	return links;
+}
+
+void OptionsWindow::copy_from_api() {
+	GW2Link* link = GW2Manager::getInstance().get_link();
+	try {
+		std::string identity = link->get_gw2_data()->get_identity();
+		json identity_json = json::parse(identity);
+		std::string name = identity_json["name"].get<std::string>();
+		auto builds = get_builds(name);
+		auto& config = ConfigManager::getInstance().get_config("BUILDS");
+		auto build_map = config.get_children();
+		for (auto iter = build_map->begin(); iter != build_map->end(); ++iter) {
+			std::cout << "####" << iter->first << std::endl;
+		}
+		for (auto iter = builds.begin(); iter != builds.end(); ++iter) {
+			if (build_map->find(iter->get_chat_string()) == build_map->end()) {
+				config.set_items(iter->get_chat_string(), {iter->name, "Imported from API"});
+				std::cout << "Importing new build " << iter->name << ":" << iter->get_chat_string() << std::endl;
+			} else {
+				std::cout << iter->get_chat_string() << " already exists..." << std::endl;
+			}
+		}
+		config.save_config("./builds.json");
+		this->load_builds();
+	} catch (std::exception& e) {
+		std::cout << "Error while getting builds from api..." << e.what() << std::endl;
+	}
+	std::cout << "Done" << std::endl;
+}
+
