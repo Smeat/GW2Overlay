@@ -419,10 +419,18 @@ int main(int argc, char** argv) {
 		};
 		setup_input_events(window, cb, &running);
 	});
+	int last_tick = 0;
+	int ticks_missed = 0;
 	while (running) {
 		uint64_t delta = SDL_GetTicks() - last_call;
+		last_tick = gw2_data->uiTick;
 		gw_link.update_gw2(true);
 		auto ctx = gw2_data->get_context();
+		if (gw2_data->uiTick == last_tick) {
+			++ticks_missed;
+		} else {
+			if (ticks_missed > 0) --ticks_missed;
+		}
 		if (ctx->mapId != last_id) {
 			printf("Map id changed to %d\n", ctx->mapId);
 			last_id = ctx->mapId;
@@ -448,7 +456,7 @@ int main(int argc, char** argv) {
 		}
 
 		// TODO: use a proper system for events like this
-		if (ctx->get_ui_state(UI_STATE::GAME_FOCUS) || vm.count("f")) {
+		if ((ctx->get_ui_state(UI_STATE::GAME_FOCUS) && ticks_missed < 5) || vm.count("f")) {
 			update_camera(gw2_data);
 			update_objects(gw2_data);
 			renderer->update();
