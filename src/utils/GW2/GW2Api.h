@@ -1,10 +1,17 @@
 #ifndef __GW2API_H__
 #define __GW2API_H__
 
+#include <bits/stdint-uintn.h>
+#include <cstring>
 #include <iostream>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "../json/json.hpp"
+
+using json = nlohmann::json;
 
 const std::string GW2_HOST_API = "api.guildwars2.com";
 const std::string GW2_URL_API = "https://" + GW2_HOST_API + "/";
@@ -39,7 +46,10 @@ class GW2Api {
 	std::vector<char> get_data(const std::string& url, const std::string& msg);
 	std::vector<char> get_render(const std::string& signature, const std::string& file_id, const std::string& format,
 								 bool cached = true);
-	std::string get_value(const std::string& endpoint, bool cached = true);
+	std::string get_value(const std::string& endpoint, std::vector<std::string> parameter, bool cached = true);
+	std::string get_value(const std::string& endpoint, bool cached = true) {
+		return this->get_value(endpoint, {}, cached);
+	}
 	/// Returns "" if no cached value is found
 	std::vector<char> get_cached(const std::string& endpoint);
 	void save_to_cache(const std::string& endpoint, const std::vector<char>& value);

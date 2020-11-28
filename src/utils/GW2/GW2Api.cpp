@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -18,11 +19,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../json/json.hpp"
-
 #include "../Config.h"
-
-using json = nlohmann::json;
 
 std::shared_ptr<addrinfo> getaddrinfo(const char* __name, const char* __service, const struct addrinfo* __req) {
 	addrinfo* info = nullptr;
@@ -130,7 +127,7 @@ std::vector<char> GW2Api::get_render(const std::string& signature, const std::st
 	return value;
 }
 
-std::string GW2Api::get_value(const std::string& endpoint, bool cached) {
+std::string GW2Api::get_value(const std::string& endpoint, std::vector<std::string> parameter, bool cached) {
 	std::string value;
 	if (cached) {
 		auto cached_data = this->get_cached(endpoint);
@@ -145,7 +142,13 @@ std::string GW2Api::get_value(const std::string& endpoint, bool cached) {
 			return endpoint.find(s) != std::string::npos;
 		}) != AUTHENTICATED_ENDPOINTS.end()) {
 		msg += "?access_token=" + this->m_api_key;
+		parameter.push_back("access_token=" + this->m_api_key);
 	}
+	msg += "?";
+	for (auto iter = parameter.begin(); iter != parameter.end(); ++iter) {
+		msg += *iter + "&";
+	}
+
 	std::cout << "Getting data with msg " << msg << std::endl;
 	std::vector<char> data = this->get_data(GW2_HOST_API, msg);
 	data.push_back('\0');
