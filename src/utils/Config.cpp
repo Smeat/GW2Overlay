@@ -20,14 +20,15 @@ void Config::save_config(std::string filename) {
 	std::cout << "Saving config to " << filename << std::endl;
 	std::function<void(json&, const Config&)> get_all_children;
 	get_all_children = [&](json& curr_j, const Config& entry) {
-		std::cout << "Processing " << entry.m_name << " with value size " << entry.m_values.size() << " and children "
-				  << entry.m_children.size() << std::endl;
+		//		std::cout << "Processing " << entry.m_name << " with value size " << entry.m_values.size() << " and
+		// children "
+		//				  << entry.m_children.size() << std::endl;
 		// add values
 		if (entry.m_values.size() > 1) {
 			curr_j[entry.m_name] = entry.m_values;
 		} else if (entry.m_values.size() == 1) {
 			curr_j[entry.m_name] = entry.m_values[0];
-			std::cout << "Adding val to json " << curr_j[entry.m_name] << std::endl;
+			//			std::cout << "Adding val to json " << curr_j[entry.m_name] << std::endl;
 		}
 
 		// add children
@@ -44,7 +45,7 @@ void Config::save_config(std::string filename) {
 	this->m_config_file = filename;
 }
 
-json Config::to_json() {}
+// json Config::to_json() {}
 
 void Config::from_json(const json& j, bool clear) {
 	if (clear) {
@@ -57,16 +58,16 @@ void Config::from_json(const json& j, bool clear) {
 			json element = iter->get<json::object_t>();
 			std::shared_ptr<Config> child(new Config(iter.key()));
 			child->from_json(element);
-			std::cout << "Created new child from " << element << " name " << child->m_name << std::endl;
+			//			std::cout << "Created new child from " << element << " name " << child->m_name << std::endl;
 			this->m_children[child->m_name] = child;
 			//	this->m_children.insert({child->m_name, child});
-			std::cout << "Adding " << iter.key() << ":" << iter.value() << " to " << m_name << " total children "
-					  << m_children.size() << std::endl;
+			//			std::cout << "Adding " << iter.key() << ":" << iter.value() << " to " << m_name << " total
+			// children " << m_children.size() << std::endl;
 		} else if (iter->is_string()) {
-			std::cout << "string key " << iter.key() << " val " << iter.value() << std::endl;
+			//			std::cout << "string key " << iter.key() << " val " << iter.value() << std::endl;
 			this->set_item(iter.key(), iter.value());
 		} else if (iter->is_array()) {
-			std::cout << "Array!" << std::endl;
+			//			std::cout << "Array!" << std::endl;
 			this->set_items(iter.key(), iter.value());
 		}
 	}
@@ -101,7 +102,7 @@ void Config::set_items(const std::string& item, const std::vector<std::string>& 
 }
 
 std::string Config::get_item() {
-	std::cout << "Getting item with size " << m_values.size() << " from " << m_name << std::endl;
+	//	std::cout << "Getting item with size " << m_values.size() << " from " << m_name << std::endl;
 	if (m_values.size() == 1) {
 		return m_values[0];
 	}

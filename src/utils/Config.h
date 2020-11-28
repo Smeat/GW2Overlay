@@ -46,10 +46,11 @@ class Config {
 			return *result->second;
 		} else {
 			// not found, create new child
-			std::cout << "Adding new entry " << val << " for " << m_name << " current children: " << std::endl;
+			/*std::cout << "Adding new entry " << val << " for " << m_name << " current children: " << std::endl;
 			for (auto iter = m_children.begin(); iter != m_children.end(); ++iter) {
 				std::cout << iter->first << std::endl;
 			}
+			*/
 			auto conf = std::shared_ptr<Config>(new Config(val, ""));
 			auto ins = this->m_children.insert({val, conf});
 			Config& ret = *ins.first->second;
