@@ -76,7 +76,7 @@ void VKTexture::createTextureSampler() {
 	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.anisotropyEnable = VK_TRUE;
+	samplerInfo.anisotropyEnable = VK_FALSE;
 	samplerInfo.maxAnisotropy = 16.0f;
 	samplerInfo.borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
 	samplerInfo.unnormalizedCoordinates = VK_FALSE;
