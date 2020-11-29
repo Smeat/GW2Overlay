@@ -1,10 +1,12 @@
 #ifndef __OPTIONSWINDOW_H__
 #define __OPTIONSWINDOW_H__
 
+#include <qwindowdefs.h>
 #include <QDialog>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMainWindow>
+#include <QTimer>
 #include <QTreeWidgetItem>
 
 #include <memory>
@@ -62,8 +64,11 @@ class OptionsWindow : public QMainWindow {
 	std::map<GW2Permission, QLabel*> m_permission_map;
 	void showEvent(QShowEvent* ev) override;
 	void copy_from_api();
+	void update_performance();
+	void on_tab_change(int index);
 
 	bool m_disable_build_save = false;
+	QTimer* m_update_timer = nullptr;
 };
 
 class NewBuildDialog : public QDialog {

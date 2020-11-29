@@ -78,6 +78,7 @@
 #include "../utils/GW2/GW2Map.h"
 #include "../utils/GW2/GW2WvW.h"
 #include "../utils/POI.h"
+#include "../utils/PerformanceStats.h"
 #include "../utils/ProcessUtils.h"
 #include "../utils/json/json.hpp"
 #include "../utils/xml/pugixml.hpp"
@@ -388,7 +389,6 @@ int main(int argc, char** argv) {
 
 	bool running = true;
 	printf("Starting main loop\n");
-	uint64_t last_call = 0;
 
 	auto d = GW2Manager::getInstance().get_api()->get_value("v2/account/achievements");
 	achievements.reset(new GW2Achievements(d));
@@ -422,12 +422,15 @@ int main(int argc, char** argv) {
 	int last_tick = 0;
 	int ticks_missed = 0;
 	while (running) {
-		uint64_t delta = SDL_GetTicks() - last_call;
+		auto loop_begin = std::chrono::high_resolution_clock::now();
 		last_tick = gw2_data->uiTick;
 		gw_link->update_gw2(true);
+		auto link_time = std::chrono::duration_cast<std::chrono::microseconds>(
+			std::chrono::high_resolution_clock::now() - loop_begin);
 		auto ctx = gw2_data->get_context();
 		if (gw2_data->uiTick == last_tick) {
 			++ticks_missed;
+			if (ticks_missed > 10) ticks_missed = 10;
 		} else {
 			if (ticks_missed > 0) --ticks_missed;
 		}
@@ -455,6 +458,7 @@ int main(int argc, char** argv) {
 			std::cout << "Loaded all objects from map " << last_id << std::endl;
 		}
 
+		auto render_begin = std::chrono::high_resolution_clock::now();
 		// TODO: use a proper system for events like this
 		if ((ctx->get_ui_state(UI_STATE::GAME_FOCUS) && ticks_missed < 5) || vm.count("f")) {
 			update_camera(gw2_data);
@@ -467,6 +471,13 @@ int main(int argc, char** argv) {
 			look_away();
 			renderer->update();
 		}
+		auto render_time = std::chrono::duration_cast<std::chrono::microseconds>(
+			std::chrono::high_resolution_clock::now() - render_begin);
+		auto loop_time = std::chrono::duration_cast<std::chrono::microseconds>(
+			std::chrono::high_resolution_clock::now() - loop_begin);
+		PerformanceStats::getInstance().set_gpu_time(render_time.count());
+		PerformanceStats::getInstance().set_loop_time(loop_time.count());
+		PerformanceStats::getInstance().set_link_time(link_time.count());
 	}
 
 	return 0;

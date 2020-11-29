@@ -71,6 +71,7 @@ SET(SOURCES
 	utils/GW2/GW2Achievements.cpp
 	utils/GW2/GW2WvW.cpp
 	utils/CategoryManager.cpp
+	utils/PerformanceStats.cpp
 	utils/POI.cpp
 	utils/Config.cpp
 	overlay/QtMain.cpp

@@ -1,4 +1,5 @@
 #include "OptionsWindow.h"
+#include <qtabwidget.h>
 #include <cstdio>
 #include <cstdlib>
 #include "ui_NewBuildDialog.h"
@@ -15,6 +16,7 @@
 #include "../../utils/GW2/GW2Builds.h"
 #include "../../utils/GW2/GW2Manager.h"
 #include "../../utils/POI.h"
+#include "../../utils/PerformanceStats.h"
 #include "../../utils/ProcessUtils.h"
 
 #include "../../utils/json/json.hpp"
@@ -29,6 +31,7 @@ NewBuildDialog::NewBuildDialog(QDialog* p) : QDialog(p, Qt::Popup), m_ui(new Ui:
 
 OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::OptionsWindow) {
 	this->m_ui->setupUi(this);
+	this->m_update_timer = new QTimer(this);
 
 	this->m_ui->treeWidget->setColumnCount(2);
 	this->m_ui->treeWidget->setHeaderLabels({"Display Name", "Name"});
@@ -47,6 +50,9 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 			[this](QTableWidgetItem* item) { this->save_builds(); });
 	connect(this->m_ui->select_helper_button, &QPushButton::clicked, this, [this] { this->select_helper_path(); });
 	connect(this->m_ui->copy_api_button, &QPushButton::clicked, this, [this] { this->copy_from_api(); });
+	connect(this->m_update_timer, &QTimer::timeout, this, [this] { this->update_performance(); });
+	connect(this->m_ui->tabWidget, &QTabWidget::currentChanged, this,
+			[this](int index) { this->on_tab_change(index); });
 
 	this->m_options_map.insert({std::string("API_KEY"), this->m_ui->api_text});
 	this->m_options_map.insert({std::string("USE_KEY"), this->m_ui->use_text});
@@ -302,3 +308,18 @@ void OptionsWindow::copy_from_api() {
 	std::cout << "Done" << std::endl;
 }
 
+void OptionsWindow::on_tab_change(int index) {
+	// TODO: stop on close
+	if (index == 2) {
+		std::cout << "Starting timer!" << std::endl;
+		this->m_update_timer->start(300);
+	} else {
+		std::cout << "Stopping timer!" << std::endl;
+		this->m_update_timer->stop();
+	}
+}
+
+void OptionsWindow::update_performance() {
+	this->m_ui->gpu_time_label->setText(QString::number(PerformanceStats::getInstance().get_gpu_time() / 1000.0));
+	this->m_ui->link_time_label->setText(QString::number(PerformanceStats::getInstance().get_link_time() / 1000.0));
+}
