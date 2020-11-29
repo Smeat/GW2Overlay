@@ -58,6 +58,8 @@ VKTexture::VKTexture(SDL_Surface* surf, VkDevice device, VkPhysicalDevice physic
 }
 
 VKTexture::~VKTexture() {
+	// TODO: I don't like this at all. Find a better way to ensure the sampler is not used by the command buffer
+	vkDeviceWaitIdle(this->m_device);
 	vkDestroySampler(m_device, this->m_texture_sampler, nullptr);
 	vkDestroyImageView(m_device, this->m_texture_image_view, nullptr);
 	vkDestroyImage(m_device, this->m_texture_image, nullptr);
