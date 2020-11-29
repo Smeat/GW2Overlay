@@ -80,6 +80,109 @@ static const std::unordered_map<std::string, int> PROFESSION_MAP = {
 	{"Guardian", 1}, {"Warrior", 2},	  {"Engineer", 3}, {"Ranger", 3},	 {"Ranger", 4},
 	{"Thief", 5},	 {"Elementalist", 6}, {"Mesmer", 7},   {"Necromant", 8}, {"Revenant", 9}};
 
+struct GW2Fact {
+	std::string text;
+	std::string type;
+	std::string icon_url;
+	int value = -1;
+	int duration = -1;
+	int apply_count = -1;
+	std::string status;
+	std::string description;
+
+	std::vector<char> get_icon_data() { return GW2Manager::getInstance().get_api()->get_render(this->icon_url); }
+};
+
+class GW2Trait {
+ public:
+	GW2Trait(int id) { this->m_id = id; }
+
+	bool load_data() {
+		try {
+			auto data = GW2Manager::getInstance().get_api()->get_value("v2/traits/" + std::to_string(this->m_id));
+			auto j_data = json::parse(data);
+			this->m_tier = j_data["tier"].get<int>();
+			this->m_order = j_data["order"].get<int>();
+			this->m_name = j_data["name"].get<std::string>();
+			this->m_description = j_data["description"].get<std::string>();
+			if (j_data["slot"].get<std::string>() == "Major") {
+				this->m_slot = 1;
+			}
+			for (auto iter = j_data["facts"].begin(); iter != j_data["facts"].end(); ++iter) {
+				GW2Fact fact;
+				fact.text = (*iter)["text"].get<std::string>();
+				fact.description = (*iter)["description"].get<std::string>();
+				this->m_facts.push_back(fact);
+			}
+
+			this->m_loaded = true;
+			return true;
+		} catch (...) {
+			return false;
+		}
+	}
+
+ private:
+	int m_id = 0;
+	int m_tier = 0;
+	int m_order = 0;
+	std::string m_name;
+	std::string m_description;
+	int m_slot = 0;
+	std::vector<GW2Fact> m_facts;
+
+	bool m_loaded = false;
+};
+
+class GW2Specialization {
+ public:
+	GW2Specialization(int id) { this->m_id = id; }
+
+	bool load_data() {
+		this->m_loaded = false;
+		try {
+			auto data =
+				GW2Manager::getInstance().get_api()->get_value("v2/specializations/" + std::to_string(this->m_id));
+			auto json_data = json::parse(data);
+			this->m_name = json_data["name"].get<std::string>();
+			this->m_profession = json_data["profession"].get<std::string>();
+			this->m_elite = json_data["elite"].get<bool>();
+			for (auto iter = json_data["minor_traits"].begin(); iter != json_data["minor_traits"].end(); ++iter) {
+				GW2Trait trait(iter->get<int>());
+				trait.load_data();
+				this->m_minor_traits.push_back(trait);
+			}
+			for (auto iter = json_data["major_traits"].begin(); iter != json_data["major_traits"].end(); ++iter) {
+				GW2Trait trait(iter->get<int>());
+				trait.load_data();
+				this->m_major_traits.push_back(trait);
+			}
+			this->m_icon_url = json_data["icon"].get<std::string>();
+			this->m_background_url = json_data["background"].get<std::string>();
+			this->m_loaded = true;
+			return true;
+		} catch (...) {
+			return false;
+		}
+	}
+
+	std::vector<char> get_background() {
+		return GW2Manager::getInstance().get_api()->get_render(this->m_background_url);
+	}
+
+ private:
+	std::vector<GW2Trait> m_minor_traits;
+	std::vector<GW2Trait> m_major_traits;
+	int m_id;
+	std::string m_background_url;
+	std::string m_icon_url;
+	std::string m_name;
+	std::string m_profession;
+	bool m_elite;
+
+	bool m_loaded = false;
+};
+
 #pragma pack(push, 1)
 typedef struct specialization_s {
 	uint8_t specialization;
