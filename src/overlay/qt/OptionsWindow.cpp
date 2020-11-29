@@ -320,6 +320,16 @@ void OptionsWindow::on_tab_change(int index) {
 }
 
 void OptionsWindow::update_performance() {
-	this->m_ui->gpu_time_label->setText(QString::number(PerformanceStats::getInstance().get_gpu_time() / 1000.0));
-	this->m_ui->link_time_label->setText(QString::number(PerformanceStats::getInstance().get_link_time() / 1000.0));
+	float gpu_time = PerformanceStats::getInstance().get_time("gpu") / 1000.0;
+	float link_time = PerformanceStats::getInstance().get_time("vkfence") / 1000.0;
+#ifdef PRINT_PERFORMANCE
+	auto times = PerformanceStats::getInstance().get_times();
+	std::cout << "[Times] ";
+	for (auto iter = times.begin(); iter != times.end(); ++iter) {
+		std::cout << iter->first << ": " << iter->second / 1000.0 << ", ";
+	}
+	std::cout << std::endl;
+#endif
+	this->m_ui->gpu_time_label->setText(QString::number(gpu_time));
+	this->m_ui->link_time_label->setText(QString::number(link_time));
 }

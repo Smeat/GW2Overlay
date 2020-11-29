@@ -475,9 +475,9 @@ int main(int argc, char** argv) {
 			std::chrono::high_resolution_clock::now() - render_begin);
 		auto loop_time = std::chrono::duration_cast<std::chrono::microseconds>(
 			std::chrono::high_resolution_clock::now() - loop_begin);
-		PerformanceStats::getInstance().set_gpu_time(render_time.count());
-		PerformanceStats::getInstance().set_loop_time(loop_time.count());
-		PerformanceStats::getInstance().set_link_time(link_time.count());
+		PerformanceStats::getInstance().set_time("gpu", render_time.count());
+		PerformanceStats::getInstance().set_time("loop", loop_time.count());
+		PerformanceStats::getInstance().set_time("link", link_time.count());
 	}
 
 	return 0;

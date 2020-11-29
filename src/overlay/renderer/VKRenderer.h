@@ -53,6 +53,8 @@
 
 #include "vk/VKCommon.h"
 
+#include "../../utils/PerformanceStats.h"
+
 const std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 const std::vector<const char*> vkExtensions = {"VK_KHR_surface", "VK_KHR_xlib_surface"};
 
@@ -1117,7 +1119,14 @@ class VKRenderer : public Renderer {
 	}
 
 	void drawFrame() {
+#ifdef RENDER_BENCH
+		auto fence_start = std::chrono::high_resolution_clock::now();
+#endif
 		vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+#ifdef RENDER_BENCH
+		auto fence_time1 = std::chrono::duration_cast<std::chrono::microseconds>(
+			std::chrono::high_resolution_clock::now() - fence_start);
+#endif
 		uint32_t imageIndex;
 		VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame],
 												VK_NULL_HANDLE, &imageIndex);
@@ -1129,12 +1138,26 @@ class VKRenderer : public Renderer {
 			throw std::runtime_error("failed to acquire swap chain image!");
 		}
 
+#ifdef RENDER_BENCH
+		fence_start = std::chrono::high_resolution_clock::now();
+#endif
 		updateUniformBuffer(imageIndex);
+#ifdef RENDER_BENCH
+		auto uniform_time = std::chrono::duration_cast<std::chrono::microseconds>(
+			std::chrono::high_resolution_clock::now() - fence_start);
+#endif
 
+#ifdef RENDER_BENCH
+		fence_start = std::chrono::high_resolution_clock::now();
+#endif
 		// Check if a previous frame is using this image (i.e. there is its fence to wait on)
 		if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
 			vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
 		}
+#ifdef RENDER_BENCH
+		auto fence_time2 = std::chrono::duration_cast<std::chrono::microseconds>(
+			std::chrono::high_resolution_clock::now() - fence_start);
+#endif
 		// Mark the image as now being in use by this frame
 		imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
@@ -1177,6 +1200,11 @@ class VKRenderer : public Renderer {
 		}
 
 		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+#ifdef RENDER_BENCH
+		PerformanceStats::getInstance().set_time("vkfence1", fence_time1.count());
+		PerformanceStats::getInstance().set_time("vkfence2", fence_time2.count());
+		PerformanceStats::getInstance().set_time("uniform", uniform_time.count());
+#endif
 	}
 
 	void cleanupSwapChain() {
