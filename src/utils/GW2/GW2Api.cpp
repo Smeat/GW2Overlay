@@ -127,6 +127,18 @@ std::vector<char> GW2Api::get_render(const std::string& signature, const std::st
 	return value;
 }
 
+std::vector<char> GW2Api::get_render(std::string url, bool cached) {
+	int pos = url.rfind(".");
+	std::string format = url.substr(pos);
+	url = url.substr(0, pos);
+	pos = url.rfind("/");
+	std::string file_id = url.substr(pos);
+	url = url.substr(0, pos);
+	pos = url.rfind("/");
+	std::string signature = url.substr(pos);
+	return get_render(signature, file_id, format, cached);
+}
+
 std::string GW2Api::get_value(const std::string& endpoint, std::vector<std::string> parameter, bool cached) {
 	std::string value;
 	if (cached) {

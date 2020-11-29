@@ -45,6 +45,7 @@ class GW2Api {
 	std::vector<char> get_data(const std::string& url, const std::string& msg);
 	std::vector<char> get_render(const std::string& signature, const std::string& file_id, const std::string& format,
 								 bool cached = true);
+	std::vector<char> get_render(std::string url, bool cached = true);
 	std::string get_value(const std::string& endpoint, std::vector<std::string> parameter, bool cached = true);
 	std::string get_value(const std::string& endpoint, bool cached = true) {
 		return this->get_value(endpoint, {}, cached);
