@@ -87,8 +87,10 @@ struct GW2Fact {
 	int value = -1;
 	int duration = -1;
 	int apply_count = -1;
+	float percent = -1;
 	std::string status;
 	std::string description;
+	std::string finisher_type;
 
 	std::vector<char> get_icon_data() { return GW2Manager::getInstance().get_api()->get_render(this->icon_url); }
 };
@@ -111,7 +113,15 @@ class GW2Trait {
 			for (auto iter = j_data["facts"].begin(); iter != j_data["facts"].end(); ++iter) {
 				GW2Fact fact;
 				if (iter->contains("text")) fact.text = (*iter)["text"].get<std::string>();
+				if (iter->contains("type")) fact.type = (*iter)["type"].get<std::string>();
 				if (iter->contains("description")) fact.description = (*iter)["description"].get<std::string>();
+				if (iter->contains("icon")) fact.icon_url = (*iter)["icon"].get<std::string>();
+				if (iter->contains("status")) fact.status = (*iter)["status"].get<std::string>();
+				if (iter->contains("finisher_type")) fact.finisher_type = (*iter)["finisher_type"].get<std::string>();
+				if (iter->contains("percent")) fact.percent = (*iter)["percent"].get<float>();
+				if (iter->contains("duration")) fact.duration = (*iter)["duration"].get<int>();
+				if (iter->contains("apply_count")) fact.apply_count = (*iter)["apply_count"].get<int>();
+				if (iter->contains("value")) fact.value = (*iter)["value"].get<int>();
 				this->m_facts.push_back(fact);
 			}
 			this->m_icon_url = j_data["icon"].get<std::string>();
@@ -128,6 +138,10 @@ class GW2Trait {
 		if (!this->m_loaded) std::cout << "### Trying to get icon without loaded = true!" << std::endl;
 		return GW2Manager::getInstance().get_api()->get_render(this->m_icon_url);
 	}
+
+	const std::vector<GW2Fact> get_facts() const { return this->m_facts; }
+	std::string get_name() const { return this->m_name; }
+	std::string get_description() const { return this->m_description; }
 
  private:
 	int m_id = 0;
