@@ -11,6 +11,8 @@
 #include <QTableWidgetItem>
 #include <string>
 
+#include "TraitLineWidget.h"
+
 #include "../../utils/CategoryManager.h"
 #include "../../utils/Config.h"
 #include "../../utils/GW2/GW2Builds.h"
@@ -48,6 +50,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui
 	connect(this->m_ui->copy_build_button, &QPushButton::clicked, this, [this] { this->copy_build(); });
 	connect(this->m_ui->build_list, &QTableWidget::itemChanged, this,
 			[this](QTableWidgetItem* item) { this->save_builds(); });
+	connect(this->m_ui->build_list, &QTableWidget::itemSelectionChanged, this, [this] { this->on_build_select(); });
 	connect(this->m_ui->select_helper_button, &QPushButton::clicked, this, [this] { this->select_helper_path(); });
 	connect(this->m_ui->copy_api_button, &QPushButton::clicked, this, [this] { this->copy_from_api(); });
 	connect(this->m_update_timer, &QTimer::timeout, this, [this] { this->update_performance(); });
@@ -332,4 +335,13 @@ void OptionsWindow::update_performance() {
 #endif
 	this->m_ui->gpu_time_label->setText(QString::number(gpu_time));
 	this->m_ui->link_time_label->setText(QString::number(link_time));
+}
+
+void OptionsWindow::on_build_select() {
+	auto items = this->m_ui->build_list->selectedItems();
+	std::string build_string = items[2]->text().toStdString();
+	std::string name = items[0]->text().toStdString();
+	std::cout << "Selected " << name << " val " << build_string << std::endl;
+	GW2BuildChatLink build(build_string, name);
+	this->m_ui->trait_widget->set_build(build);
 }

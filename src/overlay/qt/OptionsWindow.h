@@ -66,6 +66,7 @@ class OptionsWindow : public QMainWindow {
 	void copy_from_api();
 	void update_performance();
 	void on_tab_change(int index);
+	void on_build_select();
 
 	bool m_disable_build_save = false;
 	QTimer* m_update_timer = nullptr;

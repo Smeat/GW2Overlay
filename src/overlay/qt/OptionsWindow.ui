@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1368</width>
+    <height>588</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,7 +27,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -165,6 +165,16 @@
           </layout>
          </item>
         </layout>
+       </widget>
+       <widget class="TraitWidget" name="trait_widget" native="true">
+        <property name="geometry">
+         <rect>
+          <x>729</x>
+          <y>19</y>
+          <width>611</width>
+          <height>491</height>
+         </rect>
+        </property>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_2">
@@ -463,12 +473,25 @@
         </layout>
        </widget>
       </widget>
+      <widget class="QWidget" name="tab_4">
+       <attribute name="title">
+        <string>Page</string>
+       </attribute>
+      </widget>
      </widget>
     </item>
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TraitWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">overlay/qt/TraitLineWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

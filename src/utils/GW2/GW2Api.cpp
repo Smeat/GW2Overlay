@@ -115,6 +115,11 @@ std::vector<char> GW2Api::get_data(const std::string& host, const std::string& f
 }
 std::vector<char> GW2Api::get_render(const std::string& signature, const std::string& file_id,
 									 const std::string& format, bool cached) {
+	if (signature.empty() || file_id.empty() || format.empty()) {
+		std::cout << "Failed to fetch render due to missing data!!"
+				  << "Sig: " << signature << " file_id: " << file_id << " format: " << format << std::endl;
+		return {};
+	}
 	std::string filename = signature + "/" + file_id + "." + format;
 	std::string cached_path = "render/" + filename;
 	std::vector<char> value;
@@ -129,13 +134,13 @@ std::vector<char> GW2Api::get_render(const std::string& signature, const std::st
 
 std::vector<char> GW2Api::get_render(std::string url, bool cached) {
 	int pos = url.rfind(".");
-	std::string format = url.substr(pos);
+	std::string format = url.substr(pos + 1);
 	url = url.substr(0, pos);
 	pos = url.rfind("/");
-	std::string file_id = url.substr(pos);
+	std::string file_id = url.substr(pos + 1);
 	url = url.substr(0, pos);
 	pos = url.rfind("/");
-	std::string signature = url.substr(pos);
+	std::string signature = url.substr(pos + 1);
 	return get_render(signature, file_id, format, cached);
 }
 

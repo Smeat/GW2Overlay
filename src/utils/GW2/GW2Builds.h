@@ -110,16 +110,23 @@ class GW2Trait {
 			}
 			for (auto iter = j_data["facts"].begin(); iter != j_data["facts"].end(); ++iter) {
 				GW2Fact fact;
-				fact.text = (*iter)["text"].get<std::string>();
-				fact.description = (*iter)["description"].get<std::string>();
+				if (iter->contains("text")) fact.text = (*iter)["text"].get<std::string>();
+				if (iter->contains("description")) fact.description = (*iter)["description"].get<std::string>();
 				this->m_facts.push_back(fact);
 			}
+			this->m_icon_url = j_data["icon"].get<std::string>();
 
 			this->m_loaded = true;
 			return true;
 		} catch (...) {
+			std::cout << "Failed to load trait " << this->m_id << std::endl;
 			return false;
 		}
+	}
+
+	std::vector<char> get_icon() {
+		if (!this->m_loaded) std::cout << "### Trying to get icon without loaded = true!" << std::endl;
+		return GW2Manager::getInstance().get_api()->get_render(this->m_icon_url);
 	}
 
  private:
@@ -130,6 +137,7 @@ class GW2Trait {
 	std::string m_description;
 	int m_slot = 0;
 	std::vector<GW2Fact> m_facts;
+	std::string m_icon_url;
 
 	bool m_loaded = false;
 };
@@ -162,6 +170,7 @@ class GW2Specialization {
 			this->m_loaded = true;
 			return true;
 		} catch (...) {
+			std::cout << "Failed to load spec " << this->m_id << std::endl;
 			return false;
 		}
 	}
@@ -169,6 +178,9 @@ class GW2Specialization {
 	std::vector<char> get_background() {
 		return GW2Manager::getInstance().get_api()->get_render(this->m_background_url);
 	}
+	std::vector<char> get_icon() { return GW2Manager::getInstance().get_api()->get_render(this->m_icon_url); }
+	const std::vector<GW2Trait> get_minor_traits() const { return this->m_minor_traits; }
+	const std::vector<GW2Trait> get_major_traits() const { return this->m_major_traits; }
 
  private:
 	std::vector<GW2Trait> m_minor_traits;
@@ -232,6 +244,15 @@ struct GW2BuildChatLink {
 		};
 	} chat_data;
 	std::string name;
+
+	GW2BuildChatLink(std::string chat_string, std::string name) {
+		memset(&this->chat_data, 0, sizeof(this->chat_data));
+		this->chat_data.magic_number = 0x0d;
+		this->name = name;
+		chat_string = chat_string.substr(2, chat_string.length() - 3);
+
+		Base64::Decode(chat_string.c_str(), chat_string.size(), (char*)&this->chat_data, sizeof(this->chat_data));
+	}
 
 	GW2BuildChatLink(std::string json_str) {
 		memset(&this->chat_data, 0, sizeof(this->chat_data));
