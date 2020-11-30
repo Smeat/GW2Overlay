@@ -29,7 +29,7 @@
       <property name="currentIndex">
        <number>1</number>
       </property>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="poi_tab">
        <attribute name="title">
         <string>POI List</string>
        </attribute>
@@ -63,7 +63,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_3">
+      <widget class="QWidget" name="build_tab">
        <attribute name="title">
         <string>Builds</string>
        </attribute>
@@ -76,9 +76,9 @@
           <height>491</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <layout class="QVBoxLayout" name="build_table">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <layout class="QHBoxLayout" name="unused_layout_build">
            <item>
             <widget class="QTableWidget" name="build_list">
              <property name="editTriggers">
@@ -134,7 +134,7 @@
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <layout class="QHBoxLayout" name="build_buttons">
            <property name="leftMargin">
             <number>0</number>
            </property>
@@ -177,7 +177,7 @@
         </property>
        </widget>
       </widget>
-      <widget class="QWidget" name="tab_2">
+      <widget class="QWidget" name="settings_tab">
        <attribute name="title">
         <string>System Settings</string>
        </attribute>
@@ -472,11 +472,6 @@
          </item>
         </layout>
        </widget>
-      </widget>
-      <widget class="QWidget" name="tab_4">
-       <attribute name="title">
-        <string>Page</string>
-       </attribute>
       </widget>
      </widget>
     </item>
