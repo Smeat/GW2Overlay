@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1368</width>
-    <height>588</height>
+    <width>1031</width>
+    <height>585</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -67,18 +67,21 @@
        <attribute name="title">
         <string>Builds</string>
        </attribute>
-       <widget class="QWidget" name="verticalLayoutWidget">
+       <widget class="QWidget" name="horizontalLayoutWidget">
         <property name="geometry">
          <rect>
-          <x>9</x>
-          <y>9</y>
-          <width>711</width>
-          <height>491</height>
+          <x>0</x>
+          <y>0</y>
+          <width>1007</width>
+          <height>511</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="build_table">
+        <layout class="QHBoxLayout" name="base_build_layout">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetDefaultConstraint</enum>
+         </property>
          <item>
-          <layout class="QHBoxLayout" name="unused_layout_build">
+          <layout class="QVBoxLayout" name="build_table">
            <item>
             <widget class="QTableWidget" name="build_list">
              <property name="editTriggers">
@@ -131,50 +134,50 @@
              </column>
             </widget>
            </item>
+           <item>
+            <layout class="QHBoxLayout" name="build_buttons">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="add_build_button">
+               <property name="text">
+                <string>Add Build</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="copy_build_button">
+               <property name="text">
+                <string>Copy Build</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="copy_api_button">
+               <property name="text">
+                <string>Copy from Account</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="build_buttons">
-           <property name="leftMargin">
-            <number>0</number>
+          <widget class="TraitWidget" name="trait_widget" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>600</width>
+             <height>0</height>
+            </size>
            </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QPushButton" name="add_build_button">
-             <property name="text">
-              <string>Add Build</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="copy_build_button">
-             <property name="text">
-              <string>Copy Build</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="copy_api_button">
-             <property name="text">
-              <string>Copy from Account</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          </widget>
          </item>
         </layout>
-       </widget>
-       <widget class="TraitWidget" name="trait_widget" native="true">
-        <property name="geometry">
-         <rect>
-          <x>729</x>
-          <y>19</y>
-          <width>611</width>
-          <height>491</height>
-         </rect>
-        </property>
        </widget>
       </widget>
       <widget class="QWidget" name="settings_tab">
