@@ -84,13 +84,15 @@ struct GW2Fact {
 	std::string text;
 	std::string type;
 	std::string icon_url;
-	int value = -1;
+	float value = -1;
 	int duration = -1;
 	int apply_count = -1;
 	float percent = -1;
 	std::string status;
 	std::string description;
 	std::string finisher_type;
+	std::string source;
+	std::string target;
 
 	std::vector<char> get_icon_data() { return GW2Manager::getInstance().get_api()->get_render(this->icon_url); }
 };
@@ -99,6 +101,12 @@ class GW2Trait {
  public:
 	GW2Trait(int id) { this->m_id = id; }
 
+	template <typename T>
+	T get_from_json(const std::string& name, const json& json_obj, T default_value) {
+		if (json_obj.contains(name)) return json_obj[name].get<T>();
+		return default_value;
+	}
+
 	bool load_data() {
 		try {
 			auto data = GW2Manager::getInstance().get_api()->get_value("v2/traits/" + std::to_string(this->m_id));
@@ -106,36 +114,39 @@ class GW2Trait {
 			this->m_tier = j_data["tier"].get<int>();
 			this->m_order = j_data["order"].get<int>();
 			this->m_name = j_data["name"].get<std::string>();
-			this->m_description = j_data["description"].get<std::string>();
+			this->m_description = get_from_json<std::string>("description", j_data, "");
 			if (j_data["slot"].get<std::string>() == "Major") {
 				this->m_slot = 1;
 			}
 			for (auto iter = j_data["facts"].begin(); iter != j_data["facts"].end(); ++iter) {
 				GW2Fact fact;
-				if (iter->contains("text")) fact.text = (*iter)["text"].get<std::string>();
-				if (iter->contains("type")) fact.type = (*iter)["type"].get<std::string>();
-				if (iter->contains("description")) fact.description = (*iter)["description"].get<std::string>();
-				if (iter->contains("icon")) fact.icon_url = (*iter)["icon"].get<std::string>();
-				if (iter->contains("status")) fact.status = (*iter)["status"].get<std::string>();
-				if (iter->contains("finisher_type")) fact.finisher_type = (*iter)["finisher_type"].get<std::string>();
-				if (iter->contains("percent")) fact.percent = (*iter)["percent"].get<float>();
-				if (iter->contains("duration")) fact.duration = (*iter)["duration"].get<int>();
-				if (iter->contains("apply_count")) fact.apply_count = (*iter)["apply_count"].get<int>();
-				if (iter->contains("value")) fact.value = (*iter)["value"].get<int>();
+				fact.text = get_from_json<std::string>("text", *iter, "");
+				fact.description = get_from_json<std::string>("description", *iter, "");
+				fact.type = get_from_json<std::string>("type", *iter, "");
+				fact.icon_url = get_from_json<std::string>("icon", *iter, "");
+				fact.status = get_from_json<std::string>("status", *iter, "");
+				fact.finisher_type = get_from_json<std::string>("finisher_type", *iter, "");
+				fact.source = get_from_json<std::string>("source", *iter, "");
+				fact.target = get_from_json<std::string>("target", *iter, "");
+				fact.percent = get_from_json<float>("percent", *iter, -1);
+				fact.duration = get_from_json<int>("duration", *iter, -1);
+				fact.apply_count = get_from_json<int>("apply_count", *iter, -1);
+				fact.value = get_from_json<float>("value", *iter, -1);
 				this->m_facts.push_back(fact);
 			}
 			this->m_icon_url = j_data["icon"].get<std::string>();
 
 			this->m_loaded = true;
 			return true;
-		} catch (...) {
-			std::cout << "Failed to load trait " << this->m_id << std::endl;
+		} catch (const std::exception& e) {
+			std::cout << "Failed to load trait " << this->m_id << " error: " << e.what() << std::endl;
 			return false;
 		}
 	}
 
 	std::vector<char> get_icon() {
 		if (!this->m_loaded) std::cout << "### Trying to get icon without loaded = true!" << std::endl;
+		if (this->m_icon_url == "") std::cout << "#### URL EMPTY ####" << std::endl;
 		return GW2Manager::getInstance().get_api()->get_render(this->m_icon_url);
 	}
 

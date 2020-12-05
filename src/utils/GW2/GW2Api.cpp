@@ -132,7 +132,8 @@ std::vector<char> GW2Api::get_render(const std::string& signature, const std::st
 	return value;
 }
 
-std::vector<char> GW2Api::get_render(std::string url, bool cached) {
+std::vector<char> GW2Api::get_render(const std::string& url_input, bool cached) {
+	std::string url = url_input;
 	int pos = url.rfind(".");
 	std::string format = url.substr(pos + 1);
 	url = url.substr(0, pos);

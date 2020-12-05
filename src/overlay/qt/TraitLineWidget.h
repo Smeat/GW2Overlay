@@ -66,7 +66,7 @@ class TraitTooltip : public QWidget {
 			if (iter->type == "Recharge") {
 				label_icon->setMaximumSize(16, 16);
 				QLabel* time = new QLabel(this);
-				time->setText(QString::number(iter->duration));
+				time->setText(QString::number(iter->value));
 				QSpacerItem* spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 				this->m_recharge_layout->addItem(spacer);
 				this->m_recharge_layout->addWidget(time, 0, Qt::AlignRight);
@@ -89,6 +89,9 @@ class TraitTooltip : public QWidget {
 					if (iter->percent < 100) {
 						text += "(" + std::to_string(iter->percent) + " chance)";
 					}
+				} else if (iter->type == "BuffConversion") {
+					text = "Gain " + iter->target + " based on a percentage of " + iter->source + ": " +
+						   std::to_string(iter->percent) + "%";
 				}
 				label_text->setText(text.c_str());
 				this->m_form_facts->addRow(label_icon, label_text);
