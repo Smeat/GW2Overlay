@@ -86,3 +86,6 @@ float POI::get_info_range() const { return this->m_info_range; }
 bool POI::get_is_poi() const { return this->m_is_poi; }
 int POI::get_map_id() const { return this->m_map_id; }
 glm::vec3 POI::get_pos() const { return this->m_pos; }
+std::string POI::get_guid() const { return this->m_guid; }
+std::string POI::get_name() const { return this->m_name; }
+std::string POI::get_type() const { return this->m_type; }

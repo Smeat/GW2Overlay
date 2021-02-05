@@ -42,7 +42,9 @@ class Trail : public POI {
 			input_stream.seekg(0, input_stream.beg);
 		}
 		input_stream.seekg(4);	// skip header
-		input_stream.read(reinterpret_cast<char*>(&this->m_map_id), sizeof(uint32_t));
+		uint32_t map_id = 0;
+		input_stream.read(reinterpret_cast<char*>(&map_id), sizeof(uint32_t));
+		this->set_map_id(map_id);
 
 		total_len -= 8;
 		std::cout << "Total size " << total_len << " Values: " << total_len / (4.0f * 3.0f) << std::endl;

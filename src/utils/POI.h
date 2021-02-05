@@ -58,8 +58,8 @@ class POI {
 	bool m_enabled = true;
 
 	bool operator==(const POI& other) {
-		return this->m_name == other.m_name && this->m_type == other.m_type && this->m_pos == other.m_pos &&
-			   this->m_guid == other.m_guid;
+		return this->get_name() == other.get_name() && this->get_type() == other.get_type() &&
+			   this->get_pos() == other.get_pos() && this->get_guid() == other.get_guid();
 	}
 	bool operator!=(const POI& other) { return !this->operator==(other); }
 
@@ -123,6 +123,9 @@ class POI {
 	bool get_is_poi() const;
 	int get_map_id() const;
 	glm::vec3 get_pos() const;
+	std::string get_guid() const;
+	std::string get_name() const;
+	std::string get_type() const;
 
  protected:
 	std::string m_type;
