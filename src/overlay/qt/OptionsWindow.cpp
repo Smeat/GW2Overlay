@@ -134,7 +134,7 @@ void OptionsWindow::update_categories() {
 
 void OptionsWindow::set_categories(const poi_container* cats, QTreeWidgetItem* parent) {
 	for (auto iter = cats->begin(); iter != cats->end(); ++iter) {
-		if ((*iter)->m_is_poi) continue;
+		if ((*iter)->get_is_poi()) continue;
 		CategoryTreeWidgetItem* item = nullptr;
 		if (parent) {
 			item = new CategoryTreeWidgetItem();
@@ -143,7 +143,7 @@ void OptionsWindow::set_categories(const poi_container* cats, QTreeWidgetItem* p
 			item = new CategoryTreeWidgetItem(this->m_ui->treeWidget);
 			this->m_ui->treeWidget->addTopLevelItem(item);
 		}
-		item->setText(0, (*iter)->m_display_name.c_str());
+		item->setText(0, (*iter)->get_display_name().c_str());
 		item->setText(1, (*iter)->m_name.c_str());
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
 		item->setCheckState(0, Qt::Checked);

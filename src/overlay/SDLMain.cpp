@@ -131,15 +131,15 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend, std::vector<std::sh
 			std::copy(curr_poi->get_children()->begin(), curr_poi->get_children()->end(),
 					  std::back_inserter(poi_to_search));
 		}
-		if (curr_poi->m_is_poi) {
+		if (curr_poi->get_is_poi()) {
 			// leaf
-			if (curr_poi->m_map_id != mapid) continue;
+			if (curr_poi->get_map_id() != mapid) continue;
 			// check for achievements
-			if (achievements->is_done(curr_poi->m_achievement_id) ||
-				achievements->has_bit(curr_poi->m_achievement_id, curr_poi->m_achievement_bit))
+			if (achievements->is_done(curr_poi->get_achievement_id()) ||
+				achievements->has_bit(curr_poi->get_achievement_id(), curr_poi->get_achievement_bit()))
 				continue;
 
-			std::string icon_file = curr_poi->m_icon_file;
+			std::string icon_file = curr_poi->get_icon_file();
 			if (icon_file.empty()) {
 				// use the default icon file
 				icon_file = "Data/arrow.png";
@@ -160,26 +160,26 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend, std::vector<std::sh
 			auto curr_trail = std::dynamic_pointer_cast<Trail>(curr_poi);
 			if (curr_trail) {
 				for (auto iter = curr_trail->m_trailData.begin(); iter != curr_trail->m_trailData.end(); ++iter) {
-					auto pos = curr_poi->m_pos;
+					auto pos = curr_poi->get_pos();
 					pos.x = iter->x;
 					pos.y = iter->y;
 					pos.z = iter->z;
-					pos.y += curr_poi->m_height_offset;
+					pos.y += curr_poi->get_height_offset();
 					std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(curr_poi));
 					gw2obj->set_shader(my_shader);
 					gw2obj->set_meshes({my_mesh});
 					gw2obj->translate(pos);
-					gw2obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
+					gw2obj->scale({curr_poi->get_icon_size() * 1.0f, curr_poi->get_icon_size() * 1.0f, 1.0f});
 					objects->push_back(gw2obj);
 				}
 			} else {
-				auto pos = curr_poi->m_pos;
-				pos.y += curr_poi->m_height_offset;
+				auto pos = curr_poi->get_pos();
+				pos.y += curr_poi->get_height_offset();
 				std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(curr_poi));
 				gw2obj->set_shader(my_shader);
 				gw2obj->set_meshes({my_mesh});
 				gw2obj->translate(pos);
-				gw2obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
+				gw2obj->scale({curr_poi->get_icon_size() * 1.0f, curr_poi->get_icon_size() * 1.0f, 1.0f});
 				objects->push_back(gw2obj);
 			}
 		}

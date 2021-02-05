@@ -47,11 +47,65 @@ struct POI {
 	bool operator!=(const POI& other) { return !this->operator==(other); }
 
 	void set_parent(std::shared_ptr<POI> parent) { this->m_parent = parent; }
+	// adds a new child and return it. If the child already exists: Return the existing child
+	std::shared_ptr<POI> add_child(std::shared_ptr<POI> child) {
+		auto ret = this->m_children.insert(child);
+		return *std::get<0>(ret);
+	}
 	const poi_container* get_children() const;
 	std::shared_ptr<POI> get_child(const std::string& name);
 	static std::shared_ptr<POI> find_children(const poi_container children, const std::string& name);
 	static std::shared_ptr<POI> create_child(const std::shared_ptr<POI> parent);
 
+	// setter
+	void set_name(const std::string& name);
+	void set_map_id(int id);
+	void set_x(float val);
+	void set_y(float val);
+	void set_z(float val);
+	void set_type(const std::string& type);
+	void set_guid(const std::string& uid);
+	void set_icon_size(float val);
+	void set_icon_file(const std::string& file);
+	void set_alpha(float alpha);
+	void set_behavior(int i);
+	void set_fade_near(float fade);
+	void set_fade_far(float fade);
+	void set_height_offset(float off);
+	void set_reset_length(int len);
+	void set_display_name(const std::string& name);
+	void set_auto_trigger(bool mode);
+	void set_trigger_range(float range);
+	void set_has_countdown(bool cd);
+	void set_achievement_id(int id);
+	void set_achievement_bit(int bit);
+	void set_info(const std::string& info);
+	void set_info_range(float range);
+	void set_is_poi(bool poi);
+	void set_pos(const glm::vec3& pos);
+
+	// getter
+	float get_icon_size() const;
+	std::string get_icon_file() const;
+	float get_alpha() const;
+	int get_behavior() const;
+	float get_fade_near() const;
+	float get_fade_far() const;
+	float get_height_offset() const;
+	int get_reset_length() const;
+	std::string get_display_name() const;
+	bool get_auto_trigger() const;
+	float get_trigger_range() const;
+	bool get_has_countdown() const;
+	int get_achievement_id() const;
+	int get_achievement_bit() const;
+	std::string get_info() const;
+	float get_info_range() const;
+	bool get_is_poi() const;
+	int get_map_id() const;
+	glm::vec3 get_pos() const;
+
+ protected:
 	std::string m_type;
 	int m_map_id;
 	glm::vec3 m_pos;

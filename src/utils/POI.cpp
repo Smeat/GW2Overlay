@@ -48,3 +48,50 @@ std::shared_ptr<POI> POI::create_child(std::shared_ptr<POI> parent) {
 	}
 }
 
+// setter
+void POI::set_name(const std::string& name) { this->m_name = name; }
+void POI::set_map_id(int id) { this->m_map_id = id; }
+void POI::set_x(float val) { this->m_pos.x = val; }
+void POI::set_y(float val) { this->m_pos.y = val; }
+void POI::set_z(float val) { this->m_pos.z = val; }
+void POI::set_type(const std::string& type) { this->m_type = type; }
+void POI::set_guid(const std::string& uid) { this->m_guid = uid; }
+void POI::set_icon_size(float val) { this->m_icon_size = val; }
+void POI::set_icon_file(const std::string& file) { this->m_icon_file = file; }
+void POI::set_alpha(float alpha) { this->m_alpha = alpha; }
+void POI::set_behavior(int i) { this->m_behavior = i; }
+void POI::set_fade_near(float fade) { this->m_fade_near = fade; }
+void POI::set_fade_far(float fade) { this->m_fade_far = fade; }
+void POI::set_height_offset(float off) { this->m_height_offset = off; }
+void POI::set_reset_length(int len) { this->m_reset_length = len; }
+void POI::set_display_name(const std::string& name) { this->m_display_name = name; }
+void POI::set_auto_trigger(bool mode) { this->m_auto_trigger = mode; }
+void POI::set_trigger_range(float range) { this->m_trigger_range = range; }
+void POI::set_has_countdown(bool cd) { this->m_has_countdown = cd; }
+void POI::set_achievement_id(int id) { this->m_achievement_id = id; }
+void POI::set_achievement_bit(int bit) { this->m_achievement_bit = bit; }
+void POI::set_info(const std::string& info) { this->m_info = info; }
+void POI::set_info_range(float range) { this->m_info_range = range; }
+void POI::set_is_poi(bool poi) { this->m_is_poi = poi; }
+void POI::set_pos(const glm::vec3& pos) { this->m_pos = pos; }
+
+// getter
+float POI::get_icon_size() const { return this->m_icon_size; }
+std::string POI::get_icon_file() const { return this->m_icon_file; }
+float POI::get_alpha() const { return this->m_alpha; }
+int POI::get_behavior() const { return this->m_behavior; }
+float POI::get_fade_near() const { return this->m_fade_near; }
+float POI::get_fade_far() const { return this->m_fade_far; }
+float POI::get_height_offset() const { return this->m_height_offset; }
+int POI::get_reset_length() const { return this->m_reset_length; }
+std::string POI::get_display_name() const { return this->m_display_name; }
+bool POI::get_auto_trigger() const { return this->m_auto_trigger; }
+float POI::get_trigger_range() const { return this->m_trigger_range; }
+bool POI::get_has_countdown() const { return this->m_has_countdown; }
+int POI::get_achievement_id() const { return this->m_achievement_id; }
+int POI::get_achievement_bit() const { return this->m_achievement_bit; }
+std::string POI::get_info() const { return this->m_info; }
+float POI::get_info_range() const { return this->m_info_range; }
+bool POI::get_is_poi() const { return this->m_is_poi; }
+int POI::get_map_id() const { return this->m_map_id; }
+glm::vec3 POI::get_pos() const { return this->m_pos; }
