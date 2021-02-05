@@ -80,6 +80,7 @@
 #include "../utils/POI.h"
 #include "../utils/PerformanceStats.h"
 #include "../utils/ProcessUtils.h"
+#include "../utils/Trail.h"
 #include "../utils/json/json.hpp"
 #include "../utils/xml/pugixml.hpp"
 
@@ -156,14 +157,31 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend, std::vector<std::sh
 			auto tex_iter = texture_file_map.find(icon_file);
 			// TODO: this creates a new mesh, while they are all the same...
 			std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex_iter->second));
-			auto pos = curr_poi->m_pos;
-			pos.y += curr_poi->m_height_offset;
-			std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(curr_poi));
-			gw2obj->set_shader(my_shader);
-			gw2obj->set_meshes({my_mesh});
-			gw2obj->translate(pos);
-			gw2obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
-			objects->push_back(gw2obj);
+			auto curr_trail = std::dynamic_pointer_cast<Trail>(curr_poi);
+			if (curr_trail) {
+				for (auto iter = curr_trail->m_trailData.begin(); iter != curr_trail->m_trailData.end(); ++iter) {
+					auto pos = curr_poi->m_pos;
+					pos.x = iter->x;
+					pos.y = iter->y;
+					pos.z = iter->z;
+					pos.y += curr_poi->m_height_offset;
+					std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(curr_poi));
+					gw2obj->set_shader(my_shader);
+					gw2obj->set_meshes({my_mesh});
+					gw2obj->translate(pos);
+					gw2obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
+					objects->push_back(gw2obj);
+				}
+			} else {
+				auto pos = curr_poi->m_pos;
+				pos.y += curr_poi->m_height_offset;
+				std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(curr_poi));
+				gw2obj->set_shader(my_shader);
+				gw2obj->set_meshes({my_mesh});
+				gw2obj->translate(pos);
+				gw2obj->scale({curr_poi->m_icon_size * 1.0f, curr_poi->m_icon_size * 1.0f, 1.0f});
+				objects->push_back(gw2obj);
+			}
 		}
 	}
 	std::cout << "Finished loading objects" << std::endl;
@@ -430,7 +448,7 @@ int main(int argc, char** argv) {
 		auto ctx = gw2_data->get_context();
 		if (gw2_data->uiTick == last_tick) {
 			++ticks_missed;
-			if (ticks_missed > 10) ticks_missed = 10;
+			if (ticks_missed > 60) ticks_missed = 60;
 		} else {
 			if (ticks_missed > 0) --ticks_missed;
 		}
@@ -460,7 +478,7 @@ int main(int argc, char** argv) {
 
 		auto render_begin = std::chrono::high_resolution_clock::now();
 		// TODO: use a proper system for events like this
-		if ((ctx->get_ui_state(UI_STATE::GAME_FOCUS) && ticks_missed < 5) || vm.count("f")) {
+		if ((ctx->get_ui_state(UI_STATE::GAME_FOCUS) && ticks_missed < 60) || vm.count("f")) {
 			update_camera(gw2_data);
 			update_objects(gw2_data);
 			renderer->update();

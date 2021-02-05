@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "POI.h"
+#include "Trail.h"
 #include "xml/pugixml.hpp"
 
 void print_categories(const poi_container* cat, const std::string& prefix = "") {
@@ -13,6 +14,12 @@ void print_categories(const poi_container* cat, const std::string& prefix = "") 
 
 		print_categories((*iter)->get_children(), prefix + "-");
 	}
+}
+void fill_trail(Trail* poi, pugi::xml_node& node) {
+	poi->m_anim_speed = node.attribute("animSpeed").as_float(poi->m_anim_speed);
+	poi->m_icon_file = node.attribute("texture").as_string(poi->m_icon_file.c_str());
+	poi->m_trail_filename = node.attribute("trailData").as_string(poi->m_icon_file.c_str());
+	poi->load_trail_data();
 }
 
 void fill_poi(POI* poi, pugi::xml_node& node) {
@@ -86,6 +93,17 @@ void CategoryManager::load_taco_xml_pois(const std::string& filename) {
 			if (!parent) return;
 			auto poi = POI::create_child(parent);
 			fill_poi(poi.get(), node);
+			poi->m_is_poi = true;
+			parent->m_children.insert(poi);
+		} else if (node.name() == std::string("Trail")) {
+			//	return;	 // FIXME: skip for now
+			// TODO: inherit values from category
+			auto parent = POI::find_children(this->m_pois, (node.attribute("type").value()));
+			// TODO: handle loading pois before the categories (different files etc)
+			if (!parent) return;
+			auto poi = Trail::create_child(parent);
+			fill_poi(poi.get(), node);
+			fill_trail(poi.get(), node);
 			poi->m_is_poi = true;
 			parent->m_children.insert(poi);
 		}

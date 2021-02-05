@@ -37,7 +37,7 @@ std::shared_ptr<POI> POI::find_children(const poi_container children, const std:
 	return nullptr;
 }
 const poi_container* POI::get_children() const { return &this->m_children; }
-std::shared_ptr<POI> POI::create_child(const std::shared_ptr<POI> parent) {
+std::shared_ptr<POI> POI::create_child(std::shared_ptr<POI> parent) {
 	if (parent) {
 		POI child = *parent;
 		child.m_children.clear();

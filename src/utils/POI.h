@@ -20,11 +20,13 @@ enum poiBehavior {
 	REAPPEAR_AFTER_TIMER = 4,
 	REAPPEAR_ON_MAP_RESET = 5,
 	ONCE_PER_INSTANCE = 6,
-	ONCE_DAILY_PER_CHARACTER = 7
+	ONCE_DAILY_PER_CHARACTER = 7,
+	ACTION_ON_COMBAT = 23732  // custom value.
 };
 
 // TODO: are POI and MarkerCategory effectively the same?
 struct POI {
+	virtual ~POI() = default;
 	struct my_hash {
 		size_t operator()(const std::shared_ptr<POI>& v) const {
 			size_t h = std::hash<std::string>{}(v->m_name);
@@ -44,6 +46,7 @@ struct POI {
 	}
 	bool operator!=(const POI& other) { return !this->operator==(other); }
 
+	void set_parent(std::shared_ptr<POI> parent) { this->m_parent = parent; }
 	const poi_container* get_children() const;
 	std::shared_ptr<POI> get_child(const std::string& name);
 	static std::shared_ptr<POI> find_children(const poi_container children, const std::string& name);
