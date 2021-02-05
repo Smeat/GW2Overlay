@@ -50,7 +50,9 @@ struct POI {
 	// adds a new child and return it. If the child already exists: Return the existing child
 	std::shared_ptr<POI> add_child(std::shared_ptr<POI> child) {
 		auto ret = this->m_children.insert(child);
-		return *std::get<0>(ret);
+		std::shared_ptr<POI> p = *std::get<0>(ret);
+		child->set_parent(p);
+		return p;
 	}
 	const poi_container* get_children() const;
 	std::shared_ptr<POI> get_child(const std::string& name);
