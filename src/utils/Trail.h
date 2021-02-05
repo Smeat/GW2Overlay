@@ -16,9 +16,17 @@ struct TrailData {
 };
 
 class Trail : public POI {
- public:
-	Trail(const POI& other) : POI(other) {}
+ private:
 	Trail() = default;
+	Trail(std::shared_ptr<POI> base) : POI(*base) {}
+
+ public:
+	static std::shared_ptr<Trail> create_trail(std::shared_ptr<POI> parent) {
+		std::shared_ptr<Trail> t;
+		t.reset(new Trail(POI::create_poi()));
+		t->m_this = t;
+		return t;
+	}
 	float m_anim_speed = 1.0f;
 	std::string m_trail_filename;
 	std::vector<TrailData> m_trailData;
@@ -50,21 +58,10 @@ class Trail : public POI {
 
 	std::vector<std::shared_ptr<POI>> generate_pois(const std::shared_ptr<POI> parent) {
 		std::vector<std::shared_ptr<POI>> pois;
-		std::shared_ptr<POI> trail_root(new POI);
+		std::shared_ptr<POI> trail_root = POI::create_poi();
 		trail_root->set_parent(parent);
 
 		return pois;
-	}
-
-	static std::shared_ptr<Trail> create_child(const std::shared_ptr<POI> parent) {
-		if (parent) {
-			Trail child(*parent);
-			child.m_children.clear();
-			child.m_parent = parent;
-			return std::make_shared<Trail>(child);
-		} else {
-			return std::shared_ptr<Trail>(new Trail);
-		}
 	}
 };
 

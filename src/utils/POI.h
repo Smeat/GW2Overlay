@@ -25,7 +25,24 @@ enum poiBehavior {
 };
 
 // TODO: are POI and MarkerCategory effectively the same?
-struct POI {
+class POI {
+ private:
+	POI() {}
+
+ public:
+	// Creates a new POI
+	// @parent Copies all values excluding children and parent
+	static std::shared_ptr<POI> create_poi(std::shared_ptr<POI> parent = nullptr) {
+		std::shared_ptr<POI> poi(new POI);
+		if (parent) {
+			*poi = *parent;
+			poi->clear_children();
+			poi->set_parent(std::shared_ptr<POI>(nullptr));
+		}
+		poi->m_this = poi;
+		return poi;
+	}
+
 	virtual ~POI() = default;
 	struct my_hash {
 		size_t operator()(const std::shared_ptr<POI>& v) const {
@@ -46,18 +63,18 @@ struct POI {
 	}
 	bool operator!=(const POI& other) { return !this->operator==(other); }
 
-	void set_parent(std::shared_ptr<POI> parent) { this->m_parent = parent; }
+	void set_parent(std::weak_ptr<POI> parent) { this->m_parent = parent; }
 	// adds a new child and return it. If the child already exists: Return the existing child
 	std::shared_ptr<POI> add_child(std::shared_ptr<POI> child) {
 		auto ret = this->m_children.insert(child);
 		std::shared_ptr<POI> p = *std::get<0>(ret);
-		child->set_parent(p);
+		child->set_parent(this->m_this);
 		return p;
 	}
+	void clear_children();
 	const poi_container* get_children() const;
 	std::shared_ptr<POI> get_child(const std::string& name);
 	static std::shared_ptr<POI> find_children(const poi_container children, const std::string& name);
-	static std::shared_ptr<POI> create_child(const std::shared_ptr<POI> parent);
 
 	// setter
 	void set_name(const std::string& name);
@@ -131,7 +148,8 @@ struct POI {
 	float m_info_range = 0;
 	bool m_is_poi = false;
 
-	std::shared_ptr<POI> m_parent;
+	std::weak_ptr<POI> m_parent;
+	std::weak_ptr<POI> m_this;
 	poi_container m_children;
 };
 
