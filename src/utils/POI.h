@@ -24,6 +24,31 @@ enum poiBehavior {
 	ACTION_ON_COMBAT = 23732  // custom value.
 };
 
+struct InheritablePOIData {
+	std::string m_type;
+	int m_map_id;
+	glm::vec3 m_pos;
+	std::string m_icon_file;
+	std::string m_guid;
+	float m_icon_size = 1.0f;
+	float m_alpha = 1.0f;
+	int m_behavior = poiBehavior::DEFAULT;
+	float m_fade_near = -1;
+	float m_fade_far = -1;
+	float m_height_offset = 0;
+	float m_reset_length = 0;
+	std::string m_display_name;
+	bool m_auto_trigger = false;
+	bool m_has_countdown = false;
+	float m_trigger_range = 5;
+	// TODO: max/min size
+	int m_achievement_id = 0;
+	int m_achievement_bit = -1;
+	std::string m_info;
+	float m_info_range = 0;
+	bool m_is_poi = false;
+};
+
 // TODO: are POI and MarkerCategory effectively the same?
 class POI {
  private:
@@ -54,8 +79,6 @@ class POI {
 		bool operator()(const std::shared_ptr<POI>& a, const std::shared_ptr<POI>& b) const { return *a == *b; }
 	};
 	typedef std::unordered_set<std::shared_ptr<POI>, my_hash, my_comp> poi_container;
-	std::string m_name;
-	bool m_enabled = true;
 
 	bool operator==(const POI& other) {
 		return this->get_name() == other.get_name() && this->get_type() == other.get_type() &&
@@ -126,31 +149,12 @@ class POI {
 	std::string get_guid() const;
 	std::string get_name() const;
 	std::string get_type() const;
+	bool m_enabled = true;
 
  protected:
-	std::string m_type;
-	int m_map_id;
-	glm::vec3 m_pos;
-	std::string m_icon_file;
-	std::string m_guid;
-	float m_icon_size = 1.0f;
-	float m_alpha = 1.0f;
-	int m_behavior = poiBehavior::DEFAULT;
-	float m_fade_near = -1;
-	float m_fade_far = -1;
-	float m_height_offset = 0;
-	float m_reset_length = 0;
-	std::string m_display_name;
-	bool m_auto_trigger = false;
-	bool m_has_countdown = false;
-	float m_trigger_range = 5;
-	// TODO: max/min size
-	int m_achievement_id = 0;
-	int m_achievement_bit = -1;
-	std::string m_info;
-	float m_info_range = 0;
-	bool m_is_poi = false;
+	InheritablePOIData m_inheritable_data;
 
+	std::string m_name;
 	std::weak_ptr<POI> m_parent;
 	std::weak_ptr<POI> m_this;
 	poi_container m_children;

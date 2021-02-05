@@ -9,7 +9,7 @@
 
 void print_categories(const poi_container* cat, const std::string& prefix = "") {
 	for (auto iter = cat->begin(); iter != cat->end(); ++iter) {
-		std::cout << prefix << "Display: " << (*iter)->get_display_name() << " Name: " << (*iter)->m_name
+		std::cout << prefix << "Display: " << (*iter)->get_display_name() << " Name: " << (*iter)->get_name()
 				  << " Children: " << (*iter)->get_children()->size() << std::endl;
 
 		print_categories((*iter)->get_children(), prefix + "-");
@@ -58,8 +58,10 @@ void CategoryManager::load_taco_xml_categories(const std::string& filename) {
 		if (node.name() == std::string("MarkerCategory")) {
 			std::shared_ptr<POI> cat = POI::create_poi(parent);
 			fill_poi(cat.get(), node);
-			std::transform(cat->m_name.begin(), cat->m_name.end(), cat->m_name.begin(),
+			std::string lower_name = cat->get_name();
+			std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
 						   [](unsigned char c) { return std::tolower(c); });
+			cat->set_name(lower_name);
 			if (parent) {
 				parent = parent->add_child(cat);
 			} else {

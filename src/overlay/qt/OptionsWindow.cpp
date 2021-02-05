@@ -144,7 +144,7 @@ void OptionsWindow::set_categories(const poi_container* cats, QTreeWidgetItem* p
 			this->m_ui->treeWidget->addTopLevelItem(item);
 		}
 		item->setText(0, (*iter)->get_display_name().c_str());
-		item->setText(1, (*iter)->m_name.c_str());
+		item->setText(1, (*iter)->get_name().c_str());
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
 		item->setCheckState(0, Qt::Checked);
 		item->setCategoryMarker(*iter);
