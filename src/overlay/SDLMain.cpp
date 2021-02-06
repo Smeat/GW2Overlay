@@ -159,27 +159,15 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend, std::vector<std::sh
 			std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex_iter->second));
 			auto curr_trail = std::dynamic_pointer_cast<Trail>(curr_poi);
 			if (curr_trail) {
-				for (auto iter = curr_trail->m_trailData.begin(); iter != curr_trail->m_trailData.end(); ++iter) {
-					auto pos = curr_poi->get_pos();
-					pos.x = iter->x;
-					pos.y = iter->y;
-					pos.z = iter->z;
-					pos.y += curr_poi->get_height_offset();
-					std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(curr_poi));
-					gw2obj->set_shader(my_shader);
-					gw2obj->set_meshes({my_mesh});
-					gw2obj->translate(pos);
-					gw2obj->scale({curr_poi->get_icon_size() * 1.0f, curr_poi->get_icon_size() * 1.0f, 1.0f});
-					objects->push_back(gw2obj);
-				}
+				std::cout << "New Trail!!" << std::endl;
+				// auto generated_pois = curr_trail->generate_pois();
+				std::shared_ptr<GW2TrailObject> gw2obj(new GW2TrailObject(curr_trail, rend, tex_iter->second));
+				gw2obj->set_shader(my_shader);
+				objects->push_back(gw2obj);
 			} else {
-				auto pos = curr_poi->get_pos();
-				pos.y += curr_poi->get_height_offset();
 				std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(curr_poi));
 				gw2obj->set_shader(my_shader);
 				gw2obj->set_meshes({my_mesh});
-				gw2obj->translate(pos);
-				gw2obj->scale({curr_poi->get_icon_size() * 1.0f, curr_poi->get_icon_size() * 1.0f, 1.0f});
 				objects->push_back(gw2obj);
 			}
 		}
@@ -338,7 +326,7 @@ int main(int argc, char** argv) {
 	ConfigManager::getInstance();
 	auto& conf = ConfigManager::getInstance().get_config("SETTINGS");
 	GW2Manager::getInstance().get_api()->set_api_key(conf["API_KEY"].get_item());
-	GW2Manager::getInstance().get_api()->get_value("v2/account/achievements", false);
+	GW2Manager::getInstance().get_api()->get_value("v2/account/achievements", true);
 
 	float screenWidth = vm["width"].as<float>();
 	float screenHeight = vm["height"].as<float>();

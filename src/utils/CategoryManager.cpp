@@ -19,7 +19,7 @@ void fill_trail(Trail* poi, pugi::xml_node& node) {
 	poi->m_anim_speed = node.attribute("animSpeed").as_float(poi->m_anim_speed);
 	poi->set_icon_file(node.attribute("texture").as_string(poi->get_icon_file().c_str()));
 	poi->m_trail_filename = node.attribute("trailData").as_string(poi->get_icon_file().c_str());
-	poi->load_trail_data();
+	poi->load_map_id();
 }
 
 void fill_poi(POI* poi, pugi::xml_node& node) {

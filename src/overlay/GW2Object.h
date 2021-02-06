@@ -6,7 +6,10 @@
 #include <vector>
 
 #include "../utils/POI.h"
+#include "../utils/Trail.h"
 #include "Object.h"
+#include "Texture.h"
+#include "renderer/Renderer.h"
 
 // TODO: add parent and local/world space functions
 class GW2Object : public Object {
@@ -25,6 +28,13 @@ class GW2POIObject : public GW2Object {
 	std::shared_ptr<POI> m_poi;
 	bool m_inactive = false;
 	bool m_disabled = false;
+};
+
+class GW2TrailObject : public GW2Object {
+ public:
+	GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Renderer> renderer, std::shared_ptr<Texture> tex);
+
+	virtual void update(const glm::vec3& pos, uint64_t button_mask) override{};
 };
 
 #endif
