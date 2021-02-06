@@ -56,14 +56,18 @@ class Trail : public POI {
 				total_len -= 3 * sizeof(float);
 			}
 		}
+		// this->generate_pois();
 	}
 
-	std::vector<std::shared_ptr<POI>> generate_pois(const std::shared_ptr<POI> parent) {
-		std::vector<std::shared_ptr<POI>> pois;
-		std::shared_ptr<POI> trail_root = POI::create_poi();
-		trail_root->set_parent(parent);
-
-		return pois;
+	void generate_pois() {
+		for (auto iter = this->m_trailData.begin(); iter != this->m_trailData.end(); ++iter) {
+			auto poi = POI::create_poi(this->m_this.lock());
+			poi->set_x(iter->x);
+			poi->set_y(iter->y);
+			poi->set_z(iter->z);
+			poi->set_is_poi(true);
+			this->add_child(poi);
+		}
 	}
 };
 

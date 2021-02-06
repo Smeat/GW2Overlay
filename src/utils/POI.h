@@ -60,9 +60,7 @@ class POI {
 	static std::shared_ptr<POI> create_poi(std::shared_ptr<POI> parent = nullptr) {
 		std::shared_ptr<POI> poi(new POI);
 		if (parent) {
-			*poi = *parent;
-			poi->clear_children();
-			poi->set_parent(std::shared_ptr<POI>(nullptr));
+			poi->set_inheritable_data(parent->get_inheritable_data());
 		}
 		poi->m_this = poi;
 		return poi;
@@ -125,6 +123,7 @@ class POI {
 	void set_info_range(float range);
 	void set_is_poi(bool poi);
 	void set_pos(const glm::vec3& pos);
+	void set_inheritable_data(const InheritablePOIData data);
 
 	// getter
 	float get_icon_size() const;
@@ -149,6 +148,7 @@ class POI {
 	std::string get_guid() const;
 	std::string get_name() const;
 	std::string get_type() const;
+	InheritablePOIData get_inheritable_data() const;
 	bool m_enabled = true;
 
  protected:

@@ -87,7 +87,6 @@ void CategoryManager::load_taco_xml_pois(const std::string& filename) {
 			traverse_poi_func(n);
 		}
 		if (node.name() == std::string("POI")) {
-			// TODO: inherit values from category
 			auto parent = POI::find_children(this->m_pois, (node.attribute("type").value()));
 			// TODO: handle loading pois before the categories (different files etc)
 			if (!parent) return;

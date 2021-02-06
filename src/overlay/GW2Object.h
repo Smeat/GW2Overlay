@@ -23,6 +23,8 @@ class GW2POIObject : public GW2Object {
 
  private:
 	std::shared_ptr<POI> m_poi;
+	bool m_inactive = false;
+	bool m_disabled = false;
 };
 
 #endif

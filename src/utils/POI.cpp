@@ -65,6 +65,7 @@ void POI::set_info(const std::string& info) { this->m_inheritable_data.m_info = 
 void POI::set_info_range(float range) { this->m_inheritable_data.m_info_range = range; }
 void POI::set_is_poi(bool poi) { this->m_inheritable_data.m_is_poi = poi; }
 void POI::set_pos(const glm::vec3& pos) { this->m_inheritable_data.m_pos = pos; }
+void POI::set_inheritable_data(const InheritablePOIData data) { this->m_inheritable_data = data; }
 
 // getter
 float POI::get_icon_size() const { return this->m_inheritable_data.m_icon_size; }
@@ -89,3 +90,4 @@ glm::vec3 POI::get_pos() const { return this->m_inheritable_data.m_pos; }
 std::string POI::get_guid() const { return this->m_inheritable_data.m_guid; }
 std::string POI::get_name() const { return this->m_name; }
 std::string POI::get_type() const { return this->m_inheritable_data.m_type; }
+InheritablePOIData POI::get_inheritable_data() const { return this->m_inheritable_data; }
