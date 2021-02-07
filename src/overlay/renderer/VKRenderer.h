@@ -80,6 +80,14 @@ struct IndexBufferObjectList {
 	VkDeviceMemory indexMemory = VK_NULL_HANDLE;
 	size_t indexSize = 0;
 	std::vector<Object*> objects;
+	VkDevice device;
+
+	virtual ~IndexBufferObjectList() {
+		vkDestroyBuffer(device, indexBuffer, nullptr);
+		vkFreeMemory(device, indexMemory, nullptr);
+		vkDestroyBuffer(device, vertexBuffer, nullptr);
+		vkFreeMemory(device, vertexMemory, nullptr);
+	}
 };
 
 class VKRenderer : public Renderer {
@@ -119,7 +127,7 @@ class VKRenderer : public Renderer {
 	std::unordered_map<Object*, std::vector<VkDescriptorSet>> m_descriptor_sets;
 
 	bool m_enable_validation_layers = false;
-	std::vector<IndexBufferObjectList> m_buf_list;
+	std::vector<std::shared_ptr<IndexBufferObjectList>> m_buf_list;
 
  public:
 	VKRenderer(WindowData win, bool enable_validation_layers = false) {
@@ -263,20 +271,14 @@ class VKRenderer : public Renderer {
 			mesh_obj_map[meshes->at(0)->get_mesh()].push_back(obj);
 		}
 		std::cout << "Done assigning meshes. Got " << mesh_obj_map.size() << " different meshes" << std::endl;
-		for (const auto& buf : this->m_buf_list) {
-			vkDestroyBuffer(device, buf.indexBuffer, nullptr);
-			vkFreeMemory(device, buf.indexMemory, nullptr);
-			vkDestroyBuffer(device, buf.vertexBuffer, nullptr);
-			vkFreeMemory(device, buf.vertexMemory, nullptr);
-		}
 		m_buf_list.clear();
 		// create vertex and index buffer
 		for (const auto& obj_map : mesh_obj_map) {
-			IndexBufferObjectList l;
-			createVertexBuffer(*obj_map.first->get_vertices(), &l.vertexBuffer, &l.vertexMemory);
-			createIndexBuffer(*obj_map.first->get_indices(), &l.indexBuffer, &l.indexMemory);
-			l.objects = obj_map.second;
-			l.indexSize = obj_map.first->get_indices()->size();
+			std::shared_ptr<IndexBufferObjectList> l(new IndexBufferObjectList);
+			createVertexBuffer(*obj_map.first->get_vertices(), &l->vertexBuffer, &l->vertexMemory);
+			createIndexBuffer(*obj_map.first->get_indices(), &l->indexBuffer, &l->indexMemory);
+			l->objects = obj_map.second;
+			l->indexSize = obj_map.first->get_indices()->size();
 			m_buf_list.push_back(l);
 		}
 		std::cout << "And " << m_buf_list.size() << " buffers" << std::endl;
@@ -318,15 +320,15 @@ class VKRenderer : public Renderer {
 			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
 							  this->m_graphics_pipeline->get_pipeline());
 			for (const auto& buf : m_buf_list) {
-				VkBuffer vertexBuffers[] = {buf.vertexBuffer};
+				VkBuffer vertexBuffers[] = {buf->vertexBuffer};
 				VkDeviceSize offsets[] = {0};
 				vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-				vkCmdBindIndexBuffer(commandBuffers[i], buf.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+				vkCmdBindIndexBuffer(commandBuffers[i], buf->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 				// TODO: shrink this to a single call
-				for (const auto& obj : buf.objects) {
+				for (const auto& obj : buf->objects) {
 					vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
 											&this->m_descriptor_sets[obj][i], 0, nullptr);
-					vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(buf.indexSize), 1, 0, 0, 0);
+					vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(buf->indexSize), 1, 0, 0, 0);
 				}
 			}
 			vkCmdEndRenderPass(commandBuffers[i]);
@@ -1079,12 +1081,6 @@ class VKRenderer : public Renderer {
 		cleanupSwapChain();
 
 		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-		for (const auto& buf : this->m_buf_list) {
-			vkDestroyBuffer(device, buf.indexBuffer, nullptr);
-			vkFreeMemory(device, buf.indexMemory, nullptr);
-			vkDestroyBuffer(device, buf.vertexBuffer, nullptr);
-			vkFreeMemory(device, buf.vertexMemory, nullptr);
-		}
 		m_buf_list.clear();
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
