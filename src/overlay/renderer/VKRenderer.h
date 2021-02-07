@@ -80,13 +80,15 @@ struct IndexBufferObjectList {
 	VkDeviceMemory indexMemory = VK_NULL_HANDLE;
 	size_t indexSize = 0;
 	std::vector<Object*> objects;
-	VkDevice device;
+	VkDevice device = VK_NULL_HANDLE;
 
 	virtual ~IndexBufferObjectList() {
-		vkDestroyBuffer(device, indexBuffer, nullptr);
-		vkFreeMemory(device, indexMemory, nullptr);
-		vkDestroyBuffer(device, vertexBuffer, nullptr);
-		vkFreeMemory(device, vertexMemory, nullptr);
+		if (device != VK_NULL_HANDLE) {
+			vkDestroyBuffer(device, indexBuffer, nullptr);
+			vkFreeMemory(device, indexMemory, nullptr);
+			vkDestroyBuffer(device, vertexBuffer, nullptr);
+			vkFreeMemory(device, vertexMemory, nullptr);
+		}
 	}
 };
 
@@ -264,6 +266,14 @@ class VKRenderer : public Renderer {
 		}
 		// All objects created in a single buffer (per image)
 		vkDeviceWaitIdle(device);
+		VulkanPipelineSettings settings;
+		settings.shader = this->m_shader;
+		settings.device = this->device;
+		settings.pipeline_layout = this->pipelineLayout;
+		settings.render_pass = this->renderPass;
+		settings.swapchain_extend = this->swapChainExtent;
+
+		this->m_graphics_pipeline.reset(new VulkanPipeline(settings));
 		std::unordered_map<std::shared_ptr<Mesh>, std::vector<Object*>> mesh_obj_map;
 		for (const auto obj : objs) {
 			auto meshes = obj->get_textured_meshes();
@@ -279,6 +289,7 @@ class VKRenderer : public Renderer {
 			createIndexBuffer(*obj_map.first->get_indices(), &l->indexBuffer, &l->indexMemory);
 			l->objects = obj_map.second;
 			l->indexSize = obj_map.first->get_indices()->size();
+			l->device = device;
 			m_buf_list.push_back(l);
 		}
 		std::cout << "And " << m_buf_list.size() << " buffers" << std::endl;
@@ -377,14 +388,6 @@ class VKRenderer : public Renderer {
 			throw std::runtime_error("failed to create pipeline layout!");
 		}
 
-		VulkanPipelineSettings settings;
-		settings.shader = this->m_shader;
-		settings.device = this->device;
-		settings.pipeline_layout = this->pipelineLayout;
-		settings.render_pass = this->renderPass;
-		settings.swapchain_extend = this->swapChainExtent;
-
-		this->m_graphics_pipeline.reset(new VulkanPipeline(settings));
 		createFramebuffers();
 		createCommandPool();
 		createSemaphores();
