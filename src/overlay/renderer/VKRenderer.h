@@ -958,19 +958,16 @@ class VKRenderer : public Renderer {
 	}
 
 	void updateUniformBuffer(uint32_t currentImage) {
-		UniformBufferObject ubo{};
-
-		ubo.view = this->m_shader->get_view();
-		ubo.proj = this->m_shader->get_projection();
-		ubo.proj[1][1] *= -1;
-
 		for (int i = 0; i < this->m_objects.size(); ++i) {
 			this->m_objects[i]->update();
 			void* data;
-			ubo.model = this->m_shader->get_model();
-			vkMapMemory(device, uniformBuffersMemory[currentImage], i * get_dynamic_offset(sizeof(ubo)),
-						get_dynamic_offset(sizeof(ubo)), 0, &data);
-			memcpy(data, &ubo, sizeof(ubo));
+			void* ubo_data;
+			ubo_data = this->m_shader->get_uniform_data();
+			auto ubo_size = this->m_objects[i]->get_shader()->get_uniform_size();
+			// FIXME: count actual offset
+			vkMapMemory(device, uniformBuffersMemory[currentImage], i * get_dynamic_offset(ubo_size),
+						get_dynamic_offset(ubo_size), 0, &data);
+			memcpy(data, ubo_data, ubo_size);
 			vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 		}
 	}

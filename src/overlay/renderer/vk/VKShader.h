@@ -61,15 +61,15 @@ class VKShaderMVP : public VKShader {
 	glm::mat4 get_view();
 	glm::mat4 get_model();
 
+	virtual size_t get_uniform_size() override;
+	virtual void* get_uniform_data() override;
+
  private:
 	struct {
 		alignas(16) glm::mat4 model = glm::mat4(1.0f);
 		alignas(16) glm::mat4 view = glm::mat4(1.0f);
 		alignas(16) glm::mat4 proj = glm::mat4(1.0f);
 	} m_ubo;
-
-	virtual size_t get_uniform_size() override;
-	virtual void* get_uniform_data() override;
 };
 
 #endif	// __VKSHADER__H_

@@ -34,7 +34,11 @@ VKShader::~VKShader() {}
 VKShaderMVP::VKShaderMVP(const std::string& vertex_path, const std::string& fragment_path)
 	: VKShader(vertex_path, fragment_path) {}
 
-void VKShaderMVP::set_projection(glm::mat4 projection) { this->m_ubo.proj = projection; }
+void VKShaderMVP::set_projection(glm::mat4 projection) {
+	this->m_ubo.proj = projection;
+	// FIXME: fix this somewhere else
+	this->m_ubo.proj[1][1] *= -1;
+}
 void VKShaderMVP::set_view(glm::mat4 v) { this->m_ubo.view = v; }
 void VKShaderMVP::set_model(glm::mat4 m) { this->m_ubo.model = m; }
 
