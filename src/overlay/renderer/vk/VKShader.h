@@ -25,6 +25,12 @@
 
 #include <glm/glm.hpp>
 
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
+
+#include <memory>
+
+#include "../../../utils/FileHelper.h"
 #include "../../Shader.h"
 
 /**

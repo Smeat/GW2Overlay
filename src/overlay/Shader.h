@@ -21,17 +21,34 @@
 #define __SHADER__H_
 
 #include <glm/fwd.hpp>
+#include <memory>
 #include <string>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "utils/FileHelper.h"
+
 class Shader {
  public:
+	Shader(const std::string& vertex_path, const std::string& fragment_path) {
+		this->m_vertex_shader_path = vertex_path;
+		this->m_fragment_shader_path = fragment_path;
+	}
 	virtual void set_active() = 0;
 	virtual void set_projection(glm::mat4 p) = 0;
 	virtual void set_view(glm::mat4 v) = 0;
 	virtual void set_model(glm::mat4 m) = 0;
+
+	std::string get_vertex_path() const { return this->m_vertex_shader_path; }
+	std::string get_fragment_path() const { return this->m_fragment_shader_path; }
+
+	bool operator==(const std::shared_ptr<Shader> other) {
+		return this->m_vertex_shader_path == other->get_vertex_path() &&
+			   this->m_fragment_shader_path == other->get_fragment_path();
+	}
+	std::vector<char> read_vertex_data() { return filehelper::readFile(this->m_vertex_shader_path); }
+	std::vector<char> read_fragment_data() { return filehelper::readFile(this->m_fragment_shader_path); }
 
 	virtual void set_projection(float fov_rad, float w, float h, float near = 0.1f, float far = 1000.0f) {
 		glm::mat4 projection = glm::mat4(1.0f);
@@ -39,6 +56,10 @@ class Shader {
 		this->set_projection(projection);
 	}
 	virtual void load_from_string(const std::string& vert, const std::string& frag){};
+
+ private:
+	std::string m_vertex_shader_path;
+	std::string m_fragment_shader_path;
 };
 
 #endif	// __SHADER__H_

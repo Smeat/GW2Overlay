@@ -59,6 +59,7 @@ SET(VK_SOURCES
 	overlay/renderer/vk/VKMesh.cpp
 	overlay/renderer/vk/VKCommon.cpp
 	overlay/renderer/vk/VKObject.cpp
+	overlay/renderer/vk/VulkanPipeline.cpp
 
 	#overlay/renderer/VKRenderer.cpp
 	)
@@ -91,7 +92,7 @@ add_executable(GW2Overlay
 	overlay/SDLMain.cpp
 
 	${SOURCES}
-	${GL_SOURCES}
+	#	${GL_SOURCES}
 	${VK_SOURCES}
 	)
 TARGET_LINK_LIBRARIES(GW2Overlay 

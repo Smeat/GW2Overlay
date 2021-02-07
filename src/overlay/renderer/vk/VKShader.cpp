@@ -26,7 +26,8 @@
 #include <iostream>
 #include <sstream>
 
-VKShader::VKShader(const std::string& vertex_path, const std::string& fragment_path) {}
+VKShader::VKShader(const std::string& vertex_path, const std::string& fragment_path)
+	: Shader(vertex_path, fragment_path) {}
 
 VKShader::~VKShader() {}
 

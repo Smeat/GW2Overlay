@@ -87,7 +87,9 @@
 #include "QtMain.h"
 #include "Texture.h"
 #include "Window.h"
+#ifdef USE_OPENGL
 #include "renderer/GLRenderer.h"
+#endif
 #include "renderer/Renderer.h"
 #include "renderer/VKRenderer.h"
 #include "renderer/vk/VKCommon.h"
@@ -289,7 +291,9 @@ int main(int argc, char** argv) {
 			"Display width")
 		("height", po::value<float>()->default_value(1050.0f),
 			"Display height")
+#ifdef USE_OPENGL
 		("opengl", "Us the OpenGL renderer (deprecated)")
+#endif
 		("validation", "Enable validation layers for vulkan")
 		("f", "Force output")
 		;
@@ -337,7 +341,9 @@ int main(int argc, char** argv) {
 	std::shared_ptr<Renderer> renderer;
 
 	if (use_opengl) {
+#ifdef USE_OPENGL
 		renderer.reset(new GLRenderer(window));
+#endif
 	} else {
 		renderer.reset(new VKRenderer(window, vm.count("validation")));
 	}
@@ -383,7 +389,7 @@ int main(int argc, char** argv) {
 		"FragColor = texture(ourTexture, TexCoord);"
 		"}";
 
-	my_shader = renderer->load_shader("", "");
+	my_shader = renderer->load_shader("vert.spv", "frag.spv");
 
 	my_shader->load_from_string(vertex_shader_src, fragment_shader_src);
 	my_shader->set_active();
