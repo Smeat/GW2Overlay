@@ -31,13 +31,16 @@ VKShader::VKShader(const std::string& vertex_path, const std::string& fragment_p
 
 VKShader::~VKShader() {}
 
-void VKShader::set_active() {}
+VKShaderMVP::VKShaderMVP(const std::string& vertex_path, const std::string& fragment_path)
+	: VKShader(vertex_path, fragment_path) {}
 
-void VKShader::set_projection(glm::mat4 projection) { this->m_projection = projection; }
+void VKShaderMVP::set_projection(glm::mat4 projection) { this->m_ubo.proj = projection; }
+void VKShaderMVP::set_view(glm::mat4 v) { this->m_ubo.view = v; }
+void VKShaderMVP::set_model(glm::mat4 m) { this->m_ubo.model = m; }
 
-void VKShader::set_view(glm::mat4 v) { this->m_view = v; }
-void VKShader::set_model(glm::mat4 m) { this->m_model = m; }
+glm::mat4 VKShaderMVP::get_projection() { return this->m_ubo.proj; }
+glm::mat4 VKShaderMVP::get_view() { return this->m_ubo.view; }
+glm::mat4 VKShaderMVP::get_model() { return this->m_ubo.model; }
 
-glm::mat4 VKShader::get_projection() { return this->m_projection; }
-glm::mat4 VKShader::get_view() { return this->m_view; }
-glm::mat4 VKShader::get_model() { return this->m_model; }
+size_t VKShaderMVP::get_uniform_size() { return sizeof(this->m_ubo); }
+void* VKShaderMVP::get_uniform_data() { return &this->m_ubo; }

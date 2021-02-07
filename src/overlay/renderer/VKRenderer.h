@@ -124,7 +124,7 @@ class VKRenderer : public Renderer {
 	std::vector<VkDescriptorSet> descriptorSets;
 
 	WindowData windowHandle = {0, 0};
-	std::shared_ptr<VKShader> m_shader;
+	std::shared_ptr<VKShaderMVP> m_shader;
 	std::vector<Object*> m_objects;
 	std::unordered_map<Object*, std::vector<VkDescriptorSet>> m_descriptor_sets;
 
@@ -135,7 +135,7 @@ class VKRenderer : public Renderer {
 	VKRenderer(WindowData win, bool enable_validation_layers = false) {
 		this->m_enable_validation_layers = enable_validation_layers;
 		// TODO: remove this dummy shader
-		this->m_shader.reset(new VKShader("vert.spv", "frag.spv"));
+		this->m_shader.reset(new VKShaderMVP("vert.spv", "frag.spv"));
 		std::cout << "Initializing vulkan..." << std::endl;
 		this->windowHandle = win;
 		this->init();
@@ -179,7 +179,11 @@ class VKRenderer : public Renderer {
 		int images = swapChainImages.size();
 
 		// Create objects
-		VkDeviceSize bufferSize = get_dynamic_offset(sizeof(UniformBufferObject)) * objs.size();
+		VkDeviceSize bufferSize = 0;
+		for (auto iter = objs.begin(); iter != objs.end(); ++iter) {
+			size_t ubo_size = (*iter)->get_shader()->get_uniform_size();
+			bufferSize += get_dynamic_offset(ubo_size);
+		}
 		for (size_t i = 0; i < uniformBuffers.size(); i++) {
 			// TODO: is it okay to just free it even if it was never allocated?
 			vkDestroyBuffer(device, uniformBuffers[i], nullptr);
@@ -211,11 +215,15 @@ class VKRenderer : public Renderer {
 							 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 							 this->uniformBuffers[i], this->uniformBuffersMemory[i]);
 
+				// used to count the current offset due to different shaders
+				size_t current_offset = 0;
 				for (int k = 0; k < objs.size(); ++k) {
+					size_t ubo_size = objs[k]->get_shader()->get_uniform_size();
 					VkDescriptorBufferInfo bufferInfo{};
 					bufferInfo.buffer = this->uniformBuffers[i];
-					bufferInfo.offset = k * get_dynamic_offset(sizeof(UniformBufferObject));
-					bufferInfo.range = sizeof(UniformBufferObject);
+					bufferInfo.offset = current_offset;
+					bufferInfo.range = ubo_size;
+					current_offset += get_dynamic_offset(ubo_size);
 
 					VkDescriptorImageInfo imageInfo{};
 					imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -359,7 +367,7 @@ class VKRenderer : public Renderer {
 		return std::shared_ptr<Mesh>(new VKMesh(vertices, indices));
 	}
 	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override {
-		auto shader = std::shared_ptr<VKShader>(new VKShader(vert, frag));
+		auto shader = std::shared_ptr<VKShaderMVP>(new VKShaderMVP(vert, frag));
 		// FIXME: allow multiple shader
 		this->m_shader = shader;
 		return shader;

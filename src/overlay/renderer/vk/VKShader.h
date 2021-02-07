@@ -41,7 +41,18 @@ class VKShader : public Shader {
 	VKShader(const std::string& vertex_path, const std::string& fragment_path);
 	virtual ~VKShader();
 
-	void set_active() override;
+	void set_active() override{};
+	bool operator==(const std::shared_ptr<VKShader> other);
+
+ private:
+	std::string m_vertex_shader_path;
+	std::string m_fragment_shader_path;
+};
+
+class VKShaderMVP : public VKShader {
+ public:
+	VKShaderMVP(const std::string& vertex_path, const std::string& fragment_path);
+
 	virtual void set_projection(glm::mat4 p) override;
 	virtual void set_view(glm::mat4 v) override;
 	virtual void set_model(glm::mat4 m) override;
@@ -51,9 +62,14 @@ class VKShader : public Shader {
 	glm::mat4 get_model();
 
  private:
-	glm::mat4 m_projection = glm::mat4(1.0f);
-	glm::mat4 m_view = glm::mat4(1.0f);
-	glm::mat4 m_model = glm::mat4(1.0f);
+	struct {
+		alignas(16) glm::mat4 model = glm::mat4(1.0f);
+		alignas(16) glm::mat4 view = glm::mat4(1.0f);
+		alignas(16) glm::mat4 proj = glm::mat4(1.0f);
+	} m_ubo;
+
+	virtual size_t get_uniform_size() override;
+	virtual void* get_uniform_data() override;
 };
 
 #endif	// __VKSHADER__H_

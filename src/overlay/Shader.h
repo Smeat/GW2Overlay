@@ -43,6 +43,8 @@ class Shader {
 	std::string get_vertex_path() const { return this->m_vertex_shader_path; }
 	std::string get_fragment_path() const { return this->m_fragment_shader_path; }
 
+	virtual size_t get_uniform_size() = 0;
+	virtual void* get_uniform_data() = 0;
 	bool operator==(const std::shared_ptr<Shader> other) {
 		return this->m_vertex_shader_path == other->get_vertex_path() &&
 			   this->m_fragment_shader_path == other->get_fragment_path();
