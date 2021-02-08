@@ -293,7 +293,11 @@ class VKRenderer : public Renderer {
 				this->m_pipelines.insert({settings, std::shared_ptr<VulkanPipeline>(new VulkanPipeline(settings))});
 				pipe_iter = this->m_pipelines.find(settings);
 			}
-			obj_pipeline_map[pipe_iter->second][meshes->at(0)->get_mesh()].push_back(obj);
+			// obj_pipeline_map[pipe_iter->second][meshes->at(0)->get_mesh()].push_back(obj);
+
+			for (auto mesh_iter = meshes->begin(); mesh_iter != meshes->end(); ++mesh_iter) {
+				obj_pipeline_map[pipe_iter->second][(*mesh_iter)->get_mesh()].push_back(obj);
+			}
 			// find pipelines for object and save them in a list for an efficient command buffer
 			// create pipeline if it doesn't exist
 		}

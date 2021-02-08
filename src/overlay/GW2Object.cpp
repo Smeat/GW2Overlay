@@ -50,8 +50,8 @@ void GW2POIObject::update(const glm::vec3& pos, uint64_t button_mask) {
 GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Renderer> renderer,
 							   std::shared_ptr<Texture> tex) {
 	trail->load_trail_data();
-	std::vector<Vertex> vertices;
-	std::vector<uint16_t> indices;
+	std::vector<std::vector<Vertex>> mesh_verticies;
+	std::vector<std::vector<uint16_t>> mesh_indices;
 	int current_index = 0;
 	float width = 2;
 	TrailData* prev_data = nullptr;
@@ -75,7 +75,20 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 				  << std::endl;
 		return result;
 	};
+	std::vector<Vertex> vertices;
+	std::vector<uint16_t> indices;
 	for (auto iter = trail->m_trailData.begin(); iter != trail->m_trailData.end(); ++iter) {
+		if (iter->x == 0 && iter->y == 0 && iter->z == 0) {
+			if (vertices.size() > 0) {
+				mesh_verticies.push_back(vertices);
+				mesh_indices.push_back(indices);
+				vertices.clear();
+				indices.clear();
+				current_index = 0;
+				prev_data = nullptr;
+			}
+			continue;
+		}
 		if (prev_data) {
 			vertices.push_back(
 				Vertex(glm::vec3(normalize(prev_data->x - width), normalize(prev_data->y), normalize(prev_data->z)),
@@ -110,12 +123,17 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 			std::cout << "f " << indices[i] + 1 << " " << indices[i + 1] + 1 << " " << indices[i + 2] + 1 << std::endl;
 		}
 	}
-	for (int i = 0; i < indices.size(); i += 3) {
-		std::cout << "f " << indices[i] + 1 << " " << indices[i + 1] + 1 << " " << indices[i + 2] + 1 << std::endl;
+	// add the last mesh
+	mesh_verticies.push_back(vertices);
+	mesh_indices.push_back(indices);
+
+	std::vector<std::shared_ptr<TexturedMesh>> meshes;
+	for (int i = 0; i < mesh_verticies.size(); ++i) {
+		auto cube_mesh = renderer->load_mesh(mesh_verticies[i], mesh_indices[i]);
+		std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex));
+		meshes.push_back(my_mesh);
 	}
-	auto cube_mesh = renderer->load_mesh(vertices, indices);
-	std::shared_ptr<TexturedMesh> my_mesh(new TexturedMesh(cube_mesh, tex));
-	this->set_meshes({my_mesh});
+	this->set_meshes(meshes);
 	glm::vec3 pos = trail->get_pos();
 	pos.y += trail->get_height_offset();
 	this->translate(pos);
