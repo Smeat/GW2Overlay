@@ -1,4 +1,5 @@
 #include "GW2Object.h"
+#include <cmath>
 #include <vector>
 #include "Mesh.h"
 #include "Texture.h"
@@ -47,6 +48,23 @@ void GW2POIObject::update(const glm::vec3& pos, uint64_t button_mask) {
 	}
 }
 
+void get_perpendicular_points(glm::vec3 p1, glm::vec3 p2, float distance, glm::vec3* out1, glm::vec3* out2) {
+	float a = p1.z - p2.z;
+	float b = p1.x - p2.x;
+
+	float norm = std::sqrt(a * a + b * b);
+	a = a / norm;
+	b /= norm;
+
+	out1->x = p2.x - a * distance;
+	out1->z = p2.z + b * distance;
+	out1->y = p2.y;
+
+	out2->x = p2.x + a * distance;
+	out2->z = p2.z - b * distance;
+	out2->y = p2.y;
+}
+
 GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Renderer> renderer,
 							   std::shared_ptr<Texture> tex) {
 	trail->load_trail_data();
@@ -54,7 +72,6 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 	std::vector<std::vector<uint16_t>> mesh_indices;
 	int current_index = 0;
 	float width = 2;
-	TrailData* prev_data = nullptr;
 	float min_pos = FLT_MAX;
 	float max_pos = FLT_MIN;
 	for (auto iter = trail->m_trailData.begin(); iter != trail->m_trailData.end(); ++iter) {
@@ -77,9 +94,12 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 	};
 	std::vector<Vertex> vertices;
 	std::vector<uint16_t> indices;
+	TrailData* prev_data = nullptr;
+	glm::vec3 prev_p1;
+	glm::vec3 prev_p2;
 	for (auto iter = trail->m_trailData.begin(); iter != trail->m_trailData.end(); ++iter) {
 		if (iter->x == 0 && iter->y == 0 && iter->z == 0) {
-			if (vertices.size() > 0) {
+			if (vertices.size() > 0 && indices.size() > 0) {
 				mesh_verticies.push_back(vertices);
 				mesh_indices.push_back(indices);
 				vertices.clear();
@@ -90,16 +110,13 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 			continue;
 		}
 		if (prev_data) {
-			vertices.push_back(
-				Vertex(glm::vec3(normalize(prev_data->x - width), normalize(prev_data->y), normalize(prev_data->z)),
-					   glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)));
-			vertices.push_back(
-				Vertex(glm::vec3(normalize(prev_data->x + width), normalize(prev_data->y), normalize(prev_data->z)),
-					   glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)));
-			vertices.push_back(Vertex(glm::vec3(normalize(iter->x + width), normalize(iter->y), normalize(iter->z)),
-									  glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)));
-			vertices.push_back(Vertex(glm::vec3(normalize(iter->x - width), normalize(iter->y), normalize(iter->z)),
-									  glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)));
+			// TODO: currently the previous points are a duplicate due to the texture coordinates
+			vertices.push_back(Vertex(prev_p1, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)));
+			vertices.push_back(Vertex(prev_p2, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)));
+			get_perpendicular_points({prev_data->x, prev_data->y, prev_data->z}, {iter->x, iter->y, iter->z}, width,
+									 &prev_p1, &prev_p2);
+			vertices.push_back(Vertex(prev_p2, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)));
+			vertices.push_back(Vertex(prev_p1, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)));
 			indices.push_back(current_index);
 			indices.push_back(current_index + 1);
 			indices.push_back(current_index + 2);
@@ -107,6 +124,9 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 			indices.push_back(current_index + 3);
 			indices.push_back(current_index);
 			current_index += 4;
+		} else {
+			prev_p1 = glm::vec3(normalize(iter->x - width), normalize(iter->y), normalize(iter->z));
+			prev_p2 = glm::vec3(normalize(iter->x + width), normalize(iter->y), normalize(iter->z));
 		}
 		prev_data = &(*iter);
 	}
@@ -115,17 +135,20 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 	if (trail->get_type() ==
 		"tw_guides.tw_lws5.tw_lws5_bjoramarches.tw_lws5_bjoramarches_eternalicenodes.tw_lws5_bjoramarches_"
 		"eternalicenodes_toggletrail") {
+		std::ofstream output("/tmp/test.obj");
 		std::cout << "Vertex list" << std::endl;
 		for (auto iter = vertices.begin(); iter != vertices.end(); ++iter) {
-			std::cout << "v " << iter->pos.x << " " << iter->pos.y << " " << iter->pos.z << std::endl;
+			output << "v " << iter->pos.x << " " << iter->pos.y << " " << iter->pos.z << std::endl;
 		}
 		for (int i = 0; i < indices.size(); i += 3) {
-			std::cout << "f " << indices[i] + 1 << " " << indices[i + 1] + 1 << " " << indices[i + 2] + 1 << std::endl;
+			output << "f " << indices[i] + 1 << " " << indices[i + 1] + 1 << " " << indices[i + 2] + 1 << std::endl;
 		}
 	}
 	// add the last mesh
-	mesh_verticies.push_back(vertices);
-	mesh_indices.push_back(indices);
+	if (vertices.size() > 0 && indices.size() > 0) {
+		mesh_verticies.push_back(vertices);
+		mesh_indices.push_back(indices);
+	}
 
 	std::vector<std::shared_ptr<TexturedMesh>> meshes;
 	for (int i = 0; i < mesh_verticies.size(); ++i) {
