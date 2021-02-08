@@ -31,6 +31,14 @@
 
 #include "VKCommon.h"
 
+VKTexture::VKTexture(VkDevice device, VkPhysicalDevice physical_device, VkCommandPool command_pool,
+					 VkQueue graphics_queue) {
+	this->m_device = device;
+	this->m_physical_device = physical_device;
+	this->m_command_pool = command_pool;
+	this->m_graphics_queue = graphics_queue;
+}
+
 VKTexture::VKTexture(const std::string& path, VkDevice device, VkPhysicalDevice physical_device,
 					 VkCommandPool command_pool, VkQueue graphics_queue) {
 	this->m_device = device;
@@ -92,8 +100,8 @@ void VKTexture::createTextureSampler() {
 	}
 }
 
-void VKTexture::createTextureImageView() {
-	this->m_texture_image_view = createImageView(this->m_device, this->m_texture_image, VK_FORMAT_R8G8B8A8_SRGB);
+void VKTexture::createTextureImageView(VkFormat format, VkImageAspectFlags aspectFlags) {
+	this->m_texture_image_view = createImageView(this->m_device, this->m_texture_image, format, aspectFlags);
 }
 
 void VKTexture::createTextureImage(SDL_Surface* surf) {
@@ -114,8 +122,7 @@ void VKTexture::createTextureImage(SDL_Surface* surf) {
 	vkUnmapMemory(this->m_device, stagingBufferMemory);
 
 	createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
-				VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-				this->m_texture_image, this->m_texture_image_memory);
+				VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	transitionImageLayout(this->m_texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED,
 						  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -129,8 +136,7 @@ void VKTexture::createTextureImage(SDL_Surface* surf) {
 }
 
 void VKTexture::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
-							VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image,
-							VkDeviceMemory& imageMemory) {
+							VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
 	VkImageCreateInfo imageInfo{};
 	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -146,23 +152,23 @@ void VKTexture::createImage(uint32_t width, uint32_t height, VkFormat format, Vk
 	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	if (vkCreateImage(m_device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+	if (vkCreateImage(m_device, &imageInfo, nullptr, &this->m_texture_image) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create image!");
 	}
 
 	VkMemoryRequirements memRequirements;
-	vkGetImageMemoryRequirements(m_device, image, &memRequirements);
+	vkGetImageMemoryRequirements(m_device, this->m_texture_image, &memRequirements);
 
 	VkMemoryAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize = memRequirements.size;
 	allocInfo.memoryTypeIndex = findMemoryType(this->m_physical_device, memRequirements.memoryTypeBits, properties);
 
-	if (vkAllocateMemory(m_device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+	if (vkAllocateMemory(m_device, &allocInfo, nullptr, &this->m_texture_image_memory) != VK_SUCCESS) {
 		throw std::runtime_error("failed to allocate image memory!");
 	}
 
-	vkBindImageMemory(m_device, image, imageMemory, 0);
+	vkBindImageMemory(m_device, this->m_texture_image, this->m_texture_image_memory, 0);
 }
 
 void VKTexture::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout,

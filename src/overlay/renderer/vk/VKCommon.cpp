@@ -79,7 +79,7 @@ void endSingleTimeCommands(VkDevice device, VkCommandPool commandPool, VkCommand
 
 	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
-VkImageView createImageView(VkDevice device, VkImage image, VkFormat format) {
+VkImageView createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
 	VkImageViewCreateInfo viewInfo{};
 	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	viewInfo.image = image;
@@ -90,6 +90,7 @@ VkImageView createImageView(VkDevice device, VkImage image, VkFormat format) {
 	viewInfo.subresourceRange.levelCount = 1;
 	viewInfo.subresourceRange.baseArrayLayer = 0;
 	viewInfo.subresourceRange.layerCount = 1;
+	viewInfo.subresourceRange.aspectMask = aspectFlags;
 
 	VkImageView imageView;
 	if (vkCreateImageView(device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {

@@ -28,6 +28,7 @@
 
 class VKTexture : public Texture {
  public:
+	VKTexture(VkDevice device, VkPhysicalDevice physical_device, VkCommandPool command_pool, VkQueue graphics_queue);
 	VKTexture(const std::string& path, VkDevice device, VkPhysicalDevice physical_device, VkCommandPool command_pool,
 			  VkQueue graphics_queue);
 	VKTexture(SDL_Surface* surf, VkDevice device, VkPhysicalDevice physical_device, VkCommandPool command_pool,
@@ -38,13 +39,14 @@ class VKTexture : public Texture {
 
 	VkImageView get_image_view() { return this->m_texture_image_view; }
 	VkSampler get_sampler() { return this->m_texture_sampler; }
+	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+					 VkMemoryPropertyFlags properties);
+	void createTextureImageView(VkFormat format = VK_FORMAT_R8G8B8A8_SRGB,
+								VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 
  private:
 	void createTextureSampler();
-	void createTextureImageView();
 	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
-					 VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	void createTextureImage(SDL_Surface* surf);
 	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 

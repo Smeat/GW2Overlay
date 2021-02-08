@@ -9,6 +9,7 @@ uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, Vk
 void endSingleTimeCommands(VkDevice device, VkCommandPool commandPool, VkCommandBuffer commandBuffer,
 						   VkQueue graphicsQueue);
 VkCommandBuffer beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
-VkImageView createImageView(VkDevice device, VkImage image, VkFormat format);
+VkImageView createImageView(VkDevice device, VkImage image, VkFormat format,
+							VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 
 #endif
