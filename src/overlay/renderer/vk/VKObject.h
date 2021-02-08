@@ -30,13 +30,6 @@
 #include <memory>
 #include <vector>
 
-// TODO: move this to the shader
-struct UniformBufferObject {
-	alignas(16) glm::mat4 model;
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 proj;
-};
-
 class VKObject : public Object {
  public:
 	VKObject(std::shared_ptr<Shader> s, std::vector<std::shared_ptr<TexturedMesh>> vertex_data);

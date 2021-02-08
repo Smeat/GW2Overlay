@@ -72,7 +72,8 @@ void GLShader::load_from_string(const std::string& vertex_src, const std::string
 	glDeleteShader(f_shader_id);
 }
 
-GLShader::GLShader(const std::string& vertex_path, const std::string& fragment_path) {
+GLShader::GLShader(const std::string& vertex_path, const std::string& fragment_path)
+	: Shader(vertex_path, fragment_path) {
 	std::ifstream v_file(vertex_path);
 	std::ifstream f_file(fragment_path);
 

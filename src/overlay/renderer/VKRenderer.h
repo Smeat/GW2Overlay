@@ -106,10 +106,9 @@ class VKRenderer : public Renderer {
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
 	std::vector<VkImageView> swapChainImageViews;
-	VkRenderPass renderPass;
-	VkDescriptorSetLayout descriptorSetLayout;
-	VkPipelineLayout pipelineLayout;
-	std::shared_ptr<VulkanPipeline> m_graphics_pipeline;
+	VkRenderPass renderPass = VK_NULL_HANDLE;
+	VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkCommandPool commandPool;
 	std::vector<VkCommandBuffer> commandBuffers;
@@ -124,18 +123,17 @@ class VKRenderer : public Renderer {
 	std::vector<VkDescriptorSet> descriptorSets;
 
 	WindowData windowHandle = {0, 0};
-	std::shared_ptr<VKShaderMVP> m_shader;
 	std::vector<Object*> m_objects;
 	std::unordered_map<Object*, std::vector<VkDescriptorSet>> m_descriptor_sets;
 
 	bool m_enable_validation_layers = false;
-	std::vector<std::shared_ptr<IndexBufferObjectList>> m_buf_list;
+	std::unordered_map<std::shared_ptr<VulkanPipeline>, std::vector<std::shared_ptr<IndexBufferObjectList>>> m_buf_list;
+
+	std::unordered_map<VulkanPipelineSettings, std::shared_ptr<VulkanPipeline>> m_pipelines;
 
  public:
 	VKRenderer(WindowData win, bool enable_validation_layers = false) {
 		this->m_enable_validation_layers = enable_validation_layers;
-		// TODO: remove this dummy shader
-		this->m_shader.reset(new VKShaderMVP("vert.spv", "frag.spv"));
 		std::cout << "Initializing vulkan..." << std::endl;
 		this->windowHandle = win;
 		this->init();
@@ -274,33 +272,44 @@ class VKRenderer : public Renderer {
 		}
 		// All objects created in a single buffer (per image)
 		vkDeviceWaitIdle(device);
-		VulkanPipelineSettings settings;
-		settings.shader = this->m_shader;
+		typedef std::unordered_map<std::shared_ptr<Mesh>, std::vector<Object*>> mesh_obj_map;
+		// TODO: currently inefficient, but not on the critical path
+		std::unordered_map<std::shared_ptr<VulkanPipeline>, mesh_obj_map> obj_pipeline_map;
+		VulkanPipelineSettings settings{};
 		settings.device = this->device;
 		settings.pipeline_layout = this->pipelineLayout;
 		settings.render_pass = this->renderPass;
 		settings.swapchain_extend = this->swapChainExtent;
+		this->m_pipelines.clear();
 
-		this->m_graphics_pipeline.reset(new VulkanPipeline(settings));
-		std::unordered_map<std::shared_ptr<Mesh>, std::vector<Object*>> mesh_obj_map;
-		for (const auto obj : objs) {
+		for (auto obj : objs) {
 			auto meshes = obj->get_textured_meshes();
 			if (!meshes || meshes->size() == 0) continue;
-			mesh_obj_map[meshes->at(0)->get_mesh()].push_back(obj);
+			settings.shader = std::dynamic_pointer_cast<VKShader>(obj->get_shader());
+			auto pipe_iter = this->m_pipelines.find(settings);
+			// no pipeline exists
+			if (pipe_iter == this->m_pipelines.end()) {
+				this->m_pipelines.insert({settings, std::shared_ptr<VulkanPipeline>(new VulkanPipeline(settings))});
+				pipe_iter = this->m_pipelines.find(settings);
+			}
+			obj_pipeline_map[pipe_iter->second][meshes->at(0)->get_mesh()].push_back(obj);
+			// find pipelines for object and save them in a list for an efficient command buffer
+			// create pipeline if it doesn't exist
 		}
-		std::cout << "Done assigning meshes. Got " << mesh_obj_map.size() << " different meshes" << std::endl;
 		m_buf_list.clear();
 		// create vertex and index buffer
-		for (const auto& obj_map : mesh_obj_map) {
-			std::shared_ptr<IndexBufferObjectList> l(new IndexBufferObjectList);
-			createVertexBuffer(*obj_map.first->get_vertices(), &l->vertexBuffer, &l->vertexMemory);
-			createIndexBuffer(*obj_map.first->get_indices(), &l->indexBuffer, &l->indexMemory);
-			l->objects = obj_map.second;
-			l->indexSize = obj_map.first->get_indices()->size();
-			l->device = device;
-			m_buf_list.push_back(l);
+		for (auto iter = obj_pipeline_map.begin(); iter != obj_pipeline_map.end(); ++iter) {
+			for (const auto& obj_map : iter->second) {
+				std::shared_ptr<IndexBufferObjectList> l(new IndexBufferObjectList);
+				createVertexBuffer(*obj_map.first->get_vertices(), &l->vertexBuffer, &l->vertexMemory);
+				createIndexBuffer(*obj_map.first->get_indices(), &l->indexBuffer, &l->indexMemory);
+				l->objects = obj_map.second;
+				l->indexSize = obj_map.first->get_indices()->size();
+				m_buf_list[iter->first].push_back(l);
+			}
+			std::cout << "Created buf list with len " << m_buf_list[iter->first].size() << std::endl;
 		}
-		std::cout << "And " << m_buf_list.size() << " buffers" << std::endl;
+		std::cout << "And " << m_buf_list.size() << " pipelines" << std::endl;
 		vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 		// create the command buffers
 		commandBuffers.resize(swapChainFramebuffers.size());
@@ -336,18 +345,21 @@ class VKRenderer : public Renderer {
 			renderPassInfo.pClearValues = &clearColor;
 
 			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-							  this->m_graphics_pipeline->get_pipeline());
-			for (const auto& buf : m_buf_list) {
-				VkBuffer vertexBuffers[] = {buf->vertexBuffer};
-				VkDeviceSize offsets[] = {0};
-				vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-				vkCmdBindIndexBuffer(commandBuffers[i], buf->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-				// TODO: shrink this to a single call
-				for (const auto& obj : buf->objects) {
-					vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-											&this->m_descriptor_sets[obj][i], 0, nullptr);
-					vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(buf->indexSize), 1, 0, 0, 0);
+			for (auto pipeline_iter = this->m_buf_list.begin(); pipeline_iter != this->m_buf_list.end();
+				 ++pipeline_iter) {
+				vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+								  pipeline_iter->first->get_pipeline());
+				for (const auto& buf : pipeline_iter->second) {
+					VkBuffer vertexBuffers[] = {buf->vertexBuffer};
+					VkDeviceSize offsets[] = {0};
+					vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
+					vkCmdBindIndexBuffer(commandBuffers[i], buf->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+					// TODO: shrink this to a single call
+					for (const auto& obj : buf->objects) {
+						vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
+												1, &this->m_descriptor_sets[obj][i], 0, nullptr);
+						vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(buf->indexSize), 1, 0, 0, 0);
+					}
 				}
 			}
 			vkCmdEndRenderPass(commandBuffers[i]);
@@ -367,9 +379,7 @@ class VKRenderer : public Renderer {
 		return std::shared_ptr<Mesh>(new VKMesh(vertices, indices));
 	}
 	virtual std::shared_ptr<Shader> load_shader(const std::string& vert, const std::string& frag) override {
-		auto shader = std::shared_ptr<VKShaderMVP>(new VKShaderMVP(vert, frag));
-		// FIXME: allow multiple shader
-		this->m_shader = shader;
+		auto shader = std::shared_ptr<VKShader>(new VKShaderMVP(vert, frag));
 		return shader;
 	}
 
@@ -962,7 +972,7 @@ class VKRenderer : public Renderer {
 			this->m_objects[i]->update();
 			void* data;
 			void* ubo_data;
-			ubo_data = this->m_shader->get_uniform_data();
+			ubo_data = this->m_objects[i]->get_shader()->get_uniform_data();
 			auto ubo_size = this->m_objects[i]->get_shader()->get_uniform_size();
 			// FIXME: count actual offset
 			vkMapMemory(device, uniformBuffersMemory[currentImage], i * get_dynamic_offset(ubo_size),
@@ -1068,6 +1078,8 @@ class VKRenderer : public Renderer {
 
 		vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
+		// destroy graphics pipelines
+		this->m_pipelines.clear();
 		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 		vkDestroyRenderPass(device, renderPass, nullptr);
 
