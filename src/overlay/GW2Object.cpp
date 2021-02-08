@@ -117,7 +117,7 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 			float distance = glm::distance(glm::vec3(prev_data->x, prev_data->y, prev_data->z),
 										   glm::vec3(iter->x, iter->y, iter->z));
 			float length = 7.0f;
-			int frac = std::max(1.0f, distance / length);
+			int frac = std::max(1.0f, distance / length) + 0.5;
 			get_perpendicular_points({prev_data->x, prev_data->y, prev_data->z}, {iter->x, iter->y, iter->z}, width,
 									 &prev_p1, &prev_p2);
 			vertices.push_back(Vertex(prev_p2, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, frac)));
