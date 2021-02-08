@@ -1,6 +1,8 @@
 #include "GW2Object.h"
+#include <algorithm>
 #include <cmath>
 #include <vector>
+
 #include "Mesh.h"
 #include "Texture.h"
 #include "renderer/Renderer.h"
@@ -86,7 +88,6 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 	max_pos += width;
 	min_pos -= width;
 	auto normalize = [min_pos, max_pos](float val) {
-		return val;
 		float result = 2.0f * ((val - min_pos) / (max_pos - min_pos)) - 1.0f;
 		std::cout << "Normalized " << val << " with min " << min_pos << " max " << max_pos << " to " << result
 				  << std::endl;
@@ -113,10 +114,14 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 			// TODO: currently the previous points are a duplicate due to the texture coordinates
 			vertices.push_back(Vertex(prev_p1, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)));
 			vertices.push_back(Vertex(prev_p2, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)));
+			float distance = glm::distance(glm::vec3(prev_data->x, prev_data->y, prev_data->z),
+										   glm::vec3(iter->x, iter->y, iter->z));
+			float length = 7.0f;
+			int frac = std::max(1.0f, distance / length);
 			get_perpendicular_points({prev_data->x, prev_data->y, prev_data->z}, {iter->x, iter->y, iter->z}, width,
 									 &prev_p1, &prev_p2);
-			vertices.push_back(Vertex(prev_p2, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)));
-			vertices.push_back(Vertex(prev_p1, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)));
+			vertices.push_back(Vertex(prev_p2, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, frac)));
+			vertices.push_back(Vertex(prev_p1, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, frac)));
 			indices.push_back(current_index);
 			indices.push_back(current_index + 1);
 			indices.push_back(current_index + 2);
@@ -125,8 +130,8 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 			indices.push_back(current_index);
 			current_index += 4;
 		} else {
-			prev_p1 = glm::vec3(normalize(iter->x - width), normalize(iter->y), normalize(iter->z));
-			prev_p2 = glm::vec3(normalize(iter->x + width), normalize(iter->y), normalize(iter->z));
+			prev_p1 = glm::vec3(iter->x - width, iter->y, iter->z);
+			prev_p2 = glm::vec3(iter->x + width, iter->y, iter->z);
 		}
 		prev_data = &(*iter);
 	}
