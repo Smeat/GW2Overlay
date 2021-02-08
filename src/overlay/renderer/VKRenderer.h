@@ -228,6 +228,7 @@ class VKRenderer : public Renderer {
 					// TODO: move texture to object?
 					auto meshes = objs[k]->get_textured_meshes();
 					if (!meshes || meshes->size() == 0) continue;
+					// TODO: support for multiple textures
 					auto tex = std::dynamic_pointer_cast<VKTexture>(meshes->at(0)->get_texture());
 					imageInfo.imageView = tex->get_image_view();
 					imageInfo.sampler = tex->get_sampler();
@@ -708,6 +709,7 @@ class VKRenderer : public Renderer {
 		// TODO: actually enable features we might need
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
+		deviceFeatures.fillModeNonSolid = VK_TRUE;
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

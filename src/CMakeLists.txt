@@ -37,12 +37,16 @@ INCLUDE_DIRECTORIES(
 	)
 
 ADD_CUSTOM_COMMAND(
-	OUTPUT vert.spv
-	COMMAND glslc ${CMAKE_SOURCE_DIR}/overlay/renderer/vk/shader/shader.vert -o ${CMAKE_BINARY_DIR}/vert.spv
+	OUTPUT flat-vert.spv
+	COMMAND glslc ${CMAKE_SOURCE_DIR}/overlay/renderer/vk/shader/flat.vert -o ${CMAKE_BINARY_DIR}/flat-vert.spv
 	)
 ADD_CUSTOM_COMMAND(
 	OUTPUT frag.spv
 	COMMAND glslc ${CMAKE_SOURCE_DIR}/overlay/renderer/vk/shader/shader.frag -o ${CMAKE_BINARY_DIR}/frag.spv
+	)
+ADD_CUSTOM_COMMAND(
+	OUTPUT normal-vert.spv
+	COMMAND glslc ${CMAKE_SOURCE_DIR}/overlay/renderer/vk/shader/normal.vert -o ${CMAKE_BINARY_DIR}/normal-vert.spv
 	)
 
 SET(GL_SOURCES
@@ -112,7 +116,7 @@ TARGET_LINK_LIBRARIES(GW2Overlay
 
 ADD_CUSTOM_TARGET(
 	shader ALL
-	DEPENDS vert.spv frag.spv
+	DEPENDS normal-vert.spv frag.spv flat-vert.spv
 	)
 
 ADD_DEPENDENCIES(GW2Overlay shader)

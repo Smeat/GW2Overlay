@@ -1,4 +1,6 @@
 #include "GW2Object.h"
+#include <vector>
+#include "Mesh.h"
 #include "Texture.h"
 #include "renderer/Renderer.h"
 
@@ -51,8 +53,7 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 	std::vector<Vertex> vertices;
 	std::vector<uint16_t> indices;
 	int current_index = 0;
-	float width = 5;
-	float x_pos = 20;
+	float width = 2;
 	TrailData* prev_data = nullptr;
 	float min_pos = FLT_MAX;
 	float max_pos = FLT_MIN;
@@ -68,6 +69,7 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 	max_pos += width;
 	min_pos -= width;
 	auto normalize = [min_pos, max_pos](float val) {
+		return val;
 		float result = 2.0f * ((val - min_pos) / (max_pos - min_pos)) - 1.0f;
 		std::cout << "Normalized " << val << " with min " << min_pos << " max " << max_pos << " to " << result
 				  << std::endl;
@@ -96,9 +98,17 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 		prev_data = &(*iter);
 	}
 	// print vertex list
-	std::cout << "Vertex list" << std::endl;
-	for (auto iter = vertices.begin(); iter != vertices.end(); ++iter) {
-		std::cout << "v " << iter->pos.x << " " << iter->pos.y << " " << iter->pos.z << std::endl;
+
+	if (trail->get_type() ==
+		"tw_guides.tw_lws5.tw_lws5_bjoramarches.tw_lws5_bjoramarches_eternalicenodes.tw_lws5_bjoramarches_"
+		"eternalicenodes_toggletrail") {
+		std::cout << "Vertex list" << std::endl;
+		for (auto iter = vertices.begin(); iter != vertices.end(); ++iter) {
+			std::cout << "v " << iter->pos.x << " " << iter->pos.y << " " << iter->pos.z << std::endl;
+		}
+		for (int i = 0; i < indices.size(); i += 3) {
+			std::cout << "f " << indices[i] + 1 << " " << indices[i + 1] + 1 << " " << indices[i + 2] + 1 << std::endl;
+		}
 	}
 	for (int i = 0; i < indices.size(); i += 3) {
 		std::cout << "f " << indices[i] + 1 << " " << indices[i + 1] + 1 << " " << indices[i + 2] + 1 << std::endl;

@@ -105,6 +105,7 @@ namespace po = boost::program_options;
 // TODO: remove this global mess and create more files
 std::vector<std::shared_ptr<GW2Object>> gw2_objects;
 std::shared_ptr<Shader> my_shader;
+std::shared_ptr<Shader> trail_shader;
 GW2Map map;
 std::shared_ptr<GW2Achievements> achievements;
 std::vector<std::string> key_presses;
@@ -164,7 +165,8 @@ void load_objects(int mapid, std::shared_ptr<Renderer> rend, std::vector<std::sh
 				std::cout << "New Trail!!" << std::endl;
 				// auto generated_pois = curr_trail->generate_pois();
 				std::shared_ptr<GW2TrailObject> gw2obj(new GW2TrailObject(curr_trail, rend, tex_iter->second));
-				gw2obj->set_shader(my_shader);
+				gw2obj->set_shader(trail_shader);
+				gw2obj->translate({0, 0, 0});
 				objects->push_back(gw2obj);
 			} else {
 				std::shared_ptr<GW2Object> gw2obj(new GW2POIObject(curr_poi));
@@ -183,6 +185,7 @@ void look_away() {
 	auto cameraUp = glm::vec3(0.0f, 1.0f, 1.0f);
 	auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 	my_shader->set_view(view);
+	trail_shader->set_view(view);
 }
 
 void update_camera(const LinkedMem* gw2_data) {
@@ -206,6 +209,7 @@ void update_camera(const LinkedMem* gw2_data) {
 
 		auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_view(view);
+		trail_shader->set_view(view);
 		/*
 				printf("map (%f, %f) map player (%f %f) player (%f %f) scale %f\n", ctx->mapCenterX, ctx->mapCenterY,
 					   ctx->playerX, ctx->playerY, gw2_data->fAvatarPosition[0], gw2_data->fAvatarPosition[2],
@@ -246,6 +250,7 @@ void update_camera(const LinkedMem* gw2_data) {
 
 		auto view = glm::lookAtLH(cameraPos, cameraPos + cameraFront, cameraUp);
 		my_shader->set_view(view);
+		trail_shader->set_view(view);
 
 		if (map_last_open) {
 			std::cout << "Map state closed" << std::endl;
@@ -389,7 +394,8 @@ int main(int argc, char** argv) {
 		"FragColor = texture(ourTexture, TexCoord);"
 		"}";
 
-	my_shader = renderer->load_shader("vert.spv", "frag.spv");
+	my_shader = renderer->load_shader("flat-vert.spv", "frag.spv");
+	trail_shader = renderer->load_shader("normal-vert.spv", "frag.spv");
 
 	my_shader->load_from_string(vertex_shader_src, fragment_shader_src);
 	my_shader->set_active();
@@ -417,6 +423,7 @@ int main(int argc, char** argv) {
 		} catch (...) {
 		}
 		my_shader->set_projection(fov, screenWidth, screenHeight);
+		trail_shader->set_projection(fov, screenWidth, screenHeight);
 	}
 
 	GW2Manager::getInstance().start_helper();
