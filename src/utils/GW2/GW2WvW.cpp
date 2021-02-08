@@ -27,6 +27,7 @@ std::unordered_map<char, std::shared_ptr<Texture>> CharacterObject::m_textures;
 
 CharacterObject::CharacterObject(const std::string& chars, std::shared_ptr<Renderer> renderer,
 								 std::shared_ptr<Shader> shader) {
+	this->m_shader = shader;
 	for (const auto& c : chars) {
 		this->m_last_char = c;
 		std::shared_ptr<Texture> tex;
@@ -74,6 +75,7 @@ void CharacterObject::set_character(char character) {
 
 GW2WvWObject::GW2WvWObject(std::shared_ptr<Renderer> renderer, std::shared_ptr<Shader> shader,
 						   const std::vector<char>& icon_data) {
+	this->m_shader = shader;
 	std::cout << "[WvW-Object] Constructor" << std::endl;
 	this->m_characters[0] = std::shared_ptr<CharacterObject>(new CharacterObject("0123456789", renderer, shader));
 	this->m_characters[1] = std::shared_ptr<CharacterObject>(new CharacterObject("0123456", renderer, shader));
