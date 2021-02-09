@@ -73,7 +73,7 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 	std::vector<std::vector<Vertex>> mesh_verticies;
 	std::vector<std::vector<uint16_t>> mesh_indices;
 	int current_index = 0;
-	float width = 2;
+	float width = 0.5f;
 	float min_pos = FLT_MAX;
 	float max_pos = FLT_MIN;
 	for (auto iter = trail->m_trailData.begin(); iter != trail->m_trailData.end(); ++iter) {
@@ -116,7 +116,7 @@ GW2TrailObject::GW2TrailObject(std::shared_ptr<Trail> trail, std::shared_ptr<Ren
 			vertices.push_back(Vertex(prev_p2, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)));
 			float distance = glm::distance(glm::vec3(prev_data->x, prev_data->y, prev_data->z),
 										   glm::vec3(iter->x, iter->y, iter->z));
-			float length = 7.0f;
+			float length = 0.5f;
 			int frac = std::max(1.0f, distance / length) + 0.5;
 			get_perpendicular_points({prev_data->x, prev_data->y, prev_data->z}, {iter->x, iter->y, iter->z}, width,
 									 &prev_p1, &prev_p2);
