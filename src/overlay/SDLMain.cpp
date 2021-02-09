@@ -423,7 +423,8 @@ int main(int argc, char** argv) {
 		} catch (...) {
 		}
 		my_shader->set_projection(fov, screenWidth, screenHeight);
-		trail_shader->set_projection(fov, screenWidth, screenHeight);
+		// TODO: make far plane configurable. from xmls on per object?
+		trail_shader->set_projection(fov, screenWidth, screenHeight, 0.1f, 125.0f);
 	}
 
 	GW2Manager::getInstance().start_helper();
