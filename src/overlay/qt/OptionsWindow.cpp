@@ -104,6 +104,15 @@ void set_all_children(QTreeWidgetItem* item, bool state) {
 	}
 }
 
+void set_all_parents(QTreeWidgetItem* item, bool state) {
+	auto parent = dynamic_cast<CategoryTreeWidgetItem*>(item->parent());
+	while (parent) {
+		parent->setCheckState(0, state ? Qt::Checked : Qt::Unchecked);
+		parent->getCategoryMarker()->m_enabled = state;
+		CategoryManager::getInstance().set_state_changed(true);
+		parent = dynamic_cast<CategoryTreeWidgetItem*>(parent->parent());
+	}
+}
 void OptionsWindow::set_all(bool state) {
 	for (int i = 0; i < this->m_ui->treeWidget->topLevelItemCount(); ++i) {
 		auto item = dynamic_cast<CategoryTreeWidgetItem*>(this->m_ui->treeWidget->topLevelItem(i));
@@ -121,6 +130,9 @@ void OptionsWindow::on_tree_click(QTreeWidgetItem* item, int column) {
 		// apply to all children
 		set_all_children(item, cat_item->m_enabled);
 		CategoryManager::getInstance().set_state_changed(true);
+	}
+	if (enabled) {
+		set_all_parents(item, true);
 	}
 }
 
