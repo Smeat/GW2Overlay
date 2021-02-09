@@ -448,11 +448,10 @@ int main(int argc, char** argv) {
 		auto link_time = std::chrono::duration_cast<std::chrono::microseconds>(
 			std::chrono::high_resolution_clock::now() - loop_begin);
 		auto ctx = gw2_data->get_context();
-		if (gw2_data->uiTick == last_tick) {
+		if (gw2_data->uiTick == last_tick && ticks_missed < 10000) {
 			++ticks_missed;
-			if (ticks_missed > 60) ticks_missed = 60;
 		} else {
-			if (ticks_missed > 0) --ticks_missed;
+			ticks_missed = 0;
 		}
 		if (ctx->mapId != last_id) {
 			printf("Map id changed to %d\n", ctx->mapId);
