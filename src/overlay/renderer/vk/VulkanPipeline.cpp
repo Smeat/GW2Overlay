@@ -89,7 +89,7 @@ void VulkanPipeline::create_pipeline(VulkanPipelineSettings pipeline_settings) {
 	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	// TODO: Clamping to far plane. For min size for example
 	// if this is set so true, objects outside the planes are not discarded but clamped
-	rasterizer.depthClampEnable = VK_TRUE;
+	rasterizer.depthClampEnable = VK_FALSE;
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
