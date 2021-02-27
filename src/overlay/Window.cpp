@@ -7,9 +7,59 @@
 #include <X11/extensions/XInput2.h>
 
 #include <functional>
+#include <iostream>
 #include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
-WindowData createTransparentWindow(const char* title, int x, int y, int w, int h, bool create_gl_surface) {
+std::vector<std::pair<std::string, Window>> get_all_windows(Display* display) {
+	Window root_window = XDefaultRootWindow(display);
+	std::vector<Window> windows_to_process;
+	windows_to_process.push_back(root_window);
+	std::vector<std::pair<std::string, Window>> all_windows;
+
+	while (!windows_to_process.empty()) {
+		Window current_window = windows_to_process.back();
+		windows_to_process.pop_back();
+		XTextProperty text;
+		char* name = 0;
+		XFetchName(display, current_window, &name);
+		std::string name_str;
+		if (name) {
+			name_str = name;
+			XFree(name);
+		}
+		all_windows.push_back({name_str, current_window});
+
+		Window root, parent;
+		Window* children;
+		unsigned int n;
+		XQueryTree(display, current_window, &root, &parent, &children, &n);
+		if (children != NULL) {
+			for (int i = 0; i < n; ++i) {
+				windows_to_process.push_back(children[i]);
+			}
+			XFree(children);
+		}
+	}
+	return all_windows;
+}
+
+Window find_window(Display* display, const std::string& name) {
+	auto windows = get_all_windows(display);
+	for (auto iter = windows.begin(); iter != windows.end(); ++iter) {
+		std::cout << iter->first << std::endl;
+		if (iter->first == name) {
+			return iter->second;
+		}
+	}
+	return 0;
+}
+
+// TODO: only create the window once gw2 runs. recreate if window moves
+WindowData createTransparentWindow(const char* title, int x, int y, int w, int h, bool create_gl_surface,
+								   bool detect_gw2) {
 	Window mXWindow;
 	Display* mXDisplay;
 	mXDisplay = XOpenDisplay(0);
@@ -18,6 +68,29 @@ WindowData createTransparentWindow(const char* title, int x, int y, int w, int h
 		printf("Failed to connect to the Xserver\n");
 		return {0, 0};
 	}
+	Window gw2_window = find_window(mXDisplay, "Guild Wars 2");
+
+	if (gw2_window && detect_gw2) {
+		int gw2_x, gw2_y;
+		Window root_win;
+		unsigned int gw2_width, gw2_height;
+		unsigned int gw2_border, gw2_depth;
+		XGetGeometry(mXDisplay, gw2_window, &root_win, &gw2_x, &gw2_y, &gw2_width, &gw2_height, &gw2_border,
+					 &gw2_depth);
+		std::cout << "GW2 dimensions: " << gw2_x << ", " << gw2_y << " " << gw2_width << " " << gw2_height << " "
+				  << gw2_border << " " << gw2_depth << std::endl;
+		XWindowAttributes attrs;
+		int abs_x, abs_y;
+		Window child;
+		XTranslateCoordinates(mXDisplay, gw2_window, root_win, 0, 0, &abs_x, &abs_y, &child);
+		XGetWindowAttributes(mXDisplay, gw2_window, &attrs);
+		std::cout << "Offset: " << abs_x - attrs.x << " " << abs_y - attrs.y << std::endl;
+		x = abs_x - attrs.x;
+		y = abs_y - attrs.y;
+		w = gw2_width;
+		h = gw2_height;
+	}
+
 	xcb_connection_t* xconn = XGetXCBConnection(mXDisplay);
 
 	XVisualInfo visualinfo;

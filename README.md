@@ -25,6 +25,8 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
  * Start the overlay with `./GW2Overlay --xml-folder <path to your poi folder>`
    * Open the options menu and select the location of the `mumble.py` helper script (one time)
    * All the required resources are expected to be in the current working directory
+ * Currently it is required to start gw2 first AND have the game window in the final position
+   * The program uses the position on start to place the overlay. A dynamic adaption is not implemented yet
 
 ### Features
  * Can load and display GW2Taco XML POIs and trails
@@ -35,7 +37,6 @@ Python for Windows installed in `${WINEPREFIX}/drive_c/Program Files/Python38/py
 ### Status
  * Current status: It is usable, but the UI is still lacking (Just a simple window to activate/deactivate POIs)
  * Tested on Arch with i3wm and picom
- * Position is currently hardcoded for my setup
  * OpenGL and Vulkan renderers both working
    * CPU usage with Vulkan is pretty much non existent. Most is just calculating the view matrix
    * Seeing as a very bad Vulkan implementation, is much faster than the OpenGL version, the OpenGL version won't get any further updates

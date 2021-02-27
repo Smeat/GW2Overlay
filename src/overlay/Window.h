@@ -29,7 +29,8 @@ struct WindowData {
 	Window window;
 };
 
-WindowData createTransparentWindow(const char* title, int x, int y, int w, int h, bool create_gl_surface = false);
+WindowData createTransparentWindow(const char* title, int x, int y, int w, int h, bool create_gl_surface = false,
+								   bool detect_gw2 = true);
 void setup_input_events(WindowData window, std::function<void(std::string)> cb, const bool* running);
 
 #endif
